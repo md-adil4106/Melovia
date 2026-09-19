@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Dark theme design tokens (AMDE Ink Palette) */
+  --color-ink-bg: #090b10;
+  --color-ink-surface: #11141d;
+  --color-ink-elevated: #1a1f2c;
+  --color-ink-border: #273042;
+  --color-ink-text: #f8fafc;
+  --color-ink-muted: #94a3b8;
+
+  /* One warm accent (amber/gold) */
+  --color-accent-warm: #f59e0b;
+  --color-accent-warm-hover: #d97706;
+  --color-accent-warm-subtle: rgba(245, 158, 11, 0.15);
+
+  /* One cool accent (sky/cyan) */
+  --color-accent-cool: #38bdf8;
+  --color-accent-cool-hover: #0ea5e9;
+  --color-accent-cool-subtle: rgba(56, 189, 248, 0.15);
+
+  /* Spacing tokens */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* Radii tokens */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Motion duration tokens */
+  --motion-fast: 150ms;
+  --motion-normal: 250ms;
+  --motion-slow: 400ms;
+}
+
+body {
+  background-color: var(--color-ink-bg);
+  color: var(--color-ink-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Accessible visible focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-accent-cool);
+  outline-offset: 2px;
+}
+
+/* Global prefers-reduced-motion override */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
