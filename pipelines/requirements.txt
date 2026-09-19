@@ -1,0 +1,7 @@
+# Melovia Pipeline Dependencies
+# Used strictly for offline data ingestion, feature building, and sanity reporting.
+# NOT included in api runtime dependencies.
+sentence-transformers>=3.0.0
+torch>=2.0.0
+scikit-learn>=1.4.0
+matplotlib>=3.8.0

@@ -24,6 +24,9 @@ help:
 	@echo "  make ingest-sample  - Ingest 5k sample real-world staging catalog"
 	@echo "  make ingest-full    - Ingest full (up to 50k) staging catalog"
 	@echo "  make dq-report      - Generate catalog data quality report"
+	@echo "  make build-bundle   - Build versioned vector bundle from real catalog"
+	@echo "  make build-bundle-mock - Build versioned bundle from mock catalog"
+	@echo "  make sanity-report  - Generate neighbor sanity report and plots"
 	@echo "  make dev            - Launch backend and frontend development servers"
 	@echo "  make clean          - Remove caches and build artifacts"
 
@@ -41,6 +44,15 @@ ingest-full:
 
 dq-report:
 	$(UV) run --directory api python ../pipelines/dq_report.py
+
+build-bundle:
+	$(UV) run --directory api python ../pipelines/build_features.py --catalog real --version v1
+
+build-bundle-mock:
+	$(UV) run --directory api python ../pipelines/build_features.py --catalog mock --version v1
+
+sanity-report:
+	$(UV) run --directory api python ../pipelines/sanity_report.py --bundle-dir ../data/bundles/v1
 
 
 

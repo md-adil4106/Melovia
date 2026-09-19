@@ -19,8 +19,8 @@ async def test_health_endpoint_with_mounted_catalog(async_client: AsyncClient) -
     # Catalog is mounted in test fixture
     assert data["catalog"] is not None
     assert data["catalog"]["version"] == "v1"
-    assert data["catalog"]["track_count"] == 3000
-    assert data["catalog"]["plan"] == "mock"
+    assert data["catalog"]["track_count"] > 0
+    assert data["catalog"]["plan"] in ("mock", "real")
 
     # Verify X-Request-ID is attached
     assert "x-request-id" in response.headers

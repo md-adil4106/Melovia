@@ -11,11 +11,17 @@ from app.main import app
 @pytest.mark.asyncio
 async def test_search_tracks_success(async_client: AsyncClient) -> None:
     """GET /tracks/search must return matching tracks and adhere to limit."""
-    response = await async_client.get("/tracks/search", params={"q": "neon", "limit": 10})
+    query_term = (
+        "movement"
+        if getattr(app.state, "catalog_store", None)
+        and app.state.catalog_store.manifest.plan == "real"
+        else "neon"
+    )
+    response = await async_client.get("/tracks/search", params={"q": query_term, "limit": 10})
     assert response.status_code == 200
 
     data = response.json()
-    assert data["query"] == "neon"
+    assert data["query"] == query_term
     assert data["limit"] == 10
     assert isinstance(data["items"], list)
     assert len(data["items"]) <= 10
@@ -34,8 +40,14 @@ async def test_search_tracks_success(async_client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_search_tracks_case_insensitive(async_client: AsyncClient) -> None:
     """GET /tracks/search must return identical results regardless of query casing."""
-    res_lower = await async_client.get("/tracks/search", params={"q": "drift"})
-    res_upper = await async_client.get("/tracks/search", params={"q": "DRIFT"})
+    q = (
+        "movement"
+        if getattr(app.state, "catalog_store", None)
+        and app.state.catalog_store.manifest.plan == "real"
+        else "drift"
+    )
+    res_lower = await async_client.get("/tracks/search", params={"q": q.lower()})
+    res_upper = await async_client.get("/tracks/search", params={"q": q.upper()})
 
     assert res_lower.status_code == 200
     assert res_upper.status_code == 200
