@@ -1,4 +1,4 @@
-.PHONY: all help dev check lint typecheck test clean api-check web-check api-lint api-typecheck api-test web-lint web-typecheck web-test
+.PHONY: all help dev check lint typecheck test clean api-check web-check api-lint api-typecheck api-test web-lint web-typecheck web-test make-mock seed-mock
 
 # Detect operating system
 ifeq ($(OS),Windows_NT)
@@ -19,8 +19,17 @@ help:
 	@echo "  make lint           - Run linting (ruff, eslint)"
 	@echo "  make typecheck      - Run type checking (mypy, tsc)"
 	@echo "  make test           - Run test suites (pytest, vitest)"
+	@echo "  make make-mock      - Generate deterministic mock catalog bundle"
+	@echo "  make seed-mock      - Generate mock bundle and seed database"
 	@echo "  make dev            - Launch backend and frontend development servers"
 	@echo "  make clean          - Remove caches and build artifacts"
+
+make-mock:
+	$(UV) run --directory api python ../fixtures/make_mock_catalog.py
+
+seed-mock: make-mock
+	$(UV) run --directory api python ../fixtures/seed_db.py
+
 
 check: api-check web-check
 	@echo "=== All Melovia checks passed! ==="

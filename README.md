@@ -54,7 +54,14 @@
 cp .env.example .env
 ```
 
-### 2. Run Checks
+### 2. Generate Mock Catalog Bundle & Seed Database
+
+```bash
+make make-mock   # Generates deterministic mock bundle at data/bundles/v1
+make seed-mock   # Generates mock bundle and seeds relational tables
+```
+
+### 3. Run Checks
 
 ```bash
 make check
@@ -62,7 +69,8 @@ make check
 
 This runs linting (`ruff`, `eslint`), typechecking (`mypy`, `tsc`), and test suites (`pytest`, `vitest`).
 
-### 3. Run Development Servers
+### 4. Run Development Servers
+
 
 ```bash
 make dev

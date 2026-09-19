@@ -6,4 +6,16 @@ Architecture Constraints:
 - Independent stages: taste, candidates, scoring, rerank, sequencing, explain.
 """
 
-__all__: list[str] = []
+from app.recsys.catalog import (
+    CatalogCorruptError,
+    CatalogError,
+    CatalogNotFoundError,
+    CatalogStore,
+)
+
+__all__ = [
+    "CatalogCorruptError",
+    "CatalogError",
+    "CatalogNotFoundError",
+    "CatalogStore",
+]

@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 from app.config import get_settings
-from app.db.base import Base
+from app.db import Base  # imports models and registers them with Base.metadata
 
 # Alembic Config object
 config = context.config
@@ -13,9 +13,11 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Set DB url from application settings
-settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Set DB url from application settings if not explicitly provided
+if not config.get_main_option("sqlalchemy.url"):
+    settings = get_settings()
+    config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+
 
 target_metadata = Base.metadata
 

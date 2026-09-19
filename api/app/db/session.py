@@ -1,6 +1,7 @@
 """Database session and engine management."""
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -12,14 +13,25 @@ settings = get_settings()
 db_url = settings.DATABASE_URL
 if db_url.startswith("postgresql://"):
     db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+elif db_url.startswith("sqlite:///") and not db_url.startswith("sqlite+aiosqlite:///"):
+    db_url = db_url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+
+engine_kwargs: dict[str, Any] = {"echo": settings.DEBUG}
+
+if not db_url.startswith("sqlite"):
+    engine_kwargs.update(
+        {
+            "pool_size": settings.DB_POOL_SIZE,
+            "max_overflow": settings.DB_MAX_OVERFLOW,
+            "pool_timeout": settings.DB_POOL_TIMEOUT,
+        }
+    )
 
 engine = create_async_engine(
     db_url,
-    pool_size=settings.DB_POOL_SIZE,
-    max_overflow=settings.DB_MAX_OVERFLOW,
-    pool_timeout=settings.DB_POOL_TIMEOUT,
-    echo=settings.DEBUG,
+    **engine_kwargs,
 )
+
 
 async_session_factory = async_sessionmaker(
     bind=engine,

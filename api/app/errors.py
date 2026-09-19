@@ -34,6 +34,17 @@ class AppException(Exception):
         self.status_code = status_code
 
 
+class NotFoundError(AppException):
+    """Raised when a requested resource is not found."""
+
+    def __init__(self, message: str = "Resource not found") -> None:
+        super().__init__(
+            code="NOT_FOUND",
+            message=message,
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+
+
 def _build_error_payload(code: str, message: str, req_id: str) -> dict[str, Any]:
     return {
         "error": {
