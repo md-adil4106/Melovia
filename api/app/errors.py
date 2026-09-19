@@ -10,7 +10,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.logging import get_request_id
 
-logger = logging.getLogger("amde.api.errors")
+logger = logging.getLogger("melovia.api.errors")
 
 HTTP_422 = (
     status.HTTP_422_UNPROCESSABLE_CONTENT
@@ -20,7 +20,7 @@ HTTP_422 = (
 
 
 class AppException(Exception):
-    """Base application exception for AMDE domain errors."""
+    """Base application exception for Melovia domain errors."""
 
     def __init__(
         self,

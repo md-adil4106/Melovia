@@ -1,6 +1,6 @@
-# AMDE API
+# Melovia API
 
-FastAPI backend for AMDE (explainable, user-steerable music-discovery engine).
+FastAPI backend for Melovia (explainable, user-steerable music-discovery engine).
 
 ## Development
 

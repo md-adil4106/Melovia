@@ -1,4 +1,4 @@
-# AMDE Data Directory
+# Melovia Data Directory
 
 This directory stores catalog data, feature artifacts, and vector bundles.
 

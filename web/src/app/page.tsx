@@ -56,7 +56,7 @@ export default function Home() {
           <span className="text-xs font-mono text-ink-muted">v0.1.0-alpha</span>
         </div>
         <h1 className="text-4xl md:text-5xl font-display font-medium tracking-tight text-ink-text mb-2">
-          AMDE
+          MELOVIA
         </h1>
         <p className="text-lg text-ink-muted max-w-2xl font-sans">
           An explainable, user-steerable music-discovery engine with strict deterministic guarantees and structured reasoning.

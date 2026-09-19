@@ -1,6 +1,6 @@
-# AMDE
+# MELOVIA
 
-> **AMDE** (internal placeholder name) is an explainable, user-steerable music-discovery engine.
+> **Melovia** is an explainable, user-steerable music-discovery engine.
 
 ## Stack Overview
 

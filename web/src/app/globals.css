@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  /* Dark theme design tokens (AMDE Ink Palette) */
+  /* Dark theme design tokens (Melovia Ink Palette) */
   --color-ink-bg: #090b10;
   --color-ink-surface: #11141d;
   --color-ink-elevated: #1a1f2c;

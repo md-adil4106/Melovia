@@ -14,7 +14,7 @@ endif
 all: check
 
 help:
-	@echo "AMDE Build and Quality Targets:"
+	@echo "Melovia Build and Quality Targets:"
 	@echo "  make check          - Run all quality checks (API + Web)"
 	@echo "  make lint           - Run linting (ruff, eslint)"
 	@echo "  make typecheck      - Run type checking (mypy, tsc)"
@@ -23,7 +23,7 @@ help:
 	@echo "  make clean          - Remove caches and build artifacts"
 
 check: api-check web-check
-	@echo "=== All AMDE checks passed! ==="
+	@echo "=== All Melovia checks passed! ==="
 
 lint: api-lint web-lint
 
@@ -58,7 +58,7 @@ web-test:
 
 # Development servers
 dev:
-	@echo "Starting AMDE development servers..."
+	@echo "Starting Melovia development servers..."
 	@echo "In terminal 1 (API): cd api && uv run uvicorn app.main:app --reload --port 8000"
 	@echo "In terminal 2 (Web): cd web && $(PNPM) dev"
 

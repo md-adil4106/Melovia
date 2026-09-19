@@ -1,1 +1,1 @@
-"""AMDE API test suite."""
+"""Melovia API test suite."""

@@ -21,7 +21,7 @@ const monoFont = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AMDE — Music Discovery Engine",
+  title: "Melovia — Music Discovery Engine",
   description: "Explainable, user-steerable music-discovery engine",
 };
 

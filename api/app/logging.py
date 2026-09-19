@@ -68,7 +68,7 @@ def setup_logging(debug: bool = False) -> None:
     logging.getLogger("uvicorn.access").propagate = False
 
 
-logger = logging.getLogger("amde.api")
+logger = logging.getLogger("melovia.api")
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):

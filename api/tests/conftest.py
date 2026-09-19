@@ -1,4 +1,4 @@
-"""Pytest fixtures for AMDE API tests."""
+"""Pytest fixtures for Melovia API tests."""
 
 from collections.abc import AsyncGenerator
 

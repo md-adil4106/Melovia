@@ -1,6 +1,6 @@
-# AMDE Web Client
+# Melovia Web Client
 
-Next.js (App Router, TypeScript, Tailwind CSS) frontend for AMDE.
+Next.js (App Router, TypeScript, Tailwind CSS) frontend for Melovia.
 
 ## Development
 

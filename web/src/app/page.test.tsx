@@ -11,14 +11,14 @@ describe("Home Page", () => {
     vi.clearAllMocks();
   });
 
-  it("renders AMDE title and description", async () => {
+  it("renders MELOVIA title and description", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ status: "ok", version: "0.1.0", catalog: null }),
     });
 
     render(<Home />);
-    expect(screen.getByText("AMDE")).toBeDefined();
+    expect(screen.getByText("MELOVIA")).toBeDefined();
     expect(screen.getByText("Backend Status")).toBeDefined();
 
     await waitFor(() => {

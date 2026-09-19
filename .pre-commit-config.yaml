@@ -1,4 +1,4 @@
-# Pre-commit configuration for AMDE
+# Pre-commit configuration for Melovia
 # Enforces ruff linting and formatting + gitleaks secret detection
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit

@@ -1,4 +1,4 @@
-# AGENTS.md — Standing Rules (AMDE)
+# AGENTS.md — Standing Rules (Melovia)
 ## Workflow
 1. Inspect the repo first (tree, README, docs/, tests) and understand before changing. Use Planning mode; state a short plan; implement ONLY the requested phase.
 2. Work incrementally: never rewrite working modules unnecessarily; reuse existing code; no duplicate implementations; every phase leaves the app runnable.

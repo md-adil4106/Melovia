@@ -1,1 +1,1 @@
-"""AMDE API Application Package."""
+"""Melovia API Application Package."""

@@ -1,8 +1,8 @@
-# AMDE Architecture Specification
+# Melovia Architecture Specification
 
 ## Overview
 
-AMDE is an explainable, user-steerable music-discovery engine designed with strict modular separation, deterministic recommendation pipelines, and security-first boundaries.
+Melovia is an explainable, user-steerable music-discovery engine designed with strict modular separation, deterministic recommendation pipelines, and security-first boundaries.
 
 ---
 

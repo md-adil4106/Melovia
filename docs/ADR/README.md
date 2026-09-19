@@ -1,6 +1,6 @@
 # Architectural Decision Records (ADRs)
 
-This directory records all major architectural decisions made in the AMDE project.
+This directory records all major architectural decisions made in the Melovia project.
 
 ## ADR Template
 

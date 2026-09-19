@@ -1,7 +1,7 @@
 [project]
-name = "amde-api"
+name = "melovia-api"
 version = "0.1.0"
-description = "Explainable, user-steerable music-discovery engine API"
+description = "Explainable, user-steerable music-discovery engine API (Melovia)"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [

@@ -1,4 +1,4 @@
-"""Main entrypoint for AMDE FastAPI application."""
+"""Main entrypoint for Melovia FastAPI application."""
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -17,9 +17,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application startup and teardown lifecycle."""
     settings = get_settings()
     setup_logging(debug=settings.DEBUG)
-    logger.info("Starting AMDE API backend", extra={"env": settings.ENV, "version": "0.1.0"})
+    logger.info("Starting Melovia API backend", extra={"env": settings.ENV, "version": "0.1.0"})
     yield
-    logger.info("Shutting down AMDE API backend")
+    logger.info("Shutting down Melovia API backend")
 
 
 def create_app() -> FastAPI:
@@ -27,7 +27,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
 
     app = FastAPI(
-        title="AMDE API",
+        title="Melovia API",
         description="Explainable, user-steerable music-discovery engine",
         version="0.1.0",
         docs_url="/docs" if settings.DEBUG else None,

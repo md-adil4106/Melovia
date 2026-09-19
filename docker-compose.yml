@@ -1,18 +1,18 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: amde-db
+    container_name: melovia-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: amde_db
-      POSTGRES_USER: amde_user
-      POSTGRES_PASSWORD: amde_password
+      POSTGRES_DB: melovia_db
+      POSTGRES_USER: melovia_user
+      POSTGRES_PASSWORD: melovia_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U amde_user -d amde_db"]
+      test: ["CMD-SHELL", "pg_isready -U melovia_user -d melovia_db"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -21,12 +21,12 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: amde-api
+    container_name: melovia-api
     restart: unless-stopped
     environment:
       - ENV=development
       - DEBUG=true
-      - DATABASE_URL=postgresql+psycopg://amde_user:amde_password@db:5432/amde_db
+      - DATABASE_URL=postgresql+psycopg://melovia_user:melovia_password@db:5432/melovia_db
       - API_HOST=0.0.0.0
       - API_PORT=8000
     ports:
@@ -39,7 +39,7 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-    container_name: amde-web
+    container_name: melovia-web
     restart: unless-stopped
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000

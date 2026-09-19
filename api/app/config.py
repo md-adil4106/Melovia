@@ -16,7 +16,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class DatabaseSettings(BaseModel):
     url: str = Field(
-        default="postgresql+psycopg://amde_user:amde_password@localhost:5432/amde_db",
+        default="postgresql+psycopg://melovia_user:melovia_password@localhost:5432/melovia_db",
         description="PostgreSQL connection string (PostgreSQL 16, no pgvector)",
     )
     pool_size: int = Field(default=10, description="Database connection pool size")
@@ -87,7 +87,7 @@ class Settings(BaseSettings):
 
     # DATABASE
     DATABASE_URL: str = Field(
-        default="postgresql+psycopg://amde_user:amde_password@localhost:5432/amde_db",
+        default="postgresql+psycopg://melovia_user:melovia_password@localhost:5432/melovia_db",
         validation_alias="DATABASE_URL",
     )
     DB_POOL_SIZE: int = Field(default=10, validation_alias="DB_POOL_SIZE")
