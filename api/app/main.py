@@ -12,6 +12,7 @@ from app.errors import register_exception_handlers
 from app.logging import RequestLoggingMiddleware, logger, setup_logging
 from app.recsys.catalog import CatalogCorruptError, CatalogStore
 from app.routers.health import router as health_router
+from app.routers.recommendations import router as recommendations_router
 from app.routers.tracks import router as tracks_router
 
 
@@ -93,6 +94,7 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(health_router)
     app.include_router(tracks_router)
+    app.include_router(recommendations_router)
 
     return app
 

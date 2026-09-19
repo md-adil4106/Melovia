@@ -20,6 +20,8 @@ const monoFont = JetBrains_Mono({
   display: "swap",
 });
 
+import { Providers } from "./providers";
+
 export const metadata: Metadata = {
   title: "Melovia — Music Discovery Engine",
   description: "Explainable, user-steerable music-discovery engine",
@@ -36,7 +38,7 @@ export default function RootLayout({
       className={`${serifDisplay.variable} ${sansClean.variable} ${monoFont.variable} dark`}
     >
       <body className="bg-ink-bg text-ink-text antialiased min-h-screen">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

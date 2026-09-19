@@ -132,3 +132,45 @@ This allows geometric vector manipulation in semantic taste space without model 
 2. **SVD Sign Disambiguation**: Deterministic PCA using LAPACK `svd_flip` guarantees identical projection matrices across runs.
 3. **Contiguous Indexing**: Row $i$ in `vectors_t.npy`, `vectors_a.npy`, and `scalars.parquet` corresponds strictly to `track_idx == i` in `tracks.parquet`.
 4. **SHA-256 Checksum Manifest**: `manifest.json` seals every bundle artifact with cryptographic hashes. `CatalogStore.load()` verifies all hashes at startup, guaranteeing bitwise reproducibility.
+
+---
+
+## 7. Core Recommender Engine v1 (Level A)
+
+The Level A recommendation engine generates relevance-ranked track discoveries from 1 to 10 user-selected seed tracks without opaque black-box scoring.
+
+### 7.1 Multi-Seed Taste Profiling & Clustering (`recsys/taste.py`)
+Users can provide disparate seed tracks representing multiple stylistic intentions (e.g. ambient drone alongside post-punk). Rather than collapsing all seeds into a single blurry centroid, Melovia partitions seeds into cohesive **Taste Modes**:
+- **Small Seed Sets ($N < 6$)**: Each seed track directly forms its own taste mode ($K = N$ modes), ensuring individual seed characteristics are completely preserved.
+- **Large Seed Sets ($N \ge 6$)**: Deterministic k-medoids clustering partitions seeds into $K \in \{2, 3\}$ clusters by maximizing the average silhouette score computed over cosine distances in semantic taste space ($\mathbf{v}_t$).
+- **Cluster Weights**:
+  $$\pi_m = \frac{|C_m|}{N_{\text{seeds}}}$$
+- **Mode Centroid Vectors**:
+  $$\mathbf{c}_m^t = \frac{\sum_{i \in C_m} \mathbf{v}_t(i)}{\|\sum_{i \in C_m} \mathbf{v}_t(i)\|_2}, \quad \mathbf{c}_m^a = \frac{\sum_{i \in C_m \cap \text{has\_a}} \mathbf{v}_a(i)}{\|\sum_{i \in C_m \cap \text{has\_a}} \mathbf{v}_a(i)\|_2}$$
+
+### 7.2 Candidate Generation (`recsys/candidates.py`)
+To ensure high recall without scanning the entire catalog at subsequent reranking stages:
+1. For each taste mode $m$ and channel $c \in \{t, a\}$:
+   $$\mathbf{s}_m^c = \mathbf{V}^c \mathbf{c}_m^c$$
+   Top $K_{\text{cand}} = 500$ tracks are retrieved per mode and channel.
+2. **Union Pooling**: The final candidate pool is the deduplicated union across all modes and active channels.
+3. **Seed & Artist Exclusion**:
+   - Seed tracks are strictly filtered out ($i \notin \text{Seeds}$).
+   - Optionally, seed artists are excluded to ensure discovery outside familiar discographies.
+
+### 7.3 Multi-Modal Scoring & Smooth-Max Aggregation (`recsys/scoring.py`)
+For every candidate track $i$:
+1. **Log-Sum-Exp Smooth Max Across Modes**:
+   Rather than a simple max (which is non-smooth and ignores secondary clusters) or a mean (which penalizes niche seeds), mode similarities are aggregated using temperature-scaled log-sum-exp ($\tau = 8.0$):
+   $$s_i^c = \frac{1}{\tau} \log \sum_{m=1}^{M} \pi_m \exp\left(\tau \cdot \langle \mathbf{c}_m^c, \mathbf{v}_i^c \rangle\right)$$
+   Computed using the numerically stable identity $u_{\max} + \log \sum \exp(u - u_{\max})$ to prevent float overflow.
+2. **Empirical Percentile Calibration**:
+   Raw cosine scores are mapped to empirical percentiles relative to the candidate pool:
+   $$p_i^c = \frac{\text{Rank}(s_i^c)}{|\mathcal{C}|} \in [0.0, 1.0]$$
+3. **Dynamic Channel Combination**:
+   $$S_i = w_t \cdot p_i^t + w_a \cdot p_i^a$$
+   Nominal weights: $w_t = 0.60$ (semantic), $w_a = 0.40$ (acoustic).
+   **Missing Audio Invariant**: If a candidate track has `has_a = False` (or all seeds lack audio), weights dynamically renormalize to $w_t = 1.0, w_a = 0.0$.
+4. **Deterministic Ranking**:
+   Results are sorted strictly by $(-S_i, \text{track\_id})$.
+

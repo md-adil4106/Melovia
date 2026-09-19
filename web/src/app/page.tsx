@@ -1,207 +1,466 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { Activity, CheckCircle2, AlertCircle, RefreshCw, Layers, ShieldCheck, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import {
+  Compass,
+  Headphones,
+  Music,
+  Plus,
+  RefreshCw,
+  Search,
+  Sliders,
+  Sparkles,
+  Volume2,
+  X,
+} from "lucide-react";
+import { Track, RecommendedItem, useDiscoveryStore } from "./store";
 
-interface HealthData {
-  status: string;
-  version: string;
-  catalog: string | null;
-}
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export default function Home() {
-  const [health, setHealth] = useState<HealthData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastChecked, setLastChecked] = useState<string | null>(null);
+export default function DiscoveryHome() {
+  const {
+    seeds,
+    addSeed,
+    removeSeed,
+    clearSeeds,
+    recommendations,
+    setRecommendations,
+    setCandidateSetId,
+  } = useDiscoveryStore();
 
-  const fetchHealth = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-    try {
-      const res = await fetch(`${apiUrl}/health`, {
-        cache: "no-store",
-      });
+  // Debounce search query by 250ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery.trim());
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-      if (!res.ok) {
-        throw new Error(`API responded with HTTP ${res.status}`);
+  // Query track search
+  const {
+    data: searchResults,
+    isLoading: isSearchLoading,
+  } = useQuery({
+    queryKey: ["trackSearch", debouncedQuery],
+    queryFn: async () => {
+      if (!debouncedQuery) return [];
+      const res = await fetch(`${API_BASE}/tracks/search?q=${encodeURIComponent(debouncedQuery)}&limit=8`);
+      if (!res.ok) throw new Error("Failed to search tracks");
+      const data = await res.json();
+      return (data.items || []) as Track[];
+    },
+    enabled: debouncedQuery.length >= 2,
+  });
+
+  // Query system health
+  const { data: healthData } = useQuery({
+    queryKey: ["healthCheck"],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`${API_BASE}/health`);
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
       }
+    },
+    refetchInterval: 30000,
+  });
 
-      const data: HealthData = await res.json();
-      setHealth(data);
-      setLastChecked(new Date().toLocaleTimeString());
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to connect to backend API";
-      setError(message);
-      setHealth(null);
-    } finally {
-      setLoading(false);
+  // Mutation for generating recommendations
+  const recommendMutation = useMutation({
+    mutationFn: async (seedIds: string[]) => {
+      const res = await fetch(`${API_BASE}/recommendations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seed_track_ids: seedIds,
+          n: 30,
+          include_signals: true,
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.error?.message || "Failed to generate recommendations");
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setRecommendations(data.items || []);
+      setCandidateSetId(data.candidate_set_id);
+    },
+  });
+
+  const handleSelectTrack = (track: Track) => {
+    const added = addSeed(track);
+    if (added) {
+      setSearchQuery("");
+      setDebouncedQuery("");
+      setIsDropdownOpen(false);
+      setHighlightedIndex(-1);
+      searchInputRef.current?.focus();
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!searchResults || searchResults.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev < searchResults.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : searchResults.length - 1));
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      e.preventDefault();
+      handleSelectTrack(searchResults[highlightedIndex]);
+    } else if (e.key === "Escape") {
+      setIsDropdownOpen(false);
+    }
+  };
+
+  const handleDiscover = () => {
+    if (seeds.length === 0) return;
+    recommendMutation.mutate(seeds.map((s) => s.id));
+  };
+
+  // Close search dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !searchInputRef.current?.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    fetchHealth();
-  }, [fetchHealth]);
-
   return (
-    <main className="min-h-screen px-4 py-12 md:px-8 max-w-5xl mx-auto flex flex-col gap-8">
-      {/* Header */}
-      <header className="border-b border-ink-border pb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="px-2.5 py-1 text-xs font-mono font-medium rounded-full bg-warm-subtle text-warm border border-warm/30">
-            Internal Preview
-          </span>
-          <span className="text-xs font-mono text-ink-muted">v0.1.0-alpha</span>
+    <main className="min-h-screen bg-[#0d0f14] text-[#f1f3f7] font-sans pb-20">
+      {/* Top Header */}
+      <header className="border-b border-[#212631] bg-[#12161f]/80 backdrop-blur-md sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#d4af37] to-[#8c6d1f] flex items-center justify-center text-black font-bold shadow-md">
+              <Compass className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-wider font-serif-display text-[#f5ecd5]">
+                MELOVIA
+              </h1>
+              <p className="text-xs text-[#8c96a8]">Explainable Music Discovery</p>
+            </div>
+          </div>
+
+          {/* Backend Status Indicator */}
+          <div className="flex items-center gap-2 text-xs">
+            {healthData ? (
+              <span className="flex items-center gap-1.5 text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Catalog {healthData.catalog?.version || "ready"} ({healthData.catalog?.track_count?.toLocaleString() || 0} tracks)
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-amber-400 bg-amber-950/40 border border-amber-800/50 px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Connecting...
+              </span>
+            )}
+          </div>
         </div>
-        <h1 className="text-4xl md:text-5xl font-display font-medium tracking-tight text-ink-text mb-2">
-          MELOVIA
-        </h1>
-        <p className="text-lg text-ink-muted max-w-2xl font-sans">
-          An explainable, user-steerable music-discovery engine with strict deterministic guarantees and structured reasoning.
-        </p>
       </header>
 
-      {/* Backend Status Section */}
-      <section
-        aria-labelledby="system-status-heading"
-        className="rounded-xl border border-ink-border bg-ink-surface p-6 shadow-sm"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <Activity className="w-5 h-5 text-cool" aria-hidden="true" />
-            <h2 id="system-status-heading" className="text-xl font-display font-semibold text-ink-text">
-              Backend Status
-            </h2>
+      {/* Main Container */}
+      <div className="max-w-4xl mx-auto px-4 pt-10">
+        {/* Hero Section */}
+        <section className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1b212d] border border-[#2b3345] text-xs text-[#d4af37] mb-4">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Level A — Relevance Discovery</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#f1f3f7] tracking-tight mb-3 font-serif-display">
+            Steerable Discovery from Seed Tracks
+          </h2>
+          <p className="text-sm sm:text-base text-[#8c96a8] max-w-xl mx-auto">
+            Select 1 to 10 seed tracks to construct your multi-modal taste profile across semantic and acoustic channels.
+          </p>
+        </section>
+
+        {/* Seed Search & Input Box */}
+        <section className="bg-[#141923] border border-[#232a3b] rounded-2xl p-6 mb-8 shadow-xl relative">
+          <div className="flex items-center justify-between mb-3">
+            <label htmlFor="seed-search" className="text-sm font-semibold text-[#c8d0de] flex items-center gap-2">
+              <Search className="w-4 h-4 text-[#d4af37]" />
+              Search Seed Tracks
+            </label>
+            <span className="text-xs text-[#8c96a8]">
+              <strong className="text-[#d4af37]">{seeds.length}</strong> / 10 seeds selected
+            </span>
           </div>
 
-          <button
-            onClick={fetchHealth}
-            disabled={loading}
-            aria-label="Refresh API health status"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-ink-elevated hover:bg-ink-border text-ink-text border border-ink-border transition-colors duration-fast disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-cool"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
-            <span>{loading ? "Checking..." : "Refresh Status"}</span>
-          </button>
-        </div>
+          {/* Search Input Field */}
+          <div className="relative">
+            <input
+              id="seed-search"
+              ref={searchInputRef}
+              type="text"
+              placeholder={
+                seeds.length >= 10
+                  ? "Maximum of 10 seeds reached"
+                  : "Type track title or artist name (e.g. Bohemian Rhapsody, Daft Punk)..."
+              }
+              disabled={seeds.length >= 10}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsDropdownOpen(true);
+              }}
+              onFocus={() => setIsDropdownOpen(true)}
+              onKeyDown={handleKeyDown}
+              className="w-full bg-[#0d1017] border border-[#262e40] rounded-xl px-4 py-3 text-sm text-[#f1f3f7] placeholder-[#5a657a] focus:outline-none focus:ring-2 focus:ring-[#d4af37]/60 focus:border-transparent transition-all disabled:opacity-50"
+            />
 
-        {/* Status Indicators */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Status tile */}
-          <div className="rounded-lg border border-ink-border bg-ink-elevated p-4 flex flex-col gap-2">
-            <span className="text-xs font-mono text-ink-muted uppercase tracking-wider">Service Health</span>
-            <div className="flex items-center gap-2">
-              {loading ? (
-                <span className="text-sm font-mono text-ink-muted">Pinging /health...</span>
-              ) : error ? (
-                <div className="flex items-center gap-2 text-red-400">
-                  <AlertCircle className="w-5 h-5" aria-hidden="true" />
-                  <span className="font-semibold text-sm">Offline / Unreachable</span>
+            {isSearchLoading && (
+              <div className="absolute right-3 top-3 text-xs text-[#8c96a8] animate-spin">
+                <RefreshCw className="w-5 h-5" />
+              </div>
+            )}
+
+            {/* Dropdown Suggestions */}
+            {isDropdownOpen && searchResults && searchResults.length > 0 && (
+              <div
+                ref={dropdownRef}
+                className="absolute left-0 right-0 top-full mt-2 bg-[#12161f] border border-[#2a3347] rounded-xl shadow-2xl z-50 overflow-hidden max-h-72 overflow-y-auto"
+              >
+                <div className="p-1.5 divide-y divide-[#1e2535]">
+                  {searchResults.map((t, idx) => {
+                    const isAlreadySeed = seeds.some((s) => s.id === t.id);
+                    const isHighlighted = idx === highlightedIndex;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => handleSelectTrack(t)}
+                        disabled={isAlreadySeed}
+                        className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between transition-colors ${
+                          isHighlighted ? "bg-[#1f2738]" : "hover:bg-[#181f2d]"
+                        } ${isAlreadySeed ? "opacity-40 cursor-not-allowed" : ""}`}
+                      >
+                        <div className="min-w-0 pr-3">
+                          <p className="text-sm font-medium text-[#f1f3f7] truncate">{t.title}</p>
+                          <p className="text-xs text-[#8c96a8] truncate">
+                            {t.artist_name} {t.year ? `• ${t.year}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-[#d4af37]">
+                          {isAlreadySeed ? (
+                            <span className="text-[#647187]">Selected</span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs bg-[#242b3a] px-2 py-0.5 rounded text-[#c8d0de]">
+                              <Plus className="w-3 h-3 text-[#d4af37]" /> Add
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Seed Chips */}
+          <div className="mt-4 pt-4 border-t border-[#1d2331]">
+            {seeds.length === 0 ? (
+              <p className="text-xs text-[#626e85] italic">
+                No seed tracks selected yet. Search above to add seeds.
+              </p>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                {seeds.map((s) => (
+                  <div
+                    key={s.id}
+                    className="inline-flex items-center gap-2 bg-[#1b2230] border border-[#2b354a] rounded-lg px-3 py-1.5 text-xs text-[#f1f3f7] shadow-sm animate-in fade-in duration-200"
+                  >
+                    <Music className="w-3.5 h-3.5 text-[#d4af37]" />
+                    <span className="font-medium max-w-[160px] truncate">{s.title}</span>
+                    <span className="text-[#8c96a8] max-w-[100px] truncate">({s.artist_name})</span>
+                    <button
+                      type="button"
+                      onClick={() => removeSeed(s.id)}
+                      aria-label={`Remove ${s.title} by ${s.artist_name}`}
+                      className="text-[#8c96a8] hover:text-rose-400 p-0.5 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-rose-400"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={clearSeeds}
+                  className="text-xs text-[#717d94] hover:text-rose-400 ml-auto transition-colors underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Action Row */}
+          <div className="mt-6 flex items-center justify-between">
+            <div className="text-xs text-[#8c96a8] flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5 text-[#d4af37]" />
+              Dual-Channel: Semantic 60% + Acoustic 40%
+            </div>
+
+            <button
+              type="button"
+              onClick={handleDiscover}
+              disabled={seeds.length === 0 || recommendMutation.isPending}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#d4af37] to-[#b38e24] hover:from-[#e2bf48] hover:to-[#c49e2f] text-black font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all transform active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {recommendMutation.isPending ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Generating...</span>
+                </>
               ) : (
-                <div className="flex items-center gap-2 text-emerald-400">
-                  <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
-                  <span className="font-semibold text-sm capitalize">{health?.status || "OK"}</span>
-                </div>
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  <span>Discover Tracks</span>
+                </>
               )}
+            </button>
+          </div>
+        </section>
+
+        {/* Error Notification */}
+        {recommendMutation.isError && (
+          <div className="bg-rose-950/40 border border-rose-800/60 rounded-xl p-4 mb-6 text-rose-200 text-sm flex items-start gap-3">
+            <div className="p-1 rounded bg-rose-900/60 text-rose-300">
+              <X className="w-4 h-4" />
             </div>
-            {error && <p className="text-xs text-red-400/90 font-mono mt-1">{error}</p>}
+            <div>
+              <h4 className="font-semibold">Recommendation Failed</h4>
+              <p className="text-xs text-rose-300 mt-0.5">
+                {(recommendMutation.error as Error)?.message || "An unexpected error occurred."}
+              </p>
+            </div>
           </div>
-
-          {/* Version tile */}
-          <div className="rounded-lg border border-ink-border bg-ink-elevated p-4 flex flex-col gap-2">
-            <span className="text-xs font-mono text-ink-muted uppercase tracking-wider">API Version</span>
-            <span className="text-base font-mono font-medium text-ink-text">
-              {health?.version ? `v${health.version}` : "—"}
-            </span>
-            <span className="text-xs text-ink-muted">FastAPI + Python 3.12</span>
-          </div>
-
-          {/* Catalog tile */}
-          <div className="rounded-lg border border-ink-border bg-ink-elevated p-4 flex flex-col gap-2">
-            <span className="text-xs font-mono text-ink-muted uppercase tracking-wider">Vector Catalog</span>
-            <span className="text-base font-mono font-medium text-ink-text">
-              {health?.catalog === null ? "null (unmounted)" : String(health?.catalog || "unmounted")}
-            </span>
-            <span className="text-xs text-ink-muted">data/bundles/ (immutable)</span>
-          </div>
-        </div>
-
-        {lastChecked && (
-          <p className="mt-4 text-xs font-mono text-ink-muted">
-            Last checked at: <time dateTime={new Date().toISOString()}>{lastChecked}</time>
-          </p>
         )}
-      </section>
 
-      {/* System Architecture & Tokens Overview */}
-      <section
-        aria-labelledby="architecture-heading"
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
-      >
-        {/* Core Architectural Pillars */}
-        <div className="rounded-xl border border-ink-border bg-ink-surface p-6 flex flex-col gap-4">
-          <div className="flex items-center gap-2 text-warm">
-            <ShieldCheck className="w-5 h-5" aria-hidden="true" />
-            <h3 id="architecture-heading" className="text-lg font-display font-medium text-ink-text">
-              Architectural Constraints
+        {/* Results Section */}
+        <section className="mb-16">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-[#f1f3f7] flex items-center gap-2 font-serif-display">
+              <Headphones className="w-5 h-5 text-[#d4af37]" />
+              Recommended Tracks
             </h3>
-          </div>
-          <ul className="text-sm text-ink-muted space-y-2.5 font-sans">
-            <li className="flex items-start gap-2">
-              <span className="text-warm font-mono font-bold">•</span>
-              <span><strong>api/app/recsys/*</strong> is pure Python and deterministic with stable tie-breaks.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-warm font-mono font-bold">•</span>
-              <span><strong>api/app/llm/*</strong> yields structured constraints; the LLM never ranks tracks directly.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-warm font-mono font-bold">•</span>
-              <span><strong>api/app/platforms/*</strong> is isolated behind PlatformAdapter.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-warm font-mono font-bold">•</span>
-              <span><strong>PostgreSQL 16</strong> only — strictly no Redis and no pgvector.</span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Dark Theme Design Tokens */}
-        <div className="rounded-xl border border-ink-border bg-ink-surface p-6 flex flex-col gap-4">
-          <div className="flex items-center gap-2 text-cool">
-            <Sparkles className="w-5 h-5" aria-hidden="true" />
-            <h3 className="text-lg font-display font-medium text-ink-text">
-              Design Tokens & Accents
-            </h3>
-          </div>
-          <p className="text-sm text-ink-muted">
-            Design tokens parameterized via CSS variables respecting WCAG AA contrast and motion accessibility:
-          </p>
-
-          <div className="grid grid-cols-3 gap-3 font-mono text-xs">
-            <div className="rounded-lg p-3 border border-ink-border bg-ink-bg flex flex-col gap-1">
-              <span className="text-ink-muted">Ink Background</span>
-              <span className="font-semibold text-ink-text">#090B10</span>
-            </div>
-            <div className="rounded-lg p-3 border border-warm/40 bg-warm-subtle flex flex-col gap-1 text-warm">
-              <span className="opacity-80">Warm Accent</span>
-              <span className="font-semibold">#F59E0B</span>
-            </div>
-            <div className="rounded-lg p-3 border border-cool/40 bg-cool-subtle flex flex-col gap-1 text-cool">
-              <span className="opacity-80">Cool Accent</span>
-              <span className="font-semibold">#38BDF8</span>
-            </div>
+            {recommendations.length > 0 && (
+              <span className="text-xs text-[#8c96a8] bg-[#141923] px-2.5 py-1 rounded-full border border-[#232a3b]">
+                {recommendations.length} recommendations generated
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-ink-muted pt-2 border-t border-ink-border">
-            <Layers className="w-4 h-4 text-cool" aria-hidden="true" />
-            <span>Global <code className="text-cool font-mono">prefers-reduced-motion</code> overrides applied.</span>
-          </div>
-        </div>
-      </section>
+          {/* Skeleton Loading State */}
+          {recommendMutation.isPending && (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-[#141923] border border-[#202738] rounded-xl p-4 flex items-center justify-between animate-pulse"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-lg bg-[#20283b]" />
+                    <div className="space-y-2">
+                      <div className="w-48 h-4 bg-[#20283b] rounded" />
+                      <div className="w-32 h-3 bg-[#192030] rounded" />
+                    </div>
+                  </div>
+                  <div className="w-16 h-6 bg-[#20283b] rounded-full" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!recommendMutation.isPending && recommendations.length === 0 && (
+            <div className="border border-dashed border-[#232b3d] rounded-2xl p-12 text-center bg-[#10141d]/50">
+              <Compass className="w-12 h-12 mx-auto text-[#424d63] mb-3" />
+              <h4 className="text-base font-semibold text-[#c8d0de] mb-1">Your discovery feed is empty</h4>
+              <p className="text-xs text-[#8c96a8] max-w-sm mx-auto">
+                Search and select at least one seed track above, then click &quot;Discover Tracks&quot; to compute relevance-ranked music.
+              </p>
+            </div>
+          )}
+
+          {/* Recommendation Items List */}
+          {!recommendMutation.isPending && recommendations.length > 0 && (
+            <div className="space-y-3">
+              {recommendations.map((item: RecommendedItem, idx: number) => {
+                const matchPct = Math.round(item.score * 100);
+                return (
+                  <article
+                    key={item.track.id}
+                    className="bg-[#141923] border border-[#232a3b] hover:border-[#38435d] rounded-xl p-4 transition-all hover:bg-[#161c28] flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <span className="w-7 text-center font-mono text-xs font-semibold text-[#5a667d]">
+                        #{idx + 1}
+                      </span>
+                      <div className="w-9 h-9 rounded-lg bg-[#1c2230] border border-[#2a3449] flex items-center justify-center text-[#d4af37] flex-shrink-0">
+                        <Volume2 className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-semibold text-[#f1f3f7] truncate group-hover:text-[#d4af37] transition-colors">
+                          {item.track.title}
+                        </h4>
+                        <p className="text-xs text-[#8c96a8] truncate">
+                          {item.track.artist_name} {item.track.year ? `• ${item.track.year}` : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-end gap-3 pl-10 sm:pl-0">
+                      {/* Audio channel badge */}
+                      {item.track.has_a ? (
+                        <span className="text-[10px] text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded font-mono">
+                          Audio
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-zinc-500 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded font-mono">
+                          No Audio
+                        </span>
+                      )}
+
+                      {/* Match Score Badge */}
+                      <div className="flex items-center gap-2 bg-[#1b2230] border border-[#2b354a] px-2.5 py-1 rounded-lg">
+                        <span className="text-xs font-mono font-bold text-[#d4af37]">
+                          {matchPct}%
+                        </span>
+                        <span className="text-[10px] text-[#8c96a8]">match</span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 }

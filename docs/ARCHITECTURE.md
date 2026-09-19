@@ -68,3 +68,42 @@ Melovia is an explainable, user-steerable music-discovery engine designed with s
 - **Web Client**:
   - First-load JS: < 250 KB (excluding lazy-loaded 3D visualization chunks).
   - Accessibility: Keyboard operable, visible focus indicators, WCAG AA contrast, and universal respect for `prefers-reduced-motion`.
+
+---
+
+## Recommendation API & In-Memory Caching
+
+### Endpoint: `POST /recommendations`
+- **Request Body**:
+  ```json
+  {
+    "seed_track_ids": ["track_0001", "track_0042"],
+    "n": 30,
+    "exclude_seed_artists": true,
+    "include_signals": true
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "candidate_set_id": "sha256-hash-of-sorted-seeds",
+    "items": [
+      {
+        "track": { "id": "...", "title": "...", "artist_name": "...", "popularity_pct": 82.5, "has_a": true, "has_t": true },
+        "score": 0.942,
+        "signals": { "raw_sim_t": 0.89, "percentile_t": 0.98, "raw_sim_a": 0.81, "percentile_a": 0.89, "has_audio": true }
+      }
+    ],
+    "timing_ms": {
+      "taste_modes_ms": 1.2,
+      "candidate_gen_ms": 4.5,
+      "scoring_ms": 2.1,
+      "total_ms": 7.8
+    }
+  }
+  ```
+
+### In-Memory Candidate Pool Caching (`recsys/cache.py`)
+- Candidate pools generated from identical seed sets are cached in-process using thread-safe TTL storage (30-minute expiry, max 1,000 entries).
+- Subsequent steerability and reranking operations (Phase 5+) can reuse the precomputed candidate pool via `candidate_set_id`, avoiding redundant vector catalog scans.
+
