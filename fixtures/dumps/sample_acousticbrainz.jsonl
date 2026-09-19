@@ -1,0 +1,6 @@
+{"mbid": "736233d6-dd07-4221-a5d2-09859f77f3a7", "rhythm": {"bpm": 72.0}, "highlevel": {"danceable": {"probability": 0.39}, "mood_happy": {"probability": 0.45}, "voice_instrumental": {"value": "voice", "probability": 0.88}}}
+{"mbid": "12809623-64a4-4f81-ba55-9a8ff7ee20d8", "rhythm": {"bpm": 75.0}, "highlevel": {"danceable": {"probability": 0.48}, "mood_happy": {"probability": 0.62}, "voice_instrumental": {"value": "voice", "probability": 0.91}}}
+{"mbid": "b5f09aa4-dc6e-4f76-80ce-1c4b8b60f1ee", "rhythm": {"bpm": 117.0}, "highlevel": {"danceable": {"probability": 0.52}, "mood_party": {"probability": 0.82}, "voice_instrumental": {"value": "voice", "probability": 0.84}}}
+{"mbid": "40722238-d698-4670-8cc3-1188339b3420", "rhythm": {"bpm": 120.0}, "highlevel": {"danceable": {"probability": 0.68}, "mood_relaxed": {"probability": 0.74}, "voice_instrumental": {"value": "voice", "probability": 0.92}}}
+{"mbid": "3b683cb8-cc38-4e8c-a111-e40d04c35e3b", "rhythm": {"bpm": 117.0}, "highlevel": {"danceable": {"probability": 0.92}, "mood_party": {"probability": 0.88}, "voice_instrumental": {"value": "voice", "probability": 0.95}}}
+{"mbid": "a073f1d3-63dc-4c40-9a25-968fa3083e9b", "rhythm": {"bpm": 112.0}, "highlevel": {"danceable": {"probability": 0.61}, "mood_party": {"probability": 0.71}, "voice_instrumental": {"value": "voice", "probability": 0.89}}}

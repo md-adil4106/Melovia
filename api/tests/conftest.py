@@ -1,13 +1,36 @@
 """Pytest fixtures for Melovia API tests."""
 
+import os
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
-import pytest
-from httpx import ASGITransport, AsyncClient
+# Configure test database before any app module import
+test_db = Path(__file__).resolve().parent / "test_suite.db"
+os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{test_db.as_posix()}"
 
-from app.main import app
-from app.recsys.catalog import CatalogStore
+import pytest  # noqa: E402
+from httpx import ASGITransport, AsyncClient  # noqa: E402
+
+from app.db import Base, engine  # noqa: E402
+from app.main import app  # noqa: E402
+from app.recsys.catalog import CatalogStore  # noqa: E402
+
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_test_db() -> None:
+    yield
+    if test_db.exists():
+        try:
+            test_db.unlink()
+        except Exception:
+            pass
+
+
+@pytest.fixture(autouse=True)
+async def init_test_db() -> None:
+    """Ensure all database tables exist before each test."""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 @pytest.fixture(autouse=True)

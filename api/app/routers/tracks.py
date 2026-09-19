@@ -1,9 +1,14 @@
 """Track search and metadata retrieval endpoints."""
 
+import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db import StagingTrack
+from app.db.session import get_db_session
 from app.errors import AppException, NotFoundError
 from app.recsys.catalog import CatalogStore
 from app.schemas.tracks import AudioScalars, TrackDetailResponse, TrackSearchResponse
@@ -77,24 +82,113 @@ def _build_track_detail(raw_dict: dict[str, Any], store: CatalogStore) -> TrackD
     )
 
 
+def _build_staging_track_detail(st: StagingTrack) -> TrackDetailResponse:
+    scalars: AudioScalars | None = None
+    if st.scalars and isinstance(st.scalars, dict):
+        scalars = AudioScalars(
+            bpm=float(st.scalars["bpm"]) if "bpm" in st.scalars else None,
+            tempo_bpm=float(st.scalars["tempo_bpm"]) if "tempo_bpm" in st.scalars else None,
+            energy=float(st.scalars["energy"]) if "energy" in st.scalars else None,
+            valence=float(st.scalars["valence"]) if "valence" in st.scalars else None,
+            danceability=float(st.scalars["danceability"])
+            if "danceability" in st.scalars
+            else None,
+            acousticness=float(st.scalars["acousticness"])
+            if "acousticness" in st.scalars
+            else None,
+            instrumentalness=float(st.scalars["instrumentalness"])
+            if "instrumentalness" in st.scalars
+            else None,
+            loudness_db=float(st.scalars["loudness_db"]) if "loudness_db" in st.scalars else None,
+        )
+
+    tag_names: list[str] = []
+    if st.tags and isinstance(st.tags, list):
+        for t in st.tags:
+            if isinstance(t, dict) and "name" in t:
+                tag_names.append(str(t["name"]))
+            elif isinstance(t, str):
+                tag_names.append(t)
+
+    artist_id = st.artist_mbid or str(
+        uuid.uuid5(uuid.NAMESPACE_DNS, f"melovia.art.{st.artist_name}")
+    )
+
+    return TrackDetailResponse(
+        id=st.id,
+        track_idx=-1,
+        mbid=st.mbid,
+        title=st.title,
+        artist_id=artist_id,
+        artist_name=st.artist_name,
+        year=st.year,
+        isrcs=list(st.isrcs) if isinstance(st.isrcs, list) else [],
+        popularity_pct=st.popularity_pct,
+        has_a=st.has_a,
+        has_t=st.has_t,
+        region_id=None,
+        scalars=scalars,
+        tags=tag_names,
+    )
+
+
 @router.get(
     "/search",
     response_model=TrackSearchResponse,
     summary="Search Catalog Tracks",
-    description="Case-insensitive prefix and substring matching on track titles and artist names.",
+    description=(
+        "Case-insensitive prefix and substring matching across vector catalog and staging tables."
+    ),
 )
 async def search_tracks(
     q: str = Query(..., min_length=1, description="Search query string"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results to return"),
     store: CatalogStore = Depends(get_catalog_store),
+    session: AsyncSession = Depends(get_db_session),
 ) -> TrackSearchResponse:
-    results = store.search_tracks(q, limit=limit)
-    items = [_build_track_detail(item, store) for item in results]
+    # 1. Search in-memory store
+    bundle_results = store.search_tracks(q, limit=limit)
+    items: list[TrackDetailResponse] = [_build_track_detail(item, store) for item in bundle_results]
+
+    # 2. Search database staging_tracks
+    db_items: list[TrackDetailResponse] = []
+    try:
+        q_lower = q.strip().lower()
+        stmt = (
+            select(StagingTrack)
+            .where(
+                or_(
+                    func.lower(StagingTrack.title).contains(q_lower),
+                    func.lower(StagingTrack.artist_name).contains(q_lower),
+                )
+            )
+            .order_by(StagingTrack.popularity_pct.desc())
+            .limit(limit)
+        )
+        res = await session.execute(stmt)
+        for row in res.scalars():
+            db_items.append(_build_staging_track_detail(row))
+    except Exception:
+        pass
+
+    # 3. Merge and deduplicate by canonical (title, artist)
+    seen_keys: set[tuple[str, str]] = set()
+    merged: list[TrackDetailResponse] = []
+
+    # Prioritize real DB tracks if matched, else bundle tracks
+    for t in db_items + items:
+        key = (t.title.lower().strip(), t.artist_name.lower().strip())
+        if key not in seen_keys:
+            seen_keys.add(key)
+            merged.append(t)
+            if len(merged) >= limit:
+                break
+
     return TrackSearchResponse(
         query=q,
-        total=len(items),
+        total=len(merged),
         limit=limit,
-        items=items,
+        items=merged,
     )
 
 
@@ -109,9 +203,21 @@ async def search_tracks(
 async def get_track(
     id: str,
     store: CatalogStore = Depends(get_catalog_store),
+    session: AsyncSession = Depends(get_db_session),
 ) -> TrackDetailResponse:
-    if not store.contains_id(id):
-        raise NotFoundError(f"Track with ID '{id}' was not found in catalog")
+    # 1. Try store first
+    if store.contains_id(id):
+        raw_track = store.get_track_dict(id)
+        return _build_track_detail(raw_track, store)
 
-    raw_track = store.get_track_dict(id)
-    return _build_track_detail(raw_track, store)
+    # 2. Try database staging_tracks by id or mbid
+    try:
+        stmt = select(StagingTrack).where(or_(StagingTrack.id == id, StagingTrack.mbid == id))
+        res = await session.execute(stmt)
+        st = res.scalar_one_or_none()
+        if st:
+            return _build_staging_track_detail(st)
+    except Exception:
+        pass
+
+    raise NotFoundError(f"Track with ID '{id}' was not found in catalog")

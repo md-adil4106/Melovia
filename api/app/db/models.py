@@ -97,6 +97,29 @@ class CatalogVersion(Base):
     meta: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
 
+class StagingTrack(Base):
+    """Staging table for ingested, cleaned, and deduplicated catalog recordings."""
+
+    __tablename__ = "staging_tracks"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    mbid: Mapped[str | None] = mapped_column(String(36), unique=True, nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    artist_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    artist_mbid: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    isrcs: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    popularity_pct: Mapped[float] = mapped_column(Float, default=50.0, nullable=False)
+    has_a: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    has_t: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    tags: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list, nullable=False)
+    scalars: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    source: Mapped[str] = mapped_column(String(32), default="real_staging", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+
 # ==============================================================================
 # Placeholder Stubs (Required by Phase 1 specification; logic implemented later)
 # ==============================================================================

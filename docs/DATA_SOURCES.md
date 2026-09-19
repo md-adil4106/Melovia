@@ -145,3 +145,24 @@ In accordance with Melovia Standing Rules, only official APIs or openly licensed
 - **Impact on Design**:
   - Provides the open-source audio fallback (Plan B) if public domain recordings with full audio analysis are required without relying on external commercial streaming platforms.
   - Metadata CSVs can be parsed in memory without downloading large audio binaries.
+
+---
+
+### 7. Phase 2 Staging Ingestion & Sources
+- **Pipelines**: `pipelines/ingest_catalog.py`, `pipelines/ingest_musicbrainz.py`, `pipelines/ingest_listenbrainz.py`, `pipelines/ingest_acousticbrainz.py`, `pipelines/dq_report.py`.
+- **Target Ingestion Directory**: `data/dumps/` (configured via `--data-dir`, gitignored).
+- **Accepted File Formats**:
+  - MusicBrainz: `musicbrainz_recordings.jsonl` (JSONL recording dumps with artist credits, release dates, ISRCs, folksonomy tags, and release-group tags).
+  - ListenBrainz: `listenbrainz_stats.jsonl` (JSONL listen count statistics).
+  - AcousticBrainz: `acousticbrainz_features.jsonl` (JSONL high-level audio descriptors).
+- **API Top-up Politeness**:
+  - Strict 1.0 request/second limiter (`pipelines/rate_limiter.py`).
+  - Mandatory User-Agent header (env `MUSICBRAINZ_USER_AGENT` or `Melovia/0.1.0 ( https://github.com/md-adil4106/Melovia )`).
+  - Local filesystem cache at `data/cache/musicbrainz/` (gitignored).
+- **Checkpointing & Idempotency**:
+  - Checkpoint file: `data/checkpoints/ingest_checkpoint.json` (tracks processed MBIDs and batch progress).
+  - Staging storage: `staging_tracks` table in relational DB.
+  - Re-running ingestion produces zero duplicates and updates existing entries idempotently.
+- **Representative Seed Dataset**:
+  - When raw external dumps are not pre-downloaded, the pipeline automatically provides a 5,000-track real-world seed dataset (comprising canonical classics from Queen, Nirvana, The Beatles, Fleetwood Mac, Michael Jackson, Radiohead, Pink Floyd, David Bowie, Daft Punk, etc.) ensuring `make ingest-sample` and `make dq-report` run reliably out-of-the-box.
+

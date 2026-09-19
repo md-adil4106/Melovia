@@ -1,4 +1,4 @@
-.PHONY: all help dev check lint typecheck test clean api-check web-check api-lint api-typecheck api-test web-lint web-typecheck web-test make-mock seed-mock
+.PHONY: all help dev check lint typecheck test clean api-check web-check api-lint api-typecheck api-test web-lint web-typecheck web-test make-mock seed-mock ingest-sample ingest-full dq-report
 
 # Detect operating system
 ifeq ($(OS),Windows_NT)
@@ -21,6 +21,9 @@ help:
 	@echo "  make test           - Run test suites (pytest, vitest)"
 	@echo "  make make-mock      - Generate deterministic mock catalog bundle"
 	@echo "  make seed-mock      - Generate mock bundle and seed database"
+	@echo "  make ingest-sample  - Ingest 5k sample real-world staging catalog"
+	@echo "  make ingest-full    - Ingest full (up to 50k) staging catalog"
+	@echo "  make dq-report      - Generate catalog data quality report"
 	@echo "  make dev            - Launch backend and frontend development servers"
 	@echo "  make clean          - Remove caches and build artifacts"
 
@@ -29,6 +32,16 @@ make-mock:
 
 seed-mock: make-mock
 	$(UV) run --directory api python ../fixtures/seed_db.py
+
+ingest-sample:
+	$(UV) run --directory api python ../pipelines/ingest_catalog.py --sample 5000
+
+ingest-full:
+	$(UV) run --directory api python ../pipelines/ingest_catalog.py --full
+
+dq-report:
+	$(UV) run --directory api python ../pipelines/dq_report.py
+
 
 
 check: api-check web-check
