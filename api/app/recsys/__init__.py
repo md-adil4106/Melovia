@@ -31,6 +31,14 @@ from app.recsys.feedback import (
 )
 from app.recsys.rerank import rerank_candidates
 from app.recsys.scoring import ScoredItem, ScoredList, score_candidates
+from app.recsys.sequencing import (
+    ArcPoint,
+    ArcType,
+    PlaylistSequenceResult,
+    TransitionCostItem,
+    generate_arc_target,
+    sequence_playlist,
+)
 from app.recsys.taste import Modes, RecsysError, SeedNotFoundError, build_modes
 
 __all__ = [
@@ -63,4 +71,10 @@ __all__ = [
     "merge_modes",
     "modes_from_dict",
     "modes_to_dict",
+    "ArcType",
+    "ArcPoint",
+    "PlaylistSequenceResult",
+    "TransitionCostItem",
+    "generate_arc_target",
+    "sequence_playlist",
 ]

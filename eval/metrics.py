@@ -184,3 +184,77 @@ def seed_region_hit_rate(
     seed_region_set = set(valid_seeds)
     hits = sum(1 for r in valid_recs if r in seed_region_set)
     return float(hits / len(valid_recs))
+
+
+def arc_correlation(realized: Sequence[float], target: Sequence[float]) -> float:
+    """Compute Pearson correlation between realized audio scalars and target arc."""
+    if len(realized) <= 1 or len(target) <= 1 or len(realized) != len(target):
+        return 0.0
+    x = np.asarray(realized, dtype=np.float64)
+    y = np.asarray(target, dtype=np.float64)
+    x_std = float(np.std(x))
+    y_std = float(np.std(y))
+    if x_std < 1e-5 or y_std < 1e-5:
+        return 0.0
+    vx = x - np.mean(x)
+    vy = y - np.mean(y)
+    corr = float(np.dot(vx, vy) / (len(x) * x_std * y_std))
+    return float(np.clip(corr, -1.0, 1.0))
+
+
+def artist_adjacency_rate(artist_ids: Sequence[str]) -> float:
+    """Compute the fraction of adjacent track pairs that share the same artist ID."""
+    n = len(artist_ids)
+    if n <= 1:
+        return 0.0
+    same_count = sum(
+        1 for i in range(n - 1) if artist_ids[i] and artist_ids[i] == artist_ids[i + 1]
+    )
+    return float(same_count / (n - 1))
+
+
+def sequence_transition_cost(
+    tempos: Sequence[float | None] | None = None,
+    energies: Sequence[float | None] | None = None,
+    vectors_t: npt.NDArray[np.float32] | None = None,
+    artist_ids: Sequence[str] | None = None,
+    w_tempo: float = 0.25,
+    w_energy: float = 0.35,
+    w_semantic: float = 0.30,
+    w_artist: float = 5.0,
+) -> float:
+    """Compute mean pairwise transition cost across an ordered sequence of tracks."""
+    n = (
+        len(tempos)
+        if tempos is not None
+        else (
+            len(energies)
+            if energies is not None
+            else (len(artist_ids) if artist_ids is not None else 0)
+        )
+    )
+    if n <= 1:
+        return 0.0
+
+    total_cost = 0.0
+    for i in range(n - 1):
+        cost_step = 0.0
+        if tempos is not None and w_tempo > 0.0:
+            t1, t2 = tempos[i], tempos[i + 1]
+            if t1 is not None and t2 is not None:
+                cost_step += w_tempo * abs(t1 - t2)
+        if energies is not None and w_energy > 0.0:
+            e1, e2 = energies[i], energies[i + 1]
+            if e1 is not None and e2 is not None:
+                cost_step += w_energy * abs(e1 - e2)
+        if vectors_t is not None and w_semantic > 0.0:
+            v1, v2 = vectors_t[i], vectors_t[i + 1]
+            cos_sim = float(np.clip(np.dot(v1, v2), -1.0, 1.0))
+            cost_step += w_semantic * (1.0 - cos_sim)
+        if artist_ids is not None and w_artist > 0.0:
+            if artist_ids[i] and artist_ids[i] == artist_ids[i + 1]:
+                cost_step += w_artist
+        total_cost += cost_step
+
+    return float(total_cost / (n - 1))
+

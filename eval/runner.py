@@ -24,18 +24,23 @@ import yaml  # type: ignore  # noqa: E402
 from fixtures.make_mock_catalog import generate_mock_catalog  # noqa: E402
 
 from app.recsys import (  # noqa: E402
+    ArcType,
     CatalogStore,
     RecsysConfig,
+    apply_feedback,
     build_modes,
     generate_candidates,
     genre_baseline,
     random_baseline,
     rerank_candidates,
     score_candidates,
+    sequence_playlist,
     single_channel_a_baseline,
     single_channel_t_baseline,
 )
 from eval.metrics import (  # noqa: E402
+    arc_correlation,
+    artist_adjacency_rate,
     artist_coverage,
     catalog_coverage,
     gini_exposure,
@@ -43,6 +48,7 @@ from eval.metrics import (  # noqa: E402
     novelty,
     region_entropy,
     seed_region_hit_rate,
+    sequence_transition_cost,
 )
 
 
@@ -299,8 +305,6 @@ def run_evaluation(
 
         # Gate 5: Feedback Adaptation Guard (Phase 9)
         # Simulated user likes 3 tracks from target region R -> hit rate for R shifts toward R
-        from app.recsys import apply_feedback
-
         regs = catalog._tracks_metadata.get("region_id", [])
         unique_regs = sorted(set(r for r in regs if r is not None))
         if len(unique_regs) >= 2:
@@ -361,6 +365,76 @@ def run_evaluation(
                 f"Regression: Feedback failed to shift recommendations toward target region {target_reg} "
                 f"({hit_rate_before:.2f} <= {hit_rate_after:.2f})"
             )
+
+        # Gate 6: Sequencing Flow Guard (Phase 10)
+        seq_cfg = RecsysConfig()
+        first_seeds = seed_sets[0]["seed_track_ids"]
+        seq_modes = build_modes(first_seeds, catalog, config=seq_cfg)
+        seq_pool = generate_candidates(
+            seq_modes, catalog, k_per_mode=seq_cfg.k_candidates, config=seq_cfg
+        )
+        seq_scored = score_candidates(seq_pool, catalog, config=seq_cfg)
+        seq_reranked = rerank_candidates(
+            seq_pool, seq_scored, catalog, discovery=0.35, n=30, config=seq_cfg
+        )
+
+        pool_track_dicts = [catalog.get_track_dict(it.track_idx) for it in seq_reranked.items]
+        pool_indices = [it.track_idx for it in seq_reranked.items]
+        pool_vectors_t = catalog.vectors_t[pool_indices]
+
+        seq_result = sequence_playlist(
+            tracks=pool_track_dicts,
+            arc=ArcType.BUILD,
+            length=20,
+            config=seq_cfg,
+            vectors_t=pool_vectors_t,
+        )
+
+        score_tracks = pool_track_dicts[:20]
+        score_tempos = [
+            (t.get("scalars") or {}).get("tempo_norm") for t in score_tracks
+        ]
+        score_energies = [
+            (t.get("scalars") or {}).get("energy_idx") for t in score_tracks
+        ]
+        score_vecs = pool_vectors_t[:20]
+        score_artists = [str(t.get("artist_id", "")) for t in score_tracks]
+
+        rng_seq = np.random.default_rng(42)
+        rnd_costs = []
+        for _ in range(10):
+            p_idx = rng_seq.permutation(20)
+            rnd_cost = sequence_transition_cost(
+                tempos=[score_tempos[i] for i in p_idx],
+                energies=[score_energies[i] for i in p_idx],
+                vectors_t=score_vecs[p_idx],
+                artist_ids=[score_artists[i] for i in p_idx],
+            )
+            rnd_costs.append(rnd_cost)
+        mean_rnd_cost = float(np.mean(rnd_costs))
+
+        cost_reduction_vs_rnd = (
+            (mean_rnd_cost - seq_result.mean_transition_cost) / mean_rnd_cost
+            if mean_rnd_cost > 0
+            else 0.0
+        )
+        adj_artists = artist_adjacency_rate(
+            [str(t.get("artist_id", "")) for t in seq_result.ordered_tracks]
+        )
+
+        print(
+            f"Gate 6 - Sequencing Flow Guard: "
+            f"Sequenced cost ({seq_result.mean_transition_cost:.3f}) vs "
+            f"Random ({mean_rnd_cost:.3f}, -{cost_reduction_vs_rnd*100:.1f}%), "
+            f"Arc corr ({seq_result.arc_correlation:.2f}), "
+            f"Artist adjacency ({adj_artists:.2f})"
+        )
+        assert cost_reduction_vs_rnd >= 0.20, (
+            f"Regression: Sequencing cost reduction ({cost_reduction_vs_rnd*100:.1f}%) below threshold"
+        )
+        assert seq_result.arc_correlation >= 0.50, (
+            f"Regression: Arc correlation ({seq_result.arc_correlation:.2f}) below threshold"
+        )
 
         print("=== ALL EVAL-CI GATES PASSED SUCCESSFULLY ===\n")
 

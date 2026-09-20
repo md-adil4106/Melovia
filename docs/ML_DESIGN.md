@@ -378,3 +378,75 @@ When user feedback shifts recommendations, recommended tracks exhibiting high se
 Under Melovia's data sovereignty principles:
 - **Portable JSON Export** (`GET /profile/export`): Serializes all multi-modal channel vectors, weights, member seeds, and known tracks in a self-contained, versioned JSON schema.
 - **Complete Erasure** (`DELETE /profile`): Purges the device profile row from the database, deletes all recorded interaction events for that device, and flushes ephemeral in-memory session caches.
+
+---
+
+## 8. Playlist Sequencing
+
+### 8.1 Objective
+
+Given a ranked set of $N$ recommended tracks, produce a deterministic listening order that minimizes jarring transitions while following an energy arc — turning a recommendation list into a coherent listening journey.
+
+### 8.2 Transition Cost Function
+
+The pairwise transition cost between consecutive tracks $i$ and $j$ is:
+
+$$C(i, j) = w_{\text{tempo}} \cdot |\Delta_{\text{tempo}}| + w_{\text{energy}} \cdot |\Delta_{\text{energy}}| + w_{\text{semantic}} \cdot d_{\text{semantic}}(i,j) + w_{\text{artist}} \cdot \mathbb{1}[\text{same artist}]$$
+
+Where:
+- $|\Delta_{\text{tempo}}| = |\text{tempo\_norm}_i - \text{tempo\_norm}_j|$ (normalized tempo difference)
+- $|\Delta_{\text{energy}}| = |\text{energy\_idx}_i - \text{energy\_idx}_j|$ (energy index difference)
+- $d_{\text{semantic}}(i,j) = 1 - \cos(\mathbf{v}_{t,i}, \mathbf{v}_{t,j})$ (cosine distance between semantic taste vectors)
+- $\mathbb{1}[\text{same artist}] = 1$ if the two tracks share the same `artist_id`, else $0$
+
+**Default weights**: $w_{\text{tempo}} = 0.25$, $w_{\text{energy}} = 0.35$, $w_{\text{semantic}} = 0.30$, $w_{\text{artist}} = 5.0$.
+
+**Low-Coverage Auto-Drop**: If a scalar feature (tempo or energy) has coverage below 70% across the track pool, it is excluded from the cost function and its weight is redistributed proportionally among remaining terms. This prevents noisy features from dominating the sequencing.
+
+### 8.3 Arc-Aware Initialization
+
+The sequencing begins with a greedy arc-aware nearest-neighbor initialization:
+
+1. **Arc Target Generation**: For each position $k \in [0, N-1]$, a target energy is computed from the selected arc preset function $\alpha(u)$ where $u = k / (N-1) \in [0, 1]$.
+2. **Greedy Selection**: Starting from the track with energy closest to $\alpha(0)$, each subsequent position greedily selects the unplaced track minimizing:
+
+$$\text{score}(j, k) = C(\text{prev}, j) + w_{\text{arc}} \cdot |\text{energy\_idx}_j - \alpha(u_k)|$$
+
+Where $w_{\text{arc}} = 0.40$ controls arc adherence strength.
+
+3. **Tie-Breaking**: Ties are broken alphabetically by `track_id` for determinism.
+
+### 8.4 2-Opt Local Search Refinement
+
+After initialization, a bounded 2-opt local search (max 150 iterations) improves the sequence:
+- For each pair of positions $(i, j)$ where $j > i + 1$, reverse the sub-sequence $[i+1, j]$ and check if total cost (transition + arc deviation) decreases.
+- Accept the first improvement found per iteration (first-improvement strategy).
+- Stop when no improving swap exists or the iteration budget is exhausted.
+
+### 8.5 Arc Presets
+
+Four arc presets map normalized position $u \in [0,1]$ to target energy $\alpha(u) \in [0, 1]$:
+
+| Arc | Function | Behavior |
+|-----|----------|----------|
+| **steady** | $\alpha(u) = 0.5$ | Constant moderate energy throughout |
+| **build** | $\alpha(u) = 0.2 + 0.6u$ | Linear ramp from low (0.2) to high (0.8) |
+| **wave** | $\alpha(u) = 0.5 + 0.35 \sin(2\pi u)$ | Sinusoidal rise and fall |
+| **wind_down** | $\alpha(u) = 0.8 - 0.6u$ | Linear descent from high (0.8) to low (0.2) |
+
+### 8.6 Session Energy Adjustment
+
+When a session context includes an `energy` knob delta $\delta_E$ (from LLM refinement, e.g. "more energetic"), the arc target is shifted:
+
+$$\alpha'(u) = \text{clamp}(\alpha(u) + \delta_E, 0, 1)$$
+
+This allows real-time session steering to modify the arc shape without changing the preset itself.
+
+### 8.7 Acceptance Gates
+
+| Gate | Threshold |
+|------|-----------|
+| Cost reduction vs. random baseline | $\ge 25\%$ lower mean transition cost |
+| Arc correlation (build/wind_down) | $r \ge 0.60$ (Pearson) |
+| Artist adjacency | No consecutive same-artist tracks |
+| Determinism | Identical input → identical output (seeded RNG, stable tie-breaks) |

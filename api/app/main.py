@@ -15,6 +15,7 @@ from app.logging import RequestLoggingMiddleware, logger, setup_logging
 from app.recsys.catalog import CatalogCorruptError, CatalogStore
 from app.routers.feedback import router as feedback_router
 from app.routers.health import router as health_router
+from app.routers.playlist import router as playlist_router
 from app.routers.recommendations import router as recommendations_router
 from app.routers.refine import router as refine_router
 from app.routers.tracks import router as tracks_router
@@ -107,6 +108,7 @@ def create_app() -> FastAPI:
     app.include_router(recommendations_router)
     app.include_router(refine_router)
     app.include_router(feedback_router)
+    app.include_router(playlist_router)
 
     return app
 

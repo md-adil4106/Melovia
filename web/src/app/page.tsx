@@ -9,6 +9,7 @@ import {
   Compass,
   Headphones,
   HelpCircle,
+  ListMusic,
   MessageSquare,
   Music,
   Plus,
@@ -27,6 +28,7 @@ import { Track, RecommendedItem, useDiscoveryStore } from "./store";
 import { WhyDrawer } from "./components/WhyDrawer";
 import { ChatDrawer } from "./components/ChatDrawer";
 import { SettingsDrawer } from "./components/SettingsDrawer";
+import { PlaylistBuilder } from "./components/PlaylistBuilder";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -58,6 +60,8 @@ export default function DiscoveryHome() {
     addLikedTrack,
     addDislikedTrack,
     toggleSavedTrack,
+    isPlaylistBuilderOpen,
+    setPlaylistBuilderOpen,
   } = useDiscoveryStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -637,6 +641,17 @@ export default function DiscoveryHome() {
                   <span>{rememberMutation.isPending ? "Saving..." : "Remember Vibe"}</span>
                 </button>
 
+                {/* Build Playlist button (Phase 10) */}
+                <button
+                  type="button"
+                  onClick={() => setPlaylistBuilderOpen(true)}
+                  aria-label="Open playlist builder to sequence tracks into a listening journey"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-600/15 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/25 hover:border-emerald-500/60 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                >
+                  <ListMusic className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Build Playlist</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setChatDrawerOpen(true)}
@@ -977,6 +992,13 @@ export default function DiscoveryHome() {
       <SettingsDrawer
         isOpen={isSettingsDrawerOpen}
         onClose={() => setSettingsDrawerOpen(false)}
+        apiBase={API_BASE}
+      />
+
+      {/* Playlist Builder Drawer (Phase 10) */}
+      <PlaylistBuilder
+        isOpen={isPlaylistBuilderOpen}
+        onClose={() => setPlaylistBuilderOpen(false)}
         apiBase={API_BASE}
       />
     </main>

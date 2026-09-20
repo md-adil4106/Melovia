@@ -69,9 +69,19 @@ class RecsysConfig:
     merge_alpha: float = 0.30  # Weight for merging session modes into persistent profile
     max_merge_drift: float = 0.25  # Maximum Euclidean drift cap during persistent merge
 
+    # Playlist Sequencing (Phase 10)
+    seq_w_tempo: float = 0.25  # Weight for tempo difference
+    seq_w_energy: float = 0.35  # Weight for energy difference
+    seq_w_semantic: float = 0.30  # Weight for semantic cosine distance (1 - cos_t)
+    seq_w_artist_penalty: float = 5.0  # High penalty for adjacent same artist
+    seq_w_arc: float = 0.40  # Weight for arc adherence penalty
+    seq_max_2opt_iters: int = 150  # Maximum 2-opt search passes
+    seq_min_scalar_coverage: float = 0.70  # Minimum scalar coverage to include in cost
+
     # Ablation and Feature Switches for Evaluation
     use_audio: bool = True
     use_mmr: bool = True
     popularity_correction: bool = True
     use_context: bool = False  # Architecture placeholder
     use_feedback: bool = False  # Feedback ablation switch
+

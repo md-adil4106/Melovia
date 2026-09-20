@@ -126,6 +126,13 @@ interface DiscoveryStore {
   addDislikedTrack: (trackId: string) => void;
   toggleSavedTrack: (trackId: string) => void;
   clearFeedbackState: () => void;
+  // Phase 10: Playlist Builder
+  isPlaylistBuilderOpen: boolean;
+  setPlaylistBuilderOpen: (open: boolean) => void;
+  selectedArc: "steady" | "build" | "wave" | "wind_down";
+  setSelectedArc: (arc: "steady" | "build" | "wave" | "wind_down") => void;
+  playlistLength: number;
+  setPlaylistLength: (len: number) => void;
 }
 
 export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
@@ -217,4 +224,11 @@ export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
       hasPersistentProfile: false,
       tasteShiftedMessage: null,
     }),
+  // Phase 10: Playlist Builder defaults
+  isPlaylistBuilderOpen: false,
+  setPlaylistBuilderOpen: (open) => set({ isPlaylistBuilderOpen: open }),
+  selectedArc: "build",
+  setSelectedArc: (arc) => set({ selectedArc: arc }),
+  playlistLength: 15,
+  setPlaylistLength: (len) => set({ playlistLength: Math.max(2, Math.min(30, len)) }),
 }));
