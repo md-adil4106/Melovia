@@ -21,6 +21,7 @@ from app.recsys.catalog import (
     CatalogStore,
 )
 from app.recsys.config import RecsysConfig
+from app.recsys.rerank import rerank_candidates
 from app.recsys.scoring import ScoredItem, ScoredList, score_candidates
 from app.recsys.taste import Modes, RecsysError, SeedNotFoundError, build_modes
 
@@ -40,6 +41,7 @@ __all__ = [
     "ScoredItem",
     "ScoredList",
     "score_candidates",
+    "rerank_candidates",
     "CandidateCache",
     "global_candidate_cache",
     "random_baseline",

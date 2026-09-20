@@ -33,6 +33,15 @@ export interface RecommendationSignals {
   has_audio?: boolean;
   nearest_seed_id?: string;
   nearest_seed_similarity?: number;
+  novelty?: number;
+  familiarity?: number;
+  artist_new?: boolean;
+  popularity_pct?: number;
+  mmr_penalty?: number;
+  relevance?: number;
+  utility?: number;
+  discovery_score?: number;
+  discovery_d?: number;
 }
 
 export interface RecommendedItem {
@@ -50,6 +59,8 @@ interface DiscoveryStore {
   setRecommendations: (items: RecommendedItem[]) => void;
   candidateSetId: string | null;
   setCandidateSetId: (id: string | null) => void;
+  discovery: number;
+  setDiscovery: (d: number) => void;
   error: string | null;
   setError: (err: string | null) => void;
 }
@@ -70,11 +81,20 @@ export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
     set((state) => ({
       seeds: state.seeds.filter((s) => s.id !== trackId),
     })),
-  clearSeeds: () => set({ seeds: [], recommendations: [], candidateSetId: null, error: null }),
+  clearSeeds: () =>
+    set({
+      seeds: [],
+      recommendations: [],
+      candidateSetId: null,
+      error: null,
+      discovery: 0.35,
+    }),
   recommendations: [],
   setRecommendations: (items) => set({ recommendations: items, error: null }),
   candidateSetId: null,
   setCandidateSetId: (id) => set({ candidateSetId: id }),
+  discovery: 0.35,
+  setDiscovery: (d) => set({ discovery: d }),
   error: null,
   setError: (err) => set({ error: err }),
 }));

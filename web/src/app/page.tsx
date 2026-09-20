@@ -26,15 +26,25 @@ export default function DiscoveryHome() {
     clearSeeds,
     recommendations,
     setRecommendations,
+    candidateSetId,
     setCandidateSetId,
+    discovery,
+    setDiscovery,
   } = useDiscoveryStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [sliderValue, setSliderValue] = useState(discovery);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sync local slider when store discovery changes externally
+  useEffect(() => {
+    setSliderValue(discovery);
+  }, [discovery]);
 
   // Debounce search query by 250ms
   useEffect(() => {
@@ -75,15 +85,16 @@ export default function DiscoveryHome() {
     refetchInterval: 30000,
   });
 
-  // Mutation for generating recommendations
+  // Mutation for generating fresh recommendations
   const recommendMutation = useMutation({
-    mutationFn: async (seedIds: string[]) => {
+    mutationFn: async ({ seedIds, d }: { seedIds: string[]; d: number }) => {
       const res = await fetch(`${API_BASE}/recommendations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           seed_track_ids: seedIds,
           n: 30,
+          discovery: d,
           include_signals: true,
         }),
       });
@@ -98,6 +109,68 @@ export default function DiscoveryHome() {
       setCandidateSetId(data.candidate_set_id);
     },
   });
+
+  // Mutation for fast interactive reranking using cached candidate pool
+  const rerankMutation = useMutation({
+    mutationFn: async ({
+      candidate_set_id,
+      d,
+      n = 30,
+    }: {
+      candidate_set_id: string;
+      d: number;
+      n?: number;
+    }) => {
+      const res = await fetch(`${API_BASE}/recommendations/rerank`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          candidate_set_id,
+          discovery: d,
+          n,
+          include_signals: true,
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        if (res.status === 404 && errData?.error?.code === "CANDIDATE_SET_EXPIRED") {
+          throw new Error("EXPIRED");
+        }
+        throw new Error(errData?.error?.message || "Failed to rerank recommendations");
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setRecommendations(data.items || []);
+    },
+    onError: (err: Error) => {
+      // If cached candidate set expired, automatically fallback to full recommendation generation
+      if (err.message === "EXPIRED" && seeds.length > 0) {
+        recommendMutation.mutate({
+          seedIds: seeds.map((s) => s.id),
+          d: sliderValue,
+        });
+      }
+    },
+  });
+
+  // Debounce slider dragging by 120ms to fire rerank without UI stutter
+  useEffect(() => {
+    if (!candidateSetId || recommendations.length === 0) return;
+
+    const timer = setTimeout(() => {
+      if (Math.abs(sliderValue - discovery) > 0.001) {
+        setDiscovery(sliderValue);
+        rerankMutation.mutate({
+          candidate_set_id: candidateSetId,
+          d: sliderValue,
+          n: 30,
+        });
+      }
+    }, 120);
+
+    return () => clearTimeout(timer);
+  }, [sliderValue, candidateSetId, recommendations.length, discovery, setDiscovery, rerankMutation]);
 
   const handleSelectTrack = (track: Track) => {
     const added = addSeed(track);
@@ -129,7 +202,10 @@ export default function DiscoveryHome() {
 
   const handleDiscover = () => {
     if (seeds.length === 0) return;
-    recommendMutation.mutate(seeds.map((s) => s.id));
+    recommendMutation.mutate({
+      seedIds: seeds.map((s) => s.id),
+      d: sliderValue,
+    });
   };
 
   // Close search dropdown when clicking outside
@@ -146,6 +222,8 @@ export default function DiscoveryHome() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const isAnyLoading = recommendMutation.isPending || rerankMutation.isPending;
 
   return (
     <main className="min-h-screen bg-[#0d0f14] text-[#f1f3f7] font-sans pb-20">
@@ -182,23 +260,23 @@ export default function DiscoveryHome() {
       </header>
 
       {/* Main Container */}
-      <div className="max-w-4xl mx-auto px-4 pt-10">
+      <div className="max-w-4xl mx-auto px-4 pt-8">
         {/* Hero Section */}
-        <section className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1b212d] border border-[#2b3345] text-xs text-[#d4af37] mb-4">
+        <section className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1b212d] border border-[#2b3345] text-xs text-[#d4af37] mb-3">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Level A — Relevance Discovery</span>
+            <span>Interactive Discovery Control (WOW #1)</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#f1f3f7] tracking-tight mb-3 font-serif-display">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#f1f3f7] tracking-tight mb-2 font-serif-display">
             Steerable Discovery from Seed Tracks
           </h2>
           <p className="text-sm sm:text-base text-[#8c96a8] max-w-xl mx-auto">
-            Select 1 to 10 seed tracks to construct your multi-modal taste profile across semantic and acoustic channels.
+            Choose 1 to 10 seed tracks, then dynamically tune the Familiarity ↔ Discovery slider to traverse from familiar sounds to exploratory musical horizons.
           </p>
         </section>
 
         {/* Seed Search & Input Box */}
-        <section className="bg-[#141923] border border-[#232a3b] rounded-2xl p-6 mb-8 shadow-xl relative">
+        <section className="bg-[#141923] border border-[#232a3b] rounded-2xl p-6 mb-6 shadow-xl relative">
           <div className="flex items-center justify-between mb-3">
             <label htmlFor="seed-search" className="text-sm font-semibold text-[#c8d0de] flex items-center gap-2">
               <Search className="w-4 h-4 text-[#d4af37]" />
@@ -322,7 +400,7 @@ export default function DiscoveryHome() {
           <div className="mt-6 flex items-center justify-between">
             <div className="text-xs text-[#8c96a8] flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-[#d4af37]" />
-              Dual-Channel: Semantic 60% + Acoustic 40%
+              Dual-Channel + MMR Diversity
             </div>
 
             <button
@@ -347,16 +425,82 @@ export default function DiscoveryHome() {
         </section>
 
         {/* Error Notification */}
-        {recommendMutation.isError && (
+        {(recommendMutation.isError || rerankMutation.isError) && (
           <div className="bg-rose-950/40 border border-rose-800/60 rounded-xl p-4 mb-6 text-rose-200 text-sm flex items-start gap-3">
             <div className="p-1 rounded bg-rose-900/60 text-rose-300">
               <X className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-semibold">Recommendation Failed</h4>
+              <h4 className="font-semibold">Discovery Error</h4>
               <p className="text-xs text-rose-300 mt-0.5">
-                {(recommendMutation.error as Error)?.message || "An unexpected error occurred."}
+                {(recommendMutation.error as Error)?.message ||
+                  (rerankMutation.error as Error)?.message ||
+                  "An unexpected error occurred."}
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Sticky Discovery Control Slider Bar (Above Results) */}
+        {recommendations.length > 0 && (
+          <div className="sticky top-[57px] z-30 bg-[#12161f]/95 backdrop-blur-md border border-[#2b354a] rounded-xl p-4 mb-6 shadow-2xl transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-[#d4af37]" />
+                <span className="text-xs font-semibold text-[#f1f3f7] uppercase tracking-wider">
+                  Discovery Control (Familiarity ↔ Discovery)
+                </span>
+                {rerankMutation.isPending && (
+                  <span className="flex items-center gap-1 text-[11px] text-[#d4af37] animate-pulse">
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                    Reranking...
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[#8c96a8]">Discovery:</span>
+                <span
+                  data-testid="discovery-pct-badge"
+                  className="font-mono text-xs font-bold text-[#d4af37] bg-[#1a202c] border border-[#2d3748] px-2 py-0.5 rounded"
+                >
+                  {Math.round(sliderValue * 100)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Slider Input */}
+            <div className="space-y-1.5">
+              <input
+                type="range"
+                id="discovery-slider"
+                data-testid="discovery-slider"
+                min="0"
+                max="1"
+                step="0.05"
+                value={sliderValue}
+                onChange={(e) => setSliderValue(parseFloat(e.target.value))}
+                onKeyDown={(e) => {
+                  if (e.key === "Home") setSliderValue(0.0);
+                  else if (e.key === "End") setSliderValue(1.0);
+                }}
+                aria-label="Discovery level"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(sliderValue * 100)}
+                aria-valuetext={`Discovery level ${Math.round(sliderValue * 100)}%`}
+                className="w-full h-2 bg-[#1b2230] rounded-lg appearance-none cursor-pointer accent-[#d4af37] focus:outline-none focus:ring-2 focus:ring-[#d4af37]/60"
+              />
+
+              <div className="flex justify-between items-center text-[11px] text-[#8c96a8]">
+                <span className="flex items-center gap-1 text-emerald-400/90 font-medium">
+                  ← Familiarity (0%)
+                </span>
+                <span className="text-[#64748b]">Balanced (50%)</span>
+                <span className="flex items-center gap-1 text-amber-400/90 font-medium">
+                  Discovery (100%) →
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -370,7 +514,7 @@ export default function DiscoveryHome() {
             </h3>
             {recommendations.length > 0 && (
               <span className="text-xs text-[#8c96a8] bg-[#141923] px-2.5 py-1 rounded-full border border-[#232a3b]">
-                {recommendations.length} recommendations generated
+                {recommendations.length} recommendations ranked
               </span>
             )}
           </div>
@@ -407,15 +551,19 @@ export default function DiscoveryHome() {
             </div>
           )}
 
-          {/* Recommendation Items List */}
+          {/* Recommendation Items List with animated reordering & novelty ticks */}
           {!recommendMutation.isPending && recommendations.length > 0 && (
             <div className="space-y-3">
               {recommendations.map((item: RecommendedItem, idx: number) => {
                 const matchPct = Math.round(item.score * 100);
+                const novPct = item.signals?.novelty !== undefined ? Math.round(item.signals.novelty * 100) : null;
+                const isHighNovelty = (item.signals?.novelty ?? 0) >= 0.5;
+                const isModerateNovelty = (item.signals?.novelty ?? 0) >= 0.25;
+
                 return (
                   <article
                     key={item.track.id}
-                    className="bg-[#141923] border border-[#232a3b] hover:border-[#38435d] rounded-xl p-4 transition-all hover:bg-[#161c28] flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                    className="bg-[#141923] border border-[#232a3b] hover:border-[#38435d] rounded-xl p-4 transition-all duration-300 ease-out motion-reduce:transition-none hover:bg-[#161c28] flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
                       <span className="w-7 text-center font-mono text-xs font-semibold text-[#5a667d]">
@@ -434,7 +582,29 @@ export default function DiscoveryHome() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-3 pl-10 sm:pl-0">
+                    <div className="flex items-center justify-between sm:justify-end gap-2.5 pl-10 sm:pl-0 flex-wrap">
+                      {/* Subtle Familiarity <-> Discovery Tick Indicator */}
+                      {novPct !== null && (
+                        <div
+                          className="flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded bg-[#10141d] border border-[#222a3b]"
+                          title={`Novelty: ${novPct}% | Familiarity: ${100 - novPct}%`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isHighNovelty
+                                ? "bg-[#e2bf48]"
+                                : isModerateNovelty
+                                ? "bg-[#38bdf8]"
+                                : "bg-[#34d399]"
+                            }`}
+                          />
+                          <span className="text-[#8c96a8]">
+                            {isHighNovelty ? "Discovery" : isModerateNovelty ? "Balanced" : "Familiar"}
+                          </span>
+                          <span className="text-[#606d84]">{novPct}%</span>
+                        </div>
+                      )}
+
                       {/* Audio channel badge */}
                       {item.track.has_a ? (
                         <span className="text-[10px] text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded font-mono">

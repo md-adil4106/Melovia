@@ -38,5 +38,26 @@ class RecsysConfig:
     # Cache TTL for candidate pools (30 minutes in seconds)
     ttl_seconds: int = 1800
 
+    # Discovery Control (Familiarity <-> Discovery) Reranking
+    discovery_default: float = 0.35
+    discovery_u_weight: float = 0.6  # U_i = (1 - 0.6*d)*R_i + 0.6*d*D_i
+    novelty_mu_base: float = 0.15  # mu(d) = 0.15 + 0.5*d
+    novelty_mu_slope: float = 0.5
+    novelty_sigma: float = 0.15  # N_i = exp(-(nov - mu)^2 / (2 * 0.15^2))
+    discovery_w_novelty: float = 0.5  # D_i = 0.5*N_i + 0.3*A_i + 0.2*(1 - P_i)
+    discovery_w_artist: float = 0.3
+    discovery_w_popularity: float = 0.2
+    relevance_floor_base: float = 0.6  # floor = 0.6 - 0.3*d
+    relevance_floor_slope: float = 0.3
+    mmr_lambda_base: float = 1.0  # lambda = 1.0 - 0.5*d
+    mmr_lambda_slope: float = 0.5
+    sim_weight_t: float = 0.6  # sim = 0.6*cos_t + 0.3*cos_a + 0.1*[same_artist]
+    sim_weight_a: float = 0.3
+    sim_weight_artist: float = 0.1
+    artist_cap_default: int = 2  # Max 2 tracks per artist for d < 0.7
+    artist_cap_discovery: int = 1  # Max 1 track per artist for d >= 0.7
+    artist_cap_threshold_d: float = 0.7
+
     # Default random seed for deterministic baselines and tie-breaking
     seed: int = 42
+

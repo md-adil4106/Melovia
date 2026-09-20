@@ -30,6 +30,38 @@ class RecommendationRequest(BaseModel):
         default=True,
         description="Whether to include intermediate ranking signals in the response",
     )
+    discovery: float = Field(
+        default=0.35,
+        ge=0.0,
+        le=1.0,
+        description="Discovery level between 0.0 (pure familiarity) and 1.0 (maximum discovery)",
+    )
+
+
+class RerankRequest(BaseModel):
+    """Payload for reranking a cached candidate pool using Discovery Control."""
+
+    candidate_set_id: str = Field(
+        ...,
+        description="UUID of cached candidate pool to rerank",
+    )
+    discovery: float = Field(
+        default=0.35,
+        ge=0.0,
+        le=1.0,
+        description="Discovery level between 0.0 (pure familiarity) and 1.0 (maximum discovery)",
+    )
+    n: int = Field(
+        default=30,
+        ge=1,
+        le=50,
+        description="Number of reranked tracks to return (1 to 50, default 30)",
+    )
+    include_signals: bool = Field(
+        default=True,
+        description="Whether to include intermediate reranking signals in the response",
+    )
+
 
 
 class RecommendedTrackItem(BaseModel):

@@ -174,3 +174,60 @@ For every candidate track $i$:
 4. **Deterministic Ranking**:
    Results are sorted strictly by $(-S_i, \text{track\_id})$.
 
+---
+
+## 8. Discovery Control & Steerability (Familiarity ↔ Discovery)
+
+The Discovery Control slider ($d \in [0.0, 1.0]$) provides real-time, interactive steerability over the recommendation ranking without repeating expensive catalog vector scans.
+
+### 8.1 Mathematical Formulation
+
+#### 1. Known Seeds Reference Set
+Let $K = \text{Seeds} \cup \text{Liked Tracks}$ be the known anchor set. For candidate track $i$:
+- **Novelty ($nov_i$)**: Cosine distance to the nearest known seed in semantic taste space:
+  $$nov_i = 1.0 - \max_{j \in K} \langle \mathbf{x}_i^t, \mathbf{x}_j^t \rangle \in [0.0, 2.0]$$
+- **Familiarity ($fam_i$)**:
+  $$fam_i = 1.0 - nov_i = \max_{j \in K} \langle \mathbf{x}_i^t, \mathbf{x}_j^t \rangle$$
+- **Artist Newness Indicator ($A_i$)**:
+  $$A_i = \mathbb{I}[\text{artist}_i \notin \text{known artists}] \in \{0.0, 1.0\}$$
+- **Normalized Popularity ($P_i$)**:
+  $$P_i = \text{clip}\left(\frac{\text{popularity\_pct}_i}{100.0}, 0.0, 1.0\right)$$
+
+#### 2. Target Gaussian Novelty Function
+To allow the slider to target specific bands of musical distance rather than merely rewarding extreme outliers:
+$$\mu(d) = 0.15 + 0.50 \cdot d$$
+$$N_i = \exp\left( - \frac{(nov_i - \mu(d))^2}{2 \cdot \sigma^2} \right), \quad \sigma = 0.15$$
+- At $d = 0.0$: $\mu = 0.15$, targeting tracks closely clustered around the seeds.
+- At $d = 1.0$: $\mu = 0.65$, targeting tracks in exploratory adjacent subgenres.
+
+#### 3. Discovery Score ($D_i$)
+$$D_i = 0.50 \cdot N_i + 0.30 \cdot A_i + 0.20 \cdot (1.0 - P_i)$$
+
+#### 4. Unadjusted Utility ($U_i$)
+Combines base multi-channel relevance $R_i \in [0.0, 1.0]$ with discovery score $D_i$:
+$$U_i = (1.0 - 0.60 \cdot d) \cdot R_i + (0.60 \cdot d) \cdot D_i$$
+- At $d = 0.0$: $U_i = R_i$ (pure relevance).
+- At $d = 1.0$: $U_i = 0.40 \cdot R_i + 0.60 \cdot D_i$.
+
+#### 5. Dynamic Relevance Floor
+To prevent discovery from devolving into irrelevant noise, candidates falling below a dynamic floor are dropped:
+$$\text{Floor}(d) = 0.60 - 0.30 \cdot d$$
+Candidates with $R_i < \text{Floor}(d)$ are filtered prior to MMR selection.
+
+#### 6. Maximal Marginal Relevance (MMR) Selection
+Tracks are greedily selected into recommended set $S$ ($|S| = n$) according to:
+$$i^* = \arg\max_{i \in \mathcal{C} \setminus S} \left[ \lambda \cdot U_i - (1.0 - \lambda) \max_{j \in S} \text{sim}(i, j) \right]$$
+where:
+$$\lambda = 1.0 - 0.50 \cdot d$$
+Pairwise track similarity $\text{sim}(i, j)$ combines semantic, acoustic, and artist factors:
+$$\text{sim}(i, j) = 0.60 \cdot \langle \mathbf{x}_i^t, \mathbf{x}_j^t \rangle + 0.30 \cdot \langle \mathbf{x}_i^a, \mathbf{x}_j^a \rangle + 0.10 \cdot \mathbb{I}[\text{artist}_i = \text{artist}_j]$$
+If either track lacks audio analysis, weights dynamically renormalize to $0.90 \cdot \langle \mathbf{x}_i^t, \mathbf{x}_j^t \rangle + 0.10 \cdot \mathbb{I}[\text{artist}_i = \text{artist}_j]$.
+
+#### 7. Hard Artist Cap
+- For $d < 0.70$: At most 2 tracks per artist are admitted into $S$.
+- For $d \ge 0.70$: At most 1 track per artist is admitted into $S$.
+
+#### 8. Deterministic Tie-Breaking
+Any ties in MMR score are broken deterministically by lexicographical order of `track_id`.
+
+

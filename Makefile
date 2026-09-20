@@ -1,4 +1,4 @@
-.PHONY: all help dev check lint typecheck test clean api-check web-check api-lint api-typecheck api-test web-lint web-typecheck web-test make-mock seed-mock ingest-sample ingest-full dq-report
+.PHONY: all help dev check lint typecheck test clean api-check web-check api-lint api-typecheck api-test web-lint web-typecheck web-test make-mock seed-mock ingest-sample ingest-full dq-report build-bundle build-bundle-mock sanity-report demo-slider
 
 # Detect operating system
 ifeq ($(OS),Windows_NT)
@@ -53,6 +53,10 @@ build-bundle-mock:
 
 sanity-report:
 	$(UV) run --directory api python ../pipelines/sanity_report.py --bundle-dir ../data/bundles/v1
+
+demo-slider:
+	$(UV) run --directory api python ../pipelines/demo_slider.py
+
 
 
 

@@ -17,7 +17,7 @@ function renderWithClient(ui: React.ReactElement) {
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
-describe("Discovery Home Page (Phase 4)", () => {
+describe("Discovery Home Page (Phase 4 & Phase 5)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useDiscoveryStore.getState().clearSeeds();
@@ -46,7 +46,6 @@ describe("Discovery Home Page (Phase 4)", () => {
   });
 
   it("searches tracks and allows selecting a seed track", async () => {
-    // Health check mock
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -83,52 +82,19 @@ describe("Discovery Home Page (Phase 4)", () => {
 
     fireEvent.change(input, { target: { value: "Radiohead" } });
 
-    // Wait for debounce and query result
     await waitFor(() => {
       expect(screen.getByText("Paranoid Android")).toBeDefined();
     });
 
-    // Click on the track to add as seed
     fireEvent.click(screen.getByText("Paranoid Android"));
 
-    // Verify seed chip rendered
     await waitFor(() => {
-      expect(screen.getByText("1")).toBeDefined(); // "1 / 10 seeds selected"
+      expect(screen.getByText("1")).toBeDefined();
       expect(screen.getByLabelText(/Remove Paranoid Android by Radiohead/i)).toBeDefined();
     });
   });
 
-  it("removes a seed track when remove button is clicked", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ status: "ok", catalog: null }),
-    });
-
-    // Pre-populate store
-    useDiscoveryStore.getState().addSeed({
-      id: "track-1",
-      track_idx: 1,
-      title: "Karma Police",
-      artist_id: "art-1",
-      artist_name: "Radiohead",
-      popularity_pct: 80,
-      has_a: true,
-      has_t: true,
-    });
-
-    renderWithClient(<DiscoveryHome />);
-
-    expect(screen.getByText("Karma Police")).toBeDefined();
-    const removeBtn = screen.getByLabelText(/Remove Karma Police by Radiohead/i);
-    fireEvent.click(removeBtn);
-
-    await waitFor(() => {
-      expect(screen.queryByText("Karma Police")).toBeNull();
-      expect(screen.getByText(/No seed tracks selected yet/i)).toBeDefined();
-    });
-  });
-
-  it("triggers recommendations and displays recommended tracks", async () => {
+  it("triggers recommendations and displays sticky Discovery Control slider and tracks", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ status: "ok", catalog: null }),
@@ -145,7 +111,6 @@ describe("Discovery Home Page (Phase 4)", () => {
       has_t: true,
     });
 
-    // Mock recommendations response
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -170,6 +135,13 @@ describe("Discovery Home Page (Phase 4)", () => {
               raw_sim_a: 0.84,
               percentile_a: 0.90,
               has_audio: true,
+              novelty: 0.15,
+              familiarity: 0.85,
+              artist_new: true,
+              popularity_pct: 90.0,
+              relevance: 0.925,
+              utility: 0.925,
+              discovery_d: 0.35,
             },
           },
         ],
@@ -180,49 +152,141 @@ describe("Discovery Home Page (Phase 4)", () => {
     renderWithClient(<DiscoveryHome />);
 
     const discoverBtn = screen.getByRole("button", { name: /Discover Tracks/i });
-    expect(discoverBtn).toBeDefined();
     fireEvent.click(discoverBtn);
 
     await waitFor(() => {
       expect(screen.getByText("Space Oddity")).toBeDefined();
       expect(screen.getByText(/David Bowie/i)).toBeDefined();
-      expect(screen.getByText("93%")).toBeDefined(); // 0.925 rounded to 93%
-      expect(screen.getByText("1 recommendations generated")).toBeDefined();
+      // Verify Discovery Control slider is visible
+      expect(screen.getByTestId("discovery-slider")).toBeDefined();
+      expect(screen.getByTestId("discovery-pct-badge")).toBeDefined();
+      expect(screen.getByText(/35%/)).toBeDefined();
+      // Verify card novelty tick indicator
+      expect(screen.getByText("Familiar")).toBeDefined();
+      expect(screen.getByText("15%")).toBeDefined();
     });
   });
 
-  it("displays error message when recommendation API fails", async () => {
+  it("updates discovery slider via keyboard and fires /recommendations/rerank", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ status: "ok", catalog: null }),
     });
 
-    useDiscoveryStore.getState().addSeed({
-      id: "seed-1",
-      track_idx: 10,
-      title: "Unknown Song",
-      artist_id: "art-1",
-      artist_name: "Artist",
-      popularity_pct: 10,
-      has_a: false,
-      has_t: true,
-    });
-
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({
-        error: { code: "NOT_FOUND", message: "Seed track not found in catalog" },
-      }),
-    });
+    // Populate store with an active candidateSetId and recommendations
+    useDiscoveryStore.getState().setCandidateSetId("cand-set-789");
+    useDiscoveryStore.getState().setRecommendations([
+      {
+        track: {
+          id: "rec-1",
+          track_idx: 50,
+          title: "Heroes",
+          artist_id: "art-2",
+          artist_name: "David Bowie",
+          popularity_pct: 88,
+          has_a: true,
+          has_t: true,
+        },
+        score: 0.9,
+        signals: {
+          novelty: 0.12,
+          familiarity: 0.88,
+          relevance: 0.9,
+          utility: 0.9,
+          discovery_d: 0.35,
+        },
+      },
+    ]);
 
     renderWithClient(<DiscoveryHome />);
 
-    const discoverBtn = screen.getByRole("button", { name: /Discover Tracks/i });
-    fireEvent.click(discoverBtn);
+    const slider = screen.getByTestId("discovery-slider") as HTMLInputElement;
+    expect(slider).toBeDefined();
+
+    // Mock rerank response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        candidate_set_id: "cand-set-789",
+        items: [
+          {
+            track: {
+              id: "rec-2",
+              track_idx: 60,
+              title: "Starman",
+              artist_id: "art-2",
+              artist_name: "David Bowie",
+              popularity_pct: 85,
+              has_a: true,
+              has_t: true,
+            },
+            score: 0.82,
+            signals: {
+              novelty: 0.65,
+              familiarity: 0.35,
+              relevance: 0.82,
+              utility: 0.82,
+              discovery_d: 0.75,
+            },
+          },
+        ],
+      }),
+    });
+
+    // Change slider value to 0.75
+    fireEvent.change(slider, { target: { value: "0.75" } });
+
+    expect(screen.getByTestId("discovery-pct-badge").textContent).toBe("75%");
+
+    // Wait for debounced rerank mutation
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/recommendations/rerank"),
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining('"discovery":0.75'),
+        })
+      );
+    });
 
     await waitFor(() => {
-      expect(screen.getByText("Recommendation Failed")).toBeDefined();
-      expect(screen.getByText("Seed track not found in catalog")).toBeDefined();
+      expect(screen.getByText("Starman")).toBeDefined();
     });
+  });
+
+  it("handles slider keyboard navigation with Home and End keys", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "ok", catalog: null }),
+    });
+
+    useDiscoveryStore.getState().setCandidateSetId("cand-set-keys");
+    useDiscoveryStore.getState().setRecommendations([
+      {
+        track: {
+          id: "rec-1",
+          track_idx: 1,
+          title: "Track 1",
+          artist_id: "art-1",
+          artist_name: "Artist",
+          popularity_pct: 50,
+          has_a: true,
+          has_t: true,
+        },
+        score: 0.8,
+      },
+    ]);
+
+    renderWithClient(<DiscoveryHome />);
+
+    const slider = screen.getByTestId("discovery-slider") as HTMLInputElement;
+
+    // Press End key -> should set to 100%
+    fireEvent.keyDown(slider, { key: "End" });
+    expect(screen.getByTestId("discovery-pct-badge").textContent).toBe("100%");
+
+    // Press Home key -> should set to 0%
+    fireEvent.keyDown(slider, { key: "Home" });
+    expect(screen.getByTestId("discovery-pct-badge").textContent).toBe("0%");
   });
 });

@@ -277,13 +277,13 @@ def generate_mock_catalog(output_dir: Path) -> dict[str, str]:
     for i in range(TRACK_COUNT):
         reg = region_assignments[i]
         # Sample taste vector around region center
-        noise_t = rng.normal(loc=0.0, scale=0.22, size=DIM_T).astype(np.float32)
+        noise_t = rng.normal(loc=0.0, scale=0.04, size=DIM_T).astype(np.float32)
         vec_t = region_centers_t[reg] + noise_t
         vec_t /= np.linalg.norm(vec_t)
         vectors_t[i] = vec_t
 
         if has_a_list[i]:
-            noise_a = rng.normal(loc=0.0, scale=0.25, size=DIM_A).astype(np.float32)
+            noise_a = rng.normal(loc=0.0, scale=0.05, size=DIM_A).astype(np.float32)
             vec_a = region_centers_a[reg] + noise_a
             vec_a /= np.linalg.norm(vec_a)
             vectors_a[i] = vec_a
