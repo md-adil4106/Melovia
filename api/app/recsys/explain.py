@@ -41,6 +41,7 @@ class ExplanationBuilder:
     RULE_SEMANTIC_MATCH = "RULE_SEMANTIC_MATCH"
     RULE_ACOUSTIC_MATCH = "RULE_ACOUSTIC_MATCH"
     RULE_REGION_ALIGNMENT = "RULE_REGION_ALIGNMENT"
+    RULE_SESSION_REFINEMENT = "RULE_SESSION_REFINEMENT"
 
     @classmethod
     def explain(
@@ -295,6 +296,44 @@ class ExplanationBuilder:
                     weight=round(w_reg, 4),
                 )
             )
+
+        # -------------------------------------------------------------------------
+        # Rule 13: Session Refinement Steering
+        # -------------------------------------------------------------------------
+        session_facets = signals.get("session_facets_matched", [])
+        if session_facets:
+            facet_labels: list[str] = []
+            has_proxy = False
+            for f_item in session_facets:
+                if isinstance(f_item, dict):
+                    f_name = f_item.get("facet", "")
+                    f_type = f_item.get("type", "")
+                    f_detail = f_item.get("detail", "")
+                    if f_name:
+                        if f_type == "knob":
+                            facet_labels.append(f"{f_name} ({f_detail})")
+                            has_proxy = True
+                        elif f_type == "boost_tag":
+                            facet_labels.append(f"+{f_name}")
+                        elif f_type == "suppress_tag":
+                            facet_labels.append(f"no {f_name}")
+                        else:
+                            facet_labels.append(str(f_name))
+
+            if facet_labels:
+                top_facets = facet_labels[:3]
+                facets_str = ", ".join(top_facets)
+                approx_str = " (approx.)" if has_proxy else ""
+                ref_text = f"Steered by session context matching {facets_str}{approx_str}."
+                matched_reasons.append(
+                    ExplanationReason(
+                        id=cls.RULE_SESSION_REFINEMENT,
+                        text=ref_text,
+                        signal_keys=["session_facets_matched"],
+                        evidence={"matched_facets": top_facets},
+                        weight=1.6,
+                    )
+                )
 
         # Sort reasons by weight descending, breaking ties stably by rule id
         matched_reasons.sort(key=lambda r: (-r.weight, r.id))

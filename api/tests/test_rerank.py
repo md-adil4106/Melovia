@@ -155,7 +155,7 @@ def test_monotonicity_across_discovery_values(mock_catalog_store: CatalogStore) 
         # Non-decreasing trend across consecutive steps (with small tolerance for discrete rankings)
         for k in range(1, len(d_values)):
             assert mean_novs[k] >= mean_novs[k - 1] - 0.03, (
-                f"Novelty decreased from d={d_values[k-1]} to {d_values[k]}: {mean_novs}"
+                f"Novelty decreased from d={d_values[k - 1]} to {d_values[k]}: {mean_novs}"
             )
 
         # Artist newness at d=1.0 must be >= artist newness at d=0.0

@@ -72,6 +72,14 @@ export interface WhyExplanationData {
   llm_polished: boolean;
 }
 
+export interface AppliedConstraint {
+  id: string;
+  type: string;
+  description: string;
+  raw_value?: any;
+  created_at?: string;
+}
+
 export interface RecommendedItem {
   track: Track;
   score: number;
@@ -92,6 +100,18 @@ interface DiscoveryStore {
   setDiscovery: (d: number) => void;
   error: string | null;
   setError: (err: string | null) => void;
+  // Phase 8: Session Context & Refinement
+  sessionId: string | null;
+  setSessionId: (id: string | null) => void;
+  appliedConstraints: AppliedConstraint[];
+  setAppliedConstraints: (constraints: AppliedConstraint[]) => void;
+  removeAppliedConstraint: (constraintId: string) => void;
+  isChatDrawerOpen: boolean;
+  setChatDrawerOpen: (open: boolean) => void;
+  unsupportedIntents: string[];
+  setUnsupportedIntents: (items: string[]) => void;
+  clarificationMessage: string | null;
+  setClarificationMessage: (msg: string | null) => void;
 }
 
 export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
@@ -117,6 +137,10 @@ export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
       candidateSetId: null,
       error: null,
       discovery: 0.35,
+      appliedConstraints: [],
+      unsupportedIntents: [],
+      clarificationMessage: null,
+      isChatDrawerOpen: false,
     }),
   recommendations: [],
   setRecommendations: (items) => set({ recommendations: items, error: null }),
@@ -126,4 +150,19 @@ export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
   setDiscovery: (d) => set({ discovery: d }),
   error: null,
   setError: (err) => set({ error: err }),
+  // Phase 8 session defaults
+  sessionId: null,
+  setSessionId: (id) => set({ sessionId: id }),
+  appliedConstraints: [],
+  setAppliedConstraints: (constraints) => set({ appliedConstraints: constraints }),
+  removeAppliedConstraint: (constraintId) =>
+    set((state) => ({
+      appliedConstraints: state.appliedConstraints.filter((c) => c.id !== constraintId),
+    })),
+  isChatDrawerOpen: false,
+  setChatDrawerOpen: (open) => set({ isChatDrawerOpen: open }),
+  unsupportedIntents: [],
+  setUnsupportedIntents: (items) => set({ unsupportedIntents: items }),
+  clarificationMessage: null,
+  setClarificationMessage: (msg) => set({ clarificationMessage: msg }),
 }));

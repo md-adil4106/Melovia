@@ -267,5 +267,52 @@ Melovia includes an optional editorial polish interface (`api/app/llm/polish.py`
   2. **Vocabulary & Entity Integrity**: Any named entities (artists, seeds) must exist in the source reason. Words resembling instrument solos, genres, or stylistic adjectives not grounded in evidence or the original template are rejected.
   3. **Mandatory Fallback**: If verification fails for any reason, the system silently and safely falls back to the deterministic template reason. No user ever receives an ungrounded explanation.
 
+---
+
+## 6. Session Context & Conversational Refinement (WOW #4)
+
+### 6.1 Architectural Objective & Threat Model
+Natural-language discovery allows listeners to express nuanced, fluid musical intentions (e.g., *"more energetic"*, *"keep the vibe but add rock"*, *"night drive at 2 AM"*, *"less mainstream"*). In conventional systems, natural-language prompts are passed to LLMs that hallucinate track titles, invent non-existent metadata, or introduce severe popularity and recency biases.
+
+Melovia enforces an **untrusted LLM boundary**:
+1. **Zero Direct Track Selection**: The LLM never sees track IDs, never queries the database, and never emits track lists.
+2. **Schema Confinement**: The LLM parses free-form text strictly into a validated Pydantic `Refinement` object (`knobs`, `popularity_ceiling`, `boost_tags`, `suppress_tags`, `arc`, `unsupported`, `clarify`).
+3. **Controlled Vocabulary Confinement**: Any tag not present in the catalog's immutable `tag_vocab.json` is discarded and returned under `unsupported`.
+4. **Temporary Session Isolation**: Steering constraints are stored in an ephemeral in-memory `SessionStore` (2-hour TTL) associated with a signed session cookie. The persistent database profile (`ProfilePlaceholder`) is **never mutated**.
+
+### 6.2 Mathematical Formulation of Session Context Steering
+
+#### 1. Context Vector Shift ($\mathbf{C}$)
+Boosted and suppressed tags are converted to centroid vectors in semantic taste space ($\mathbb{R}^{128}$):
+$$\mathbf{C} = \sum_{t \in \text{boost}} w_t \cdot \mathbf{v}_t - \sum_{s \in \text{suppress}} w_s \cdot \mathbf{v}_s$$
+where $\mathbf{v}_t$ is the average embedding vector of tracks tagged with $t$. The multi-modal seed taste centroid $\mathbf{T}_m$ is dynamically shifted:
+$$\mathbf{Q}_m = \frac{\mathbf{T}_m + 0.50 \cdot \mathbf{C}}{\|\mathbf{T}_m + 0.50 \cdot \mathbf{C}\|_2}$$
+
+#### 2. Interpretable Scalar Target Matching
+For each active scalar knob $k \in \{\text{energy}, \text{valence}, \text{tempo}, \text{acousticness}, \text{danceability}\}$ with delta $\Delta_k \in [-1.0, 1.0]$, a soft target value is established relative to the seed tracks' mean baseline:
+$$\text{target}_k = \text{clip}\left(\mu_{\text{seed}, k} + 0.35 \cdot \Delta_k, 0.0, 1.0\right)$$
+For each candidate track $i$, closeness to the target is scored:
+$$\text{match}_{i, k} = 1.0 - |s_{i, k} - \text{target}_k|$$
+The mean match across active knobs blends into base relevance with weight $\gamma = 0.35$:
+$$R_i \leftarrow (1.0 - \gamma) \cdot R_i + \gamma \cdot \left( \frac{1}{|K|} \sum_{k \in K} \text{match}_{i, k} \right)$$
+
+#### 3. Suppress Tag Soft Penalty
+Candidates possessing tags explicitly suppressed by the user receive a multiplicative penalty:
+$$R_i \leftarrow R_i \cdot (1.0 - 0.50 \cdot w_s)$$
+where $w_s \in [0.0, 1.0]$ is the suppression weight.
+
+#### 4. Popularity Ceiling Penalty
+If a constraint imposes a popularity ceiling $P_{\text{ceil}} \in [0.0, 1.0]$ (e.g. underground / hidden gems intent):
+$$R_i \leftarrow R_i \cdot \max\left(0.10, 1.0 - 2.50 \cdot \max(0, P_i - P_{\text{ceil}})\right)$$
+
+#### 5. Novelty Gaussian Mean Shift
+When the novelty knob delta $\Delta_{\text{novelty}}$ is active:
+$$\mu \leftarrow \text{clip}\left(\mu + 0.25 \cdot \Delta_{\text{novelty}}, 0.05, 0.95\right)$$
+shifting the target novelty curve in the Discovery Control formula.
+
+### 6.3 Reversibility & Rate Limiting
+- **Deterministic Replay**: When a constraint is deleted (`DELETE /refine/{id}`), the session context is rebuilt from the remaining active constraints and re-applied to the cached candidate pool.
+- **Token Bucket Rate Limiting**: Every session is protected by a token bucket rate limiter (capacity 20 tokens, refill rate 0.5 tokens/second). Rapid automated requests exceeding the quota receive `HTTP 429 Too Many Requests`.
+
 
 

@@ -7,4 +7,35 @@ Architecture Constraints:
 - The LLM NEVER writes explanations not derived from ranking signals.
 """
 
-__all__: list[str] = []
+from app.llm.client import (
+    FakeLLMClient,
+    LLMClient,
+    LLMClientError,
+    LLMResponseValidationError,
+    LLMTimeoutError,
+    OpenAILLMClient,
+    get_llm_client,
+)
+from app.llm.polish import (
+    BaseLLMProvider,
+    FakeLLMProvider,
+    LLMPolishService,
+    verify_polished_reason,
+)
+from app.llm.rule_parser import RuleBasedRefinementParser, parse_refinement_rule_based
+
+__all__ = [
+    "LLMClient",
+    "OpenAILLMClient",
+    "FakeLLMClient",
+    "LLMClientError",
+    "LLMTimeoutError",
+    "LLMResponseValidationError",
+    "get_llm_client",
+    "RuleBasedRefinementParser",
+    "parse_refinement_rule_based",
+    "BaseLLMProvider",
+    "FakeLLMProvider",
+    "LLMPolishService",
+    "verify_polished_reason",
+]

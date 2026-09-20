@@ -429,4 +429,118 @@ describe("Discovery Home Page (Phase 4 & Phase 5)", () => {
       expect(screen.queryByTestId("why-drawer")).toBeNull();
     });
   });
+
+  it("opens Chat Drawer, submits natural language refinement, and displays applied constraint chips", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "ok", catalog: null }),
+    });
+
+    useDiscoveryStore.getState().setCandidateSetId("cand-set-refine-1");
+    useDiscoveryStore.getState().setRecommendations([
+      {
+        track: {
+          id: "rec-refine-1",
+          track_idx: 1,
+          title: "Karma Police",
+          artist_id: "art-1",
+          artist_name: "Radiohead",
+          popularity_pct: 82,
+          has_a: true,
+          has_t: true,
+        },
+        score: 0.94,
+      },
+    ]);
+
+    renderWithClient(<DiscoveryHome />);
+
+    // 1. Click Steer Vibe button
+    const steerBtn = screen.getByLabelText(/Open steer discovery chat drawer/i);
+    fireEvent.click(steerBtn);
+
+    // Verify ChatDrawer opened
+    expect(screen.getByText("Steer Discovery")).toBeDefined();
+    expect(screen.getByText(/Natural-language session steering/i)).toBeDefined();
+
+    // 2. Type "more energetic" and submit
+    const textarea = screen.getByPlaceholderText(/more energetic/i);
+    fireEvent.change(textarea, { target: { value: "more energetic" } });
+    expect(screen.getByText("14/300")).toBeDefined();
+
+    // Mock /refine response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        candidate_set_id: "cand-set-refine-1",
+        session_id: "sess_test_123",
+        applied: [
+          {
+            id: "cnst_energy_1",
+            type: "knob",
+            description: "energy (+50%)",
+          },
+        ],
+        unsupported: [],
+        items: [
+          {
+            track: {
+              id: "rec-refine-2",
+              track_idx: 2,
+              title: "Bodysnatchers",
+              artist_id: "art-1",
+              artist_name: "Radiohead",
+              popularity_pct: 80,
+              has_a: true,
+              has_t: true,
+            },
+            score: 0.96,
+          },
+        ],
+      }),
+    });
+
+    const submitBtn = screen.getByLabelText(/Submit refinement/i);
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      // Applied constraint pill should be visible in drawer and main page
+      expect(screen.getAllByText(/energy \(\+50%\)/i).length).toBeGreaterThan(0);
+      // Recommendation list updated
+      expect(screen.getByText("Bodysnatchers")).toBeDefined();
+    });
+
+    // 3. Delete applied constraint
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        candidate_set_id: "cand-set-refine-1",
+        session_id: "sess_test_123",
+        applied: [],
+        items: [
+          {
+            track: {
+              id: "rec-refine-1",
+              track_idx: 1,
+              title: "Karma Police",
+              artist_id: "art-1",
+              artist_name: "Radiohead",
+              popularity_pct: 82,
+              has_a: true,
+              has_t: true,
+            },
+            score: 0.94,
+          },
+        ],
+      }),
+    });
+
+    const removeBtns = screen.getAllByLabelText(/Remove constraint energy \(\+50%\)/i);
+    expect(removeBtns.length).toBeGreaterThan(0);
+    fireEvent.click(removeBtns[0]);
+
+    await waitFor(() => {
+      expect(screen.queryByText(/energy \(\+50%\)/i)).toBeNull();
+    });
+  });
 });

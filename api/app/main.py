@@ -9,12 +9,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.errors import register_exception_handlers
+from app.llm.client import get_llm_client
 from app.llm.polish import LLMPolishService
 from app.logging import RequestLoggingMiddleware, logger, setup_logging
 from app.recsys.catalog import CatalogCorruptError, CatalogStore
 from app.routers.health import router as health_router
 from app.routers.recommendations import router as recommendations_router
+from app.routers.refine import router as refine_router
 from app.routers.tracks import router as tracks_router
+from app.session.store import global_session_store
 
 
 @asynccontextmanager
@@ -26,6 +29,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     app.state.settings = settings
     app.state.llm_polish_service = LLMPolishService(enabled=settings.EXPLAIN_LLM_POLISH)
+    app.state.llm_client = get_llm_client(settings)
+    app.state.session_store = global_session_store
 
     # Mount immutable vector catalog bundle
     bundle_path = Path(settings.CATALOG_BUNDLE_PATH)
@@ -99,6 +104,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(tracks_router)
     app.include_router(recommendations_router)
+    app.include_router(refine_router)
 
     return app
 

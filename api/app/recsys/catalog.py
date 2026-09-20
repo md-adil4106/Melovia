@@ -215,6 +215,14 @@ class CatalogStore:
     def track_count(self) -> int:
         return len(self.track_ids)
 
+    @property
+    def dim_t(self) -> int:
+        return self.manifest.dim_t
+
+    @property
+    def dim_a(self) -> int:
+        return self.manifest.dim_a
+
     def get_idx(self, track_id: str) -> int:
         """Return integer row index for a track ID."""
         try:
@@ -301,3 +309,44 @@ class CatalogStore:
         matches.sort(key=lambda item: item[0], reverse=True)
         top_indices = [idx for _, idx in matches[:limit]]
         return [self.get_track_dict(idx) for idx in top_indices]
+
+    def get_tag_facet_vector(self, tag: str) -> npt.NDArray[np.float32]:
+        """Return 128-d unit facet vector for a tag from tag_vocab or mean track vectors."""
+        tag_lower = tag.strip().lower()
+
+        # 1. Direct lookup from precomputed facet_vectors in tag_vocab
+        cached_vectors = self.tag_vocab.get("facet_vectors", {})
+        if tag_lower in cached_vectors:
+            vec = np.array(cached_vectors[tag_lower], dtype=np.float32)
+            norm = float(np.linalg.norm(vec))
+            if norm > 1e-12:
+                return np.asarray(vec / norm, dtype=np.float32)
+            return vec
+
+        # 2. On-the-fly mean of t-vectors across tracks carrying this tag
+        matching_indices: list[int] = []
+        tags_col = self._tracks_metadata.get("tags", [])
+        for idx in range(min(self.track_count, len(tags_col))):
+            track_tags = tags_col[idx] or []
+            tag_names: list[str] = []
+            for t_item in track_tags:
+                if isinstance(t_item, str):
+                    tag_names.append(t_item.lower())
+                elif isinstance(t_item, dict) and "name" in t_item:
+                    tag_names.append(str(t_item["name"]).lower())
+                elif hasattr(t_item, "name"):
+                    tag_names.append(str(t_item.name).lower())
+
+            if tag_lower in tag_names:
+                matching_indices.append(idx)
+
+        if matching_indices:
+            sub_vecs = self.vectors_t[matching_indices]
+            mean_vec = np.mean(sub_vecs, axis=0)
+            norm = float(np.linalg.norm(mean_vec))
+            if norm > 1e-12:
+                mean_vec = mean_vec / norm
+            return np.asarray(mean_vec, dtype=np.float32)
+
+        # 3. Fallback: zero vector
+        return np.zeros(self.dim_t, dtype=np.float32)

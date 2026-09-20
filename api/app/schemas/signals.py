@@ -40,12 +40,8 @@ class RecSignals(BaseModel):
     nearest_seed_id: str = Field(
         ..., description="Track UUID of the nearest seed in representation space"
     )
-    nearest_seed_title: str | None = Field(
-        default=None, description="Track title of nearest seed"
-    )
-    nearest_seed_artist: str | None = Field(
-        default=None, description="Artist name of nearest seed"
-    )
+    nearest_seed_title: str | None = Field(default=None, description="Track title of nearest seed")
+    nearest_seed_artist: str | None = Field(default=None, description="Artist name of nearest seed")
     novelty: float = Field(
         default=0.0, ge=0.0, le=1.0, description="Normalized novelty score in [0, 1]"
     )

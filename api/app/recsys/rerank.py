@@ -9,7 +9,7 @@ Architecture Constraints:
 """
 
 from collections import defaultdict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -17,6 +17,9 @@ from app.recsys.candidates import CandidatePool
 from app.recsys.catalog import CatalogStore
 from app.recsys.config import RecsysConfig
 from app.recsys.scoring import ScoredItem, ScoredList
+
+if TYPE_CHECKING:
+    pass
 
 
 def rerank_candidates(
@@ -26,6 +29,7 @@ def rerank_candidates(
     discovery: float = 0.35,
     n: int = 30,
     config: RecsysConfig | None = None,
+    session_context: Any | None = None,
 ) -> ScoredList:
     """Rerank candidates using the Discovery Control (Familiarity <-> Discovery) algorithm.
 
@@ -128,6 +132,155 @@ def rerank_candidates(
         dtype=np.float32,
     )
 
+    # 7b. Apply Session Context steering if active
+    session_facets_per_track: dict[int, list[dict[str, Any]]] = defaultdict(list)
+    if session_context is not None and not session_context.is_empty():
+        # 1. Context vector dot products
+        c_vec = session_context.compute_context_vector(catalog)
+        if float(np.linalg.norm(c_vec)) > 1e-6:
+            c_sims = np.dot(cand_vecs_t, c_vec)
+            relevance = np.clip(relevance + 0.35 * c_sims, 0.0, 1.0)
+
+        # 2. Scalar knob targets
+        active_knobs = {
+            k: float(v) for k, v in session_context.knobs.items() if abs(float(v)) > 0.001
+        }
+        if active_knobs and catalog.scalars:
+            knob_to_scalar_keys = {
+                "energy": ["energy_idx", "energy"],
+                "valence": ["valence_idx", "valence"],
+                "tempo": ["tempo_norm", "tempo_bpm", "bpm"],
+                "acousticness": ["acousticness"],
+                "danceability": ["danceability"],
+            }
+            knob_to_scalar: dict[str, str] = {}
+            for k_name, candidates in knob_to_scalar_keys.items():
+                for cand in candidates:
+                    if cand in catalog.scalars:
+                        knob_to_scalar[k_name] = cand
+                        break
+
+            seed_means: dict[str, float] = {}
+            for k_name, s_name in knob_to_scalar.items():
+                vals = []
+                for s_idx in seed_indices:
+                    if s_idx < len(catalog.scalars[s_name]):
+                        v = float(catalog.scalars[s_name][s_idx])
+                        if s_name in ("bpm", "tempo_bpm"):
+                            v = float(np.clip((v - 50.0) / 150.0, 0.0, 1.0))
+                        vals.append(v)
+                seed_means[k_name] = float(np.mean(vals)) if vals else 0.5
+
+            knob_matches = np.zeros(p_size, dtype=np.float32)
+            n_active_knobs = 0
+            for k_name, delta in active_knobs.items():
+                if k_name not in knob_to_scalar:
+                    continue
+                s_name = knob_to_scalar[k_name]
+
+                target_val = float(np.clip(seed_means.get(k_name, 0.5) + delta * 0.35, 0.0, 1.0))
+                scalar_col = catalog.scalars[s_name]
+
+                for i in range(p_size):
+                    t_idx = int(track_indices[i])
+                    val = float(scalar_col[t_idx]) if t_idx < len(scalar_col) else 0.5
+                    if s_name in ("bpm", "tempo_bpm"):
+                        val = float(np.clip((val - 50.0) / 150.0, 0.0, 1.0))
+                    closeness = 1.0 - abs(val - target_val)
+                    knob_matches[i] += closeness
+                    pct_delta = int(round(delta * 100))
+                    sign = "+" if pct_delta > 0 else ""
+                    session_facets_per_track[t_idx].append(
+                        {
+                            "facet": k_name,
+                            "type": "knob",
+                            "detail": f"{sign}{pct_delta}%",
+                        }
+                    )
+
+                n_active_knobs += 1
+
+            if n_active_knobs > 0:
+                mean_knob_match = knob_matches / n_active_knobs
+                gamma = 0.35
+                relevance = np.asarray(
+                    (1.0 - gamma) * relevance + gamma * mean_knob_match,
+                    dtype=np.float32,
+                )
+
+        # 3. Suppress tags soft penalty
+        if session_context.suppress_tags:
+            tags_col = catalog._tracks_metadata.get("tags", [])
+            for i in range(p_size):
+                t_idx = int(track_indices[i])
+                track_tags = tags_col[t_idx] if t_idx < len(tags_col) else []
+                t_names = set()
+                for tt in track_tags or []:
+                    if isinstance(tt, str):
+                        t_names.add(tt.lower())
+                    elif isinstance(tt, dict) and "name" in tt:
+                        t_names.add(str(tt["name"]).lower())
+                    elif hasattr(tt, "name"):
+                        t_names.add(str(tt.name).lower())
+
+                for stag, sweight in session_context.suppress_tags.items():
+                    if stag.lower() in t_names:
+                        relevance[i] = relevance[i] * (1.0 - 0.5 * float(sweight))
+                        session_facets_per_track[t_idx].append(
+                            {
+                                "facet": stag,
+                                "type": "suppress_tag",
+                                "detail": f"-{int(round(sweight * 100))}%",
+                            }
+                        )
+
+        # 4. Popularity ceiling penalty
+        if session_context.popularity_ceiling is not None:
+            ceil_val = float(session_context.popularity_ceiling)
+            for i in range(p_size):
+                if pop_norm[i] > ceil_val:
+                    excess = pop_norm[i] - ceil_val
+                    relevance[i] = relevance[i] * float(np.maximum(0.1, 1.0 - 2.5 * excess))
+
+        # 5. Novelty knob target shift
+        if abs(session_context.knobs.get("novelty", 0.0)) > 0.001:
+            nov_shift = float(session_context.knobs["novelty"]) * 0.25
+            mu = float(np.clip(mu + nov_shift, 0.05, 0.95))
+            n_score = np.exp(-((nov - mu) ** 2) / (2.0 * sigma_sq)).astype(np.float32)
+            if cfg.popularity_correction:
+                d_score = (
+                    cfg.discovery_w_novelty * n_score
+                    + cfg.discovery_w_artist * a_new
+                    + cfg.discovery_w_popularity * (1.0 - pop_norm)
+                ).astype(np.float32)
+            else:
+                d_score = (w_nov * n_score + w_art * a_new).astype(np.float32)
+
+        # 6. Boost tag matches tracking
+        if session_context.boost_tags:
+            tags_col = catalog._tracks_metadata.get("tags", [])
+            for i in range(p_size):
+                t_idx = int(track_indices[i])
+                track_tags = tags_col[t_idx] if t_idx < len(tags_col) else []
+                t_names = set()
+                for tt in track_tags or []:
+                    if isinstance(tt, str):
+                        t_names.add(tt.lower())
+                    elif isinstance(tt, dict) and "name" in tt:
+                        t_names.add(str(tt["name"]).lower())
+                    elif hasattr(tt, "name"):
+                        t_names.add(str(tt.name).lower())
+
+                for btag, bweight in session_context.boost_tags.items():
+                    if btag.lower() in t_names:
+                        session_facets_per_track[t_idx].append(
+                            {
+                                "facet": btag,
+                                "type": "boost_tag",
+                                "detail": f"+{int(round(bweight * 100))}%",
+                            }
+                        )
+
     # 8. Unadjusted Utility U_i
     u_weight = cfg.discovery_u_weight * d
     utility = ((1.0 - u_weight) * relevance + u_weight * d_score).astype(np.float32)
@@ -214,9 +367,7 @@ def rerank_candidates(
             if len(selected_in_s) == 0:
                 score_c = float(mmr_lambda * surv_utility[c])
             else:
-                score_c = float(
-                    mmr_lambda * surv_utility[c] - (1.0 - mmr_lambda) * max_sim_to_s[c]
-                )
+                score_c = float(mmr_lambda * surv_utility[c] - (1.0 - mmr_lambda) * max_sim_to_s[c])
 
             t_id = surv_track_ids[c]
 
@@ -268,9 +419,7 @@ def rerank_candidates(
 
             if has_a_star and surv_mask_a[c]:
                 pair_sim = (
-                    w_sim_t * sim_t_all[c]
-                    + w_sim_a * sim_a_all[c]
-                    + w_sim_artist * same_artist
+                    w_sim_t * sim_t_all[c] + w_sim_a * sim_a_all[c] + w_sim_artist * same_artist
                 )
             else:
                 pair_sim = w_sim_t_no_audio * sim_t_all[c] + w_sim_artist * same_artist
@@ -301,6 +450,7 @@ def rerank_candidates(
                 "discovery_score": round(float(surv_d_score[c]), 4),
                 "discovery_value": round(float(surv_d_score[c]), 4),
                 "discovery_d": round(d, 3),
+                "session_facets_matched": session_facets_per_track.get(t_idx, []),
             }
         )
 

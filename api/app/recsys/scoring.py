@@ -195,16 +195,17 @@ def score_candidates(
         track_tags = set(tags_col[t_idx] if t_idx < len(tags_col) and tags_col[t_idx] else [])
         seed_tags = set(best_seed_meta.get("tags") or [])
         shared_set = track_tags.intersection(seed_tags)
-        shared_tags_list = [
-            {"tag": tag, "idf": 2.5, "weight": 1.0}
-            for tag in sorted(shared_set)
-        ]
+        shared_tags_list = [{"tag": tag, "idf": 2.5, "weight": 1.0} for tag in sorted(shared_set)]
 
         # Scalar deltas against nearest seed
         scalar_deltas: dict[str, float] = {}
         if catalog.scalars:
             for s_key in (
-                "energy_idx", "valence_idx", "tempo_norm", "danceability", "acousticness"
+                "energy_idx",
+                "valence_idx",
+                "tempo_norm",
+                "danceability",
+                "acousticness",
             ):
                 if s_key in catalog.scalars:
                     track_val = catalog.scalars[s_key][t_idx]

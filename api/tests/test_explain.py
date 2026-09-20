@@ -206,9 +206,7 @@ def test_no_sentence_without_backing_signal_invariant() -> None:
         has_a = rng.choice([True, False])
         pct_a = rng.uniform(0.1, 0.99) if has_a else None
 
-        shared = (
-            [{"tag": "synthwave", "weight": 1.0}] if rng.random() > 0.4 else []
-        )
+        shared = [{"tag": "synthwave", "weight": 1.0}] if rng.random() > 0.4 else []
         deltas: dict[str, float] = {}
         if rng.random() > 0.3:
             deltas["energy_idx"] = rng.uniform(-0.3, 0.3)
@@ -300,7 +298,8 @@ def test_proxy_scalar_approximate_label_invariant() -> None:
     }
     reasons = ExplanationBuilder.explain(signals, track_meta, discovery=0.35)
     proxy_reasons = [
-        r for r in reasons
+        r
+        for r in reasons
         if r.id in (ExplanationBuilder.RULE_ENERGY_MATCH, ExplanationBuilder.RULE_VALENCE_MATCH)
     ]
     assert len(proxy_reasons) >= 1

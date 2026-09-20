@@ -6,6 +6,7 @@ import {
   Compass,
   Headphones,
   HelpCircle,
+  MessageSquare,
   Music,
   Plus,
   RefreshCw,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { Track, RecommendedItem, useDiscoveryStore } from "./store";
 import { WhyDrawer } from "./components/WhyDrawer";
+import { ChatDrawer } from "./components/ChatDrawer";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -32,6 +34,10 @@ export default function DiscoveryHome() {
     setCandidateSetId,
     discovery,
     setDiscovery,
+    appliedConstraints,
+    removeAppliedConstraint,
+    isChatDrawerOpen,
+    setChatDrawerOpen,
   } = useDiscoveryStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,6 +51,26 @@ export default function DiscoveryHome() {
   const handleOpenWhy = (track: Track) => {
     setSelectedTrackForWhy(track);
     setIsWhyDrawerOpen(true);
+  };
+
+  const handleDeleteConstraint = async (constraintId: string) => {
+    if (!candidateSetId) return;
+    try {
+      const res = await fetch(
+        `${API_BASE}/refine/${encodeURIComponent(constraintId)}?candidate_set_id=${encodeURIComponent(candidateSetId)}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setRecommendations(data.items || []);
+        removeAppliedConstraint(constraintId);
+      }
+    } catch {
+      // fallback
+    }
   };
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -468,6 +494,21 @@ export default function DiscoveryHome() {
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setChatDrawerOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/30 hover:border-purple-500/60 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  aria-label="Open steer discovery chat drawer"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Steer Vibe</span>
+                  {appliedConstraints.length > 0 && (
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-purple-500 text-white text-[10px] font-bold">
+                      {appliedConstraints.length}
+                    </span>
+                  )}
+                </button>
+
                 <span className="text-xs text-[#8c96a8]">Discovery:</span>
                 <span
                   data-testid="discovery-pct-badge"
@@ -511,6 +552,42 @@ export default function DiscoveryHome() {
                 </span>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Active Applied Session Constraints Banner */}
+        {appliedConstraints.length > 0 && (
+          <div className="flex items-center gap-2 mb-4 flex-wrap p-3 rounded-xl bg-purple-950/30 border border-purple-800/40 shadow-sm animate-in fade-in">
+            <span className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              Session Steering:
+            </span>
+            {appliedConstraints.map((c) => (
+              <span
+                key={c.id}
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-medium bg-zinc-900 text-zinc-200 border border-purple-500/30 shadow-sm"
+              >
+                <span className="text-purple-400 font-mono text-[10px] uppercase">
+                  {c.type}:
+                </span>
+                <span>{c.description}</span>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteConstraint(c.id)}
+                  className="text-zinc-400 hover:text-red-400 p-0.5 rounded transition-colors"
+                  aria-label={`Remove constraint ${c.description}`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={() => setChatDrawerOpen(true)}
+              className="text-xs text-purple-400 hover:text-purple-300 underline ml-auto font-medium transition-colors"
+            >
+              Modify in Chat →
+            </button>
           </div>
         )}
 
@@ -659,6 +736,13 @@ export default function DiscoveryHome() {
         onClose={() => setIsWhyDrawerOpen(false)}
         track={selectedTrackForWhy}
         candidateSetId={candidateSetId}
+        apiBase={API_BASE}
+      />
+
+      {/* Accessible Natural Language Steering Drawer (WOW #4) */}
+      <ChatDrawer
+        isOpen={isChatDrawerOpen}
+        onClose={() => setChatDrawerOpen(false)}
         apiBase={API_BASE}
       />
     </main>
