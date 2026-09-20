@@ -69,23 +69,25 @@ def generate_seedsets(
             track_items = [catalog.get_track_dict(int(idx)) for idx in chosen_indices]
             seed_ids = [catalog.get_id(int(idx)) for idx in chosen_indices]
 
-            seed_sets.append({
-                "id": f"seedset_{set_counter:02d}",
-                "region_id": int(reg_id),
-                "name": f"Region {reg_id} Cluster {s_idx + 1}",
-                "track_count": len(seed_ids),
-                "seed_track_ids": seed_ids,
-                "seed_tracks": [
-                    {
-                        "id": t["id"],
-                        "track_idx": t["track_idx"],
-                        "title": t["title"],
-                        "artist_name": t["artist_name"],
-                        "year": t.get("year"),
-                    }
-                    for t in track_items
-                ],
-            })
+            seed_sets.append(
+                {
+                    "id": f"seedset_{set_counter:02d}",
+                    "region_id": int(reg_id),
+                    "name": f"Region {reg_id} Cluster {s_idx + 1}",
+                    "track_count": len(seed_ids),
+                    "seed_track_ids": seed_ids,
+                    "seed_tracks": [
+                        {
+                            "id": t["id"],
+                            "track_idx": t["track_idx"],
+                            "title": t["title"],
+                            "artist_name": t["artist_name"],
+                            "year": t.get("year"),
+                        }
+                        for t in track_items
+                    ],
+                }
+            )
             set_counter += 1
 
     payload = {
@@ -110,9 +112,7 @@ def main() -> None:
     parser.add_argument(
         "--output", type=str, default="eval/seedsets.yaml", help="Target output YAML path"
     )
-    parser.add_argument(
-        "--count", type=int, default=36, help="Minimum number of seed sets (>=30)"
-    )
+    parser.add_argument("--count", type=int, default=36, help="Minimum number of seed sets (>=30)")
     args = parser.parse_args()
 
     bundle_path = repo_root / "data" / "bundles" / "v1"

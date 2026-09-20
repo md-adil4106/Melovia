@@ -61,9 +61,17 @@ class RecsysConfig:
     # Default random seed for deterministic baselines and tie-breaking
     seed: int = 42
 
+    # Feedback & Taste Adaptation (Phase 9)
+    feedback_eta: float = 0.15  # Learning rate for positive feedback (like/save/replay/add)
+    feedback_dislike_factor: float = 0.50  # Negative multiplier for dislike (-0.5 * eta)
+    feedback_skip_factor: float = 0.125  # Weak negative multiplier for skip (-0.125 * eta)
+    feedback_remove_factor: float = 0.25  # Milder negative multiplier for remove (-0.25 * eta)
+    merge_alpha: float = 0.30  # Weight for merging session modes into persistent profile
+    max_merge_drift: float = 0.25  # Maximum Euclidean drift cap during persistent merge
+
     # Ablation and Feature Switches for Evaluation
     use_audio: bool = True
     use_mmr: bool = True
     popularity_correction: bool = True
     use_context: bool = False  # Architecture placeholder
-    use_feedback: bool = False  # Architecture placeholder
+    use_feedback: bool = False  # Feedback ablation switch

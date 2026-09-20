@@ -112,6 +112,20 @@ interface DiscoveryStore {
   setUnsupportedIntents: (items: string[]) => void;
   clarificationMessage: string | null;
   setClarificationMessage: (msg: string | null) => void;
+  // Phase 9: Feedback & Persistent Profile
+  likedTrackIds: string[];
+  dislikedTrackIds: string[];
+  savedTrackIds: string[];
+  hasPersistentProfile: boolean;
+  setHasPersistentProfile: (val: boolean) => void;
+  tasteShiftedMessage: string | null;
+  setTasteShiftedMessage: (msg: string | null) => void;
+  isSettingsDrawerOpen: boolean;
+  setSettingsDrawerOpen: (open: boolean) => void;
+  addLikedTrack: (trackId: string) => void;
+  addDislikedTrack: (trackId: string) => void;
+  toggleSavedTrack: (trackId: string) => void;
+  clearFeedbackState: () => void;
 }
 
 export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
@@ -165,4 +179,42 @@ export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
   setUnsupportedIntents: (items) => set({ unsupportedIntents: items }),
   clarificationMessage: null,
   setClarificationMessage: (msg) => set({ clarificationMessage: msg }),
+  // Phase 9 feedback & profile defaults
+  likedTrackIds: [],
+  dislikedTrackIds: [],
+  savedTrackIds: [],
+  hasPersistentProfile: false,
+  setHasPersistentProfile: (val) => set({ hasPersistentProfile: val }),
+  tasteShiftedMessage: null,
+  setTasteShiftedMessage: (msg) => set({ tasteShiftedMessage: msg }),
+  isSettingsDrawerOpen: false,
+  setSettingsDrawerOpen: (open) => set({ isSettingsDrawerOpen: open }),
+  addLikedTrack: (trackId) =>
+    set((state) => ({
+      likedTrackIds: state.likedTrackIds.includes(trackId)
+        ? state.likedTrackIds
+        : [...state.likedTrackIds, trackId],
+      dislikedTrackIds: state.dislikedTrackIds.filter((id) => id !== trackId),
+    })),
+  addDislikedTrack: (trackId) =>
+    set((state) => ({
+      dislikedTrackIds: state.dislikedTrackIds.includes(trackId)
+        ? state.dislikedTrackIds
+        : [...state.dislikedTrackIds, trackId],
+      likedTrackIds: state.likedTrackIds.filter((id) => id !== trackId),
+    })),
+  toggleSavedTrack: (trackId) =>
+    set((state) => ({
+      savedTrackIds: state.savedTrackIds.includes(trackId)
+        ? state.savedTrackIds.filter((id) => id !== trackId)
+        : [...state.savedTrackIds, trackId],
+    })),
+  clearFeedbackState: () =>
+    set({
+      likedTrackIds: [],
+      dislikedTrackIds: [],
+      savedTrackIds: [],
+      hasPersistentProfile: false,
+      tasteShiftedMessage: null,
+    }),
 }));

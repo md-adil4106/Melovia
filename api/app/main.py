@@ -13,6 +13,7 @@ from app.llm.client import get_llm_client
 from app.llm.polish import LLMPolishService
 from app.logging import RequestLoggingMiddleware, logger, setup_logging
 from app.recsys.catalog import CatalogCorruptError, CatalogStore
+from app.routers.feedback import router as feedback_router
 from app.routers.health import router as health_router
 from app.routers.recommendations import router as recommendations_router
 from app.routers.refine import router as refine_router
@@ -105,6 +106,7 @@ def create_app() -> FastAPI:
     app.include_router(tracks_router)
     app.include_router(recommendations_router)
     app.include_router(refine_router)
+    app.include_router(feedback_router)
 
     return app
 

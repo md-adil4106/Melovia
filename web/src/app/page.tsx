@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
+  Bookmark,
+  BookmarkCheck,
+  BookmarkPlus,
   Compass,
   Headphones,
   HelpCircle,
@@ -11,14 +14,19 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Shield,
+  SkipForward,
   Sliders,
   Sparkles,
+  ThumbsDown,
+  ThumbsUp,
   Volume2,
   X,
 } from "lucide-react";
 import { Track, RecommendedItem, useDiscoveryStore } from "./store";
 import { WhyDrawer } from "./components/WhyDrawer";
 import { ChatDrawer } from "./components/ChatDrawer";
+import { SettingsDrawer } from "./components/SettingsDrawer";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -38,6 +46,18 @@ export default function DiscoveryHome() {
     removeAppliedConstraint,
     isChatDrawerOpen,
     setChatDrawerOpen,
+    likedTrackIds,
+    dislikedTrackIds,
+    savedTrackIds,
+    hasPersistentProfile,
+    setHasPersistentProfile,
+    tasteShiftedMessage,
+    setTasteShiftedMessage,
+    isSettingsDrawerOpen,
+    setSettingsDrawerOpen,
+    addLikedTrack,
+    addDislikedTrack,
+    toggleSavedTrack,
   } = useDiscoveryStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -122,12 +142,22 @@ export default function DiscoveryHome() {
 
   // Mutation for generating fresh recommendations
   const recommendMutation = useMutation({
-    mutationFn: async ({ seedIds, d }: { seedIds: string[]; d: number }) => {
+    mutationFn: async ({
+      seedIds,
+      d,
+      useSavedTaste = false,
+    }: {
+      seedIds?: string[];
+      d: number;
+      useSavedTaste?: boolean;
+    }) => {
       const res = await fetch(`${API_BASE}/recommendations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
-          seed_track_ids: seedIds,
+          seed_track_ids: seedIds || [],
+          use_saved_taste: useSavedTaste,
           n: 30,
           discovery: d,
           include_signals: true,
@@ -142,6 +172,71 @@ export default function DiscoveryHome() {
     onSuccess: (data) => {
       setRecommendations(data.items || []);
       setCandidateSetId(data.candidate_set_id);
+    },
+  });
+
+  // Mutation for submitting live user interaction feedback
+  const feedbackMutation = useMutation({
+    mutationFn: async ({ trackId, event }: { trackId: string; event: string }) => {
+      const res = await fetch(`${API_BASE}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          track_id: trackId,
+          event,
+          candidate_set_id: candidateSetId || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.error?.message || "Failed to submit feedback");
+      }
+      return await res.json();
+    },
+    onSuccess: (data, variables) => {
+      if (variables.event === "like") {
+        addLikedTrack(variables.trackId);
+      } else if (variables.event === "dislike") {
+        addDislikedTrack(variables.trackId);
+      } else if (variables.event === "save") {
+        toggleSavedTrack(variables.trackId);
+      }
+
+      if (data.items && data.items.length > 0) {
+        setRecommendations(data.items);
+      }
+
+      if (data.mode_shifted) {
+        const shiftVal = data.cosine_shift;
+        const sign = shiftVal > 0 ? "+" : "";
+        setTasteShiftedMessage(
+          variables.event === "like"
+            ? `Taste shifted (${sign}${shiftVal} toward this vibe)`
+            : `Taste shifted (${sign}${shiftVal})`
+        );
+        setTimeout(() => setTasteShiftedMessage(null), 3000);
+      }
+    },
+  });
+
+  // Mutation for explicitly merging session modes into persistent profile
+  const rememberMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${API_BASE}/profile/remember`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.error?.message || "Failed to remember taste profile");
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setHasPersistentProfile(true);
+      setTasteShiftedMessage(`Saved ${data.num_modes} taste modes to persistent profile!`);
+      setTimeout(() => setTasteShiftedMessage(null), 3500);
     },
   });
 
@@ -277,8 +372,23 @@ export default function DiscoveryHome() {
             </div>
           </div>
 
-          {/* Backend Status Indicator */}
-          <div className="flex items-center gap-2 text-xs">
+          {/* Right Header Actions */}
+          <div className="flex items-center gap-3 text-xs">
+            {/* Anonymous Taste Profile & Settings Button */}
+            <button
+              type="button"
+              onClick={() => setSettingsDrawerOpen(true)}
+              aria-label="Open anonymous taste profile and privacy settings"
+              className="flex items-center gap-1.5 text-xs text-[#c8d0de] hover:text-[#d4af37] bg-[#141923] hover:bg-[#1b2230] border border-[#232a3b] px-3 py-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+            >
+              <Shield className="w-3.5 h-3.5 text-[#d4af37]" />
+              <span>Taste Profile</span>
+              {hasPersistentProfile && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Profile saved" />
+              )}
+            </button>
+
+            {/* Backend Status Indicator */}
             {healthData ? (
               <span className="flex items-center gap-1.5 text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 px-2.5 py-1 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -432,30 +542,51 @@ export default function DiscoveryHome() {
           </div>
 
           {/* Action Row */}
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
             <div className="text-xs text-[#8c96a8] flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-[#d4af37]" />
               Dual-Channel + MMR Diversity
             </div>
 
-            <button
-              type="button"
-              onClick={handleDiscover}
-              disabled={seeds.length === 0 || recommendMutation.isPending}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#d4af37] to-[#b38e24] hover:from-[#e2bf48] hover:to-[#c49e2f] text-black font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all transform active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              {recommendMutation.isPending ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Discover Tracks</span>
-                </>
+            <div className="flex items-center gap-2">
+              {/* Start from Saved Taste Button (Phase 9) */}
+              {(hasPersistentProfile || seeds.length === 0) && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    recommendMutation.mutate({
+                      useSavedTaste: true,
+                      d: sliderValue,
+                    })
+                  }
+                  disabled={recommendMutation.isPending}
+                  aria-label="Start discovery using saved persistent taste"
+                  className="inline-flex items-center gap-1.5 bg-[#1b2230] hover:bg-[#232b3d] border border-[#d4af37]/40 hover:border-[#d4af37]/80 text-[#f5ecd5] font-semibold text-xs px-4 py-2.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-[#d4af37] disabled:opacity-40"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+                  <span>Start from Saved Taste</span>
+                </button>
               )}
-            </button>
+
+              <button
+                type="button"
+                onClick={handleDiscover}
+                disabled={seeds.length === 0 || recommendMutation.isPending}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#d4af37] to-[#b38e24] hover:from-[#e2bf48] hover:to-[#c49e2f] text-black font-bold px-6 py-2.5 rounded-xl shadow-lg transition-all transform active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {recommendMutation.isPending ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Discover Tracks</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </section>
 
@@ -494,6 +625,18 @@ export default function DiscoveryHome() {
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Remember this vibe button (Phase 9) */}
+                <button
+                  type="button"
+                  onClick={() => rememberMutation.mutate()}
+                  disabled={rememberMutation.isPending}
+                  aria-label="Remember this vibe to persistent device profile"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-[#18202d] border border-[#2b374c] hover:border-[#d4af37]/60 text-[#c8d0de] hover:text-[#d4af37] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+                >
+                  <BookmarkPlus className="w-3.5 h-3.5 text-[#d4af37]" />
+                  <span>{rememberMutation.isPending ? "Saving..." : "Remember Vibe"}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setChatDrawerOpen(true)}
@@ -710,6 +853,77 @@ export default function DiscoveryHome() {
                         <span className="text-[10px] text-[#8c96a8]">match</span>
                       </div>
 
+                      {/* Interactive Feedback Controls (Phase 9) */}
+                      <div className="flex items-center gap-1 bg-[#10141d] border border-[#1f2637] rounded-lg p-0.5">
+                        {/* Like button */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            feedbackMutation.mutate({ trackId: item.track.id, event: "like" })
+                          }
+                          data-testid={`like-button-${item.track.id}`}
+                          aria-label={`Like ${item.track.title}`}
+                          className={`p-1.5 rounded-md transition-colors focus:outline-none focus:ring-1 focus:ring-[#d4af37] ${
+                            likedTrackIds.includes(item.track.id)
+                              ? "bg-[#d4af37]/20 text-[#d4af37]"
+                              : "text-[#8c96a8] hover:text-[#d4af37] hover:bg-[#1b2230]"
+                          }`}
+                        >
+                          <ThumbsUp className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Dislike button */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            feedbackMutation.mutate({ trackId: item.track.id, event: "dislike" })
+                          }
+                          data-testid={`dislike-button-${item.track.id}`}
+                          aria-label={`Dislike and exclude ${item.track.title}`}
+                          className={`p-1.5 rounded-md transition-colors focus:outline-none focus:ring-1 focus:ring-red-400 ${
+                            dislikedTrackIds.includes(item.track.id)
+                              ? "bg-red-950/40 text-red-400"
+                              : "text-[#8c96a8] hover:text-red-400 hover:bg-[#1b2230]"
+                          }`}
+                        >
+                          <ThumbsDown className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Skip button */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            feedbackMutation.mutate({ trackId: item.track.id, event: "skip" })
+                          }
+                          data-testid={`skip-button-${item.track.id}`}
+                          aria-label={`Skip ${item.track.title}`}
+                          className="p-1.5 rounded-md text-[#8c96a8] hover:text-[#f1f3f7] hover:bg-[#1b2230] transition-colors focus:outline-none focus:ring-1 focus:ring-[#8c96a8]"
+                        >
+                          <SkipForward className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Save / Bookmark button */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            feedbackMutation.mutate({ trackId: item.track.id, event: "save" })
+                          }
+                          data-testid={`save-button-${item.track.id}`}
+                          aria-label={`Save ${item.track.title}`}
+                          className={`p-1.5 rounded-md transition-colors focus:outline-none focus:ring-1 focus:ring-[#d4af37] ${
+                            savedTrackIds.includes(item.track.id)
+                              ? "bg-[#d4af37]/20 text-[#d4af37]"
+                              : "text-[#8c96a8] hover:text-[#d4af37] hover:bg-[#1b2230]"
+                          }`}
+                        >
+                          {savedTrackIds.includes(item.track.id) ? (
+                            <BookmarkCheck className="w-3.5 h-3.5" />
+                          ) : (
+                            <Bookmark className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+
                       {/* Why Explanation Button */}
                       <button
                         type="button"
@@ -730,6 +944,19 @@ export default function DiscoveryHome() {
         </section>
       </div>
 
+      {/* Floating Taste Shifted Micro-Indicator (Phase 9) */}
+      {tasteShiftedMessage && (
+        <div
+          data-testid="taste-shifted-indicator"
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#141923]/95 border border-[#d4af37]/60 text-[#f5ecd5] shadow-2xl backdrop-blur-md text-xs font-medium animate-in fade-in slide-in-from-bottom-3"
+        >
+          <Sparkles className="w-4 h-4 text-[#d4af37]" />
+          <span>{tasteShiftedMessage}</span>
+        </div>
+      )}
+
       {/* Accessible Explainability Drawer */}
       <WhyDrawer
         isOpen={isWhyDrawerOpen}
@@ -743,6 +970,13 @@ export default function DiscoveryHome() {
       <ChatDrawer
         isOpen={isChatDrawerOpen}
         onClose={() => setChatDrawerOpen(false)}
+        apiBase={API_BASE}
+      />
+
+      {/* Accessible Anonymous Taste Profile & Settings Drawer (Phase 9) */}
+      <SettingsDrawer
+        isOpen={isSettingsDrawerOpen}
+        onClose={() => setSettingsDrawerOpen(false)}
         apiBase={API_BASE}
       />
     </main>

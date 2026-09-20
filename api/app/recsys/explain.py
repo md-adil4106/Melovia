@@ -42,6 +42,7 @@ class ExplanationBuilder:
     RULE_ACOUSTIC_MATCH = "RULE_ACOUSTIC_MATCH"
     RULE_REGION_ALIGNMENT = "RULE_REGION_ALIGNMENT"
     RULE_SESSION_REFINEMENT = "RULE_SESSION_REFINEMENT"
+    RULE_FEEDBACK_LIKED = "RULE_FEEDBACK_LIKED"
 
     @classmethod
     def explain(
@@ -334,6 +335,32 @@ class ExplanationBuilder:
                         weight=1.6,
                     )
                 )
+
+        # -------------------------------------------------------------------------
+        # Rule 14: Feedback Affinity (Moves toward tracks you liked)
+        # -------------------------------------------------------------------------
+        feedback_sim = signals.get("feedback_similarity")
+        nearest_liked_title = signals.get("nearest_liked_title")
+        if feedback_sim is not None and float(feedback_sim) >= 0.70:
+            sim_pct = int(round(float(feedback_sim) * 100))
+            if nearest_liked_title:
+                liked_text = (
+                    f'Moves toward "{nearest_liked_title}" which you liked ({sim_pct}% match).'
+                )
+            else:
+                liked_text = f"Moves toward tracks you liked in this session ({sim_pct}% match)."
+            matched_reasons.append(
+                ExplanationReason(
+                    id=cls.RULE_FEEDBACK_LIKED,
+                    text=liked_text,
+                    signal_keys=["feedback_similarity"],
+                    evidence={
+                        "feedback_similarity": float(feedback_sim),
+                        "nearest_liked_title": nearest_liked_title,
+                    },
+                    weight=1.7,
+                )
+            )
 
         # Sort reasons by weight descending, breaking ties stably by rule id
         matched_reasons.sort(key=lambda r: (-r.weight, r.id))

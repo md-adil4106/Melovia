@@ -185,9 +185,7 @@ def run_evaluation(
         for s_data in seed_sets:
             seed_ids = s_data["seed_track_ids"]
             seed_regions = [
-                region_col[catalog.get_idx(sid)]
-                for sid in seed_ids
-                if catalog.contains_id(sid)
+                region_col[catalog.get_idx(sid)] for sid in seed_ids if catalog.contains_id(sid)
             ]
 
             rec_indices = run_system_on_seedset(sys_name, seed_ids, catalog, n=30)
@@ -296,9 +294,73 @@ def run_evaluation(
             f"With MMR ({ild_with_mmr:.3f}) vs Without MMR ({ild_no_mmr:.3f})"
         )
         assert ild_with_mmr > ild_no_mmr, (
-            f"Regression: -MMR failed to drop diversity "
-            f"({ild_with_mmr:.3f} <= {ild_no_mmr:.3f})"
+            f"Regression: -MMR failed to drop diversity ({ild_with_mmr:.3f} <= {ild_no_mmr:.3f})"
         )
+
+        # Gate 5: Feedback Adaptation Guard (Phase 9)
+        # Simulated user likes 3 tracks from target region R -> hit rate for R shifts toward R
+        from app.recsys import apply_feedback
+
+        regs = catalog._tracks_metadata.get("region_id", [])
+        unique_regs = sorted(set(r for r in regs if r is not None))
+        if len(unique_regs) >= 2:
+            target_reg = unique_regs[1]
+            s0 = [catalog.get_id(i) for i, r in enumerate(regs) if r == unique_regs[0]][0]
+            s1 = [catalog.get_id(i) for i, r in enumerate(regs) if r == target_reg][0]
+            sim_seeds = [s0, s1]
+            sim_cfg = RecsysConfig()
+
+            sim_modes = build_modes(sim_seeds, catalog, config=sim_cfg)
+            sim_pool = generate_candidates(
+                sim_modes, catalog, k_per_mode=sim_cfg.k_candidates, config=sim_cfg
+            )
+            sim_scored = score_candidates(sim_pool, catalog, config=sim_cfg)
+            sim_reranked = rerank_candidates(
+                sim_pool, sim_scored, catalog, discovery=0.35, n=30, config=sim_cfg
+            )
+            hit_rate_before = (
+                sum(1 for it in sim_reranked.items if regs[it.track_idx] == target_reg) / 30.0
+            )
+
+            target_tracks = [
+                catalog.get_id(i)
+                for i, r in enumerate(regs)
+                if r == target_reg and catalog.get_id(i) not in sim_seeds
+            ][:3]
+            cur_modes = sim_modes
+            neg: set[str] = set()
+            neg_a: set[str] = set()
+            kn: set[str] = set()
+            lk: set[str] = set()
+            for tid in target_tracks:
+                fb_res = apply_feedback(
+                    "like", tid, cur_modes, neg, neg_a, kn, lk, catalog, sim_cfg
+                )
+                cur_modes = fb_res.updated_modes
+                neg = fb_res.negative_track_ids
+                neg_a = fb_res.negative_artist_ids
+                kn = fb_res.known_track_ids
+                lk = fb_res.liked_track_ids
+
+            sim_pool2 = generate_candidates(
+                cur_modes, catalog, k_per_mode=sim_cfg.k_candidates, config=sim_cfg
+            )
+            sim_scored2 = score_candidates(sim_pool2, catalog, config=sim_cfg)
+            sim_reranked2 = rerank_candidates(
+                sim_pool2, sim_scored2, catalog, discovery=0.35, n=30, config=sim_cfg
+            )
+            hit_rate_after = (
+                sum(1 for it in sim_reranked2.items if regs[it.track_idx] == target_reg) / 30.0
+            )
+
+            print(
+                f"Gate 5 - Feedback Adaptation Guard: "
+                f"Target region {target_reg} hit rate before ({hit_rate_before:.2f}) vs after ({hit_rate_after:.2f})"
+            )
+            assert hit_rate_after > hit_rate_before, (
+                f"Regression: Feedback failed to shift recommendations toward target region {target_reg} "
+                f"({hit_rate_before:.2f} <= {hit_rate_after:.2f})"
+            )
 
         print("=== ALL EVAL-CI GATES PASSED SUCCESSFULLY ===\n")
 
@@ -324,20 +386,22 @@ def _write_csv_report(csv_path: Path, results: dict[str, dict[str, Any]]) -> Non
         writer = csv.writer(f)
         writer.writerow(headers)
         for name, r in results.items():
-            writer.writerow([
-                name,
-                f"{r['mean_ild']:.4f}",
-                f"{r['std_ild']:.4f}",
-                f"{r['diff_vs_hybrid_ild']:.4f}",
-                f"{r['ci_ild_low']:.4f}",
-                f"{r['ci_ild_high']:.4f}",
-                f"{r['mean_novelty']:.4f}",
-                f"{r['mean_entropy']:.4f}",
-                f"{r['mean_hit_rate']:.4f}",
-                f"{r['artist_coverage'] * 100.0:.2f}",
-                f"{r['catalog_coverage'] * 100.0:.2f}",
-                f"{r['gini_exposure']:.4f}",
-            ])
+            writer.writerow(
+                [
+                    name,
+                    f"{r['mean_ild']:.4f}",
+                    f"{r['std_ild']:.4f}",
+                    f"{r['diff_vs_hybrid_ild']:.4f}",
+                    f"{r['ci_ild_low']:.4f}",
+                    f"{r['ci_ild_high']:.4f}",
+                    f"{r['mean_novelty']:.4f}",
+                    f"{r['mean_entropy']:.4f}",
+                    f"{r['mean_hit_rate']:.4f}",
+                    f"{r['artist_coverage'] * 100.0:.2f}",
+                    f"{r['catalog_coverage'] * 100.0:.2f}",
+                    f"{r['gini_exposure']:.4f}",
+                ]
+            )
 
 
 def _write_markdown_report(

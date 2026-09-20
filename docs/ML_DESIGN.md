@@ -314,5 +314,67 @@ shifting the target novelty curve in the Discovery Control formula.
 - **Deterministic Replay**: When a constraint is deleted (`DELETE /refine/{id}`), the session context is rebuilt from the remaining active constraints and re-applied to the cached candidate pool.
 - **Token Bucket Rate Limiting**: Every session is protected by a token bucket rate limiter (capacity 20 tokens, refill rate 0.5 tokens/second). Rapid automated requests exceeding the quota receive `HTTP 429 Too Many Requests`.
 
+---
 
+## 7. Feedback Dynamics & Persistent Profile Architecture (Phase 9)
 
+### 7.1 Separation of Session Adaptation vs. Persistent Profile
+
+Melovia enforces strict separation between **in-session fluid adaptation** and the **durable persistent profile**:
+1. **Live Session Adaptation**: Micro-interactions (like, dislike, skip, save) immediately adjust active session taste modes in-memory and re-score cached candidate tracks in sub-100ms. They do **not** write to the long-term profile database table.
+2. **Explicit User Consent for Permanence**: Persistent long-term taste is updated only when the listener explicitly triggers `"Remember this vibe"` (`POST /profile/remember`).
+3. **Anonymous Device Identity**: Profiles are keyed by an anonymous UUID stored in an `httpOnly`, `SameSite=Lax` cookie (`melovia_device_id`). No user accounts, passwords, email addresses, or personal data exist in Melovia. In all application logs, the device ID is strictly one-way hashed (SHA-256 prefix) to guarantee anonymity.
+
+### 7.2 Mathematical Formulation of In-Session Feedback
+
+For each feedback event on track $k$ with vector $\mathbf{v}_k \in \mathbb{R}^D$:
+
+#### 1. Nearest Mode Identification
+The system finds the closest active taste mode $m^*$ to track $k$ using cosine similarity:
+$$m^* = \arg\max_m \cos(\mathbf{T}_m, \mathbf{v}_k)$$
+
+#### 2. Positive Feedback Dynamics (Like, Save, Replay, Add)
+The nearest taste mode is shifted toward the track representation across all orthogonal channels ($t$ and $a$):
+$$\mathbf{T}_{m^*} \leftarrow \frac{\mathbf{T}_{m^*} + \eta \cdot \mathbf{v}_k}{\|\mathbf{T}_{m^*} + \eta \cdot \mathbf{v}_k\|_2}$$
+where learning rate $\eta = 0.15$. The track ID is recorded in session known tracks and liked tracks.
+
+#### 3. Negative Feedback Dynamics (Dislike, Skip, Remove)
+The nearest taste mode is shifted away from the track representation:
+$$\mathbf{T}_{m^*} \leftarrow \frac{\mathbf{T}_{m^*} - (\text{factor} \cdot \eta) \cdot \mathbf{v}_k}{\|\mathbf{T}_{m^*} - (\text{factor} \cdot \eta) \cdot \mathbf{v}_k\|_2}$$
+where:
+- For `dislike`: $\text{factor} = 0.50$. The track ID is added to `negative_track_ids`, and its artist ID is added to `negative_artist_ids`.
+- For `skip`: $\text{factor} = 0.125$ (mild dampening). No hard exclusions are added.
+- For `remove`: $\text{factor} = 0.25$. Track ID is added to negative exclusions.
+
+#### 4. Candidate Pool Exclusion
+During candidate retrieval and reranking, any track where $\text{track\_id} \in \text{negative\_track\_ids}$ or $\text{artist\_id} \in \text{negative\_artist\_ids}$ is strictly excluded ($R_i = 0$).
+
+### 7.3 Persistent Profile Merging & Drift Capping
+
+When the listener explicitly clicks `"Remember this vibe"` (`POST /profile/remember`), session modes are merged into persistent modes using an exponential moving average with bounded Euclidean drift:
+
+#### 1. Convex Combination
+For each persistent mode $\mathbf{p}$ paired with its nearest session mode $\mathbf{s}$:
+$$\mathbf{u} = (1 - \alpha) \cdot \mathbf{p} + \alpha \cdot \mathbf{s}$$
+where $\alpha = 0.30$.
+
+#### 2. Euclidean Drift Capping ($\delta_{\max} = 0.25$)
+To prevent rapid mode collapse or single-session overfitting, the displacement vector $\mathbf{d} = \mathbf{u} - \mathbf{p}$ is strictly bounded by maximum drift radius $\delta_{\max} = 0.25$:
+$$\text{drift} = \|\mathbf{u} - \mathbf{p}\|_2$$
+$$\mathbf{u}_{\text{capped}} = \begin{cases}
+\mathbf{u}, & \text{if } \text{drift} \le \delta_{\max} \\
+\mathbf{p} + \delta_{\max} \cdot \frac{\mathbf{u} - \mathbf{p}}{\|\mathbf{u} - \mathbf{p}\|_2}, & \text{otherwise}
+\end{cases}$$
+$$\mathbf{p}_{\text{merged}} = \frac{\mathbf{u}_{\text{capped}}}{\|\mathbf{u}_{\text{capped}}\|_2}$$
+
+### 7.4 Explainability Integration (Rule 14)
+
+When user feedback shifts recommendations, recommended tracks exhibiting high semantic affinity ($\ge 70\%$) to liked tracks trigger Rule 14 (`RULE_FEEDBACK_LIKED`):
+- Explanation: *"Moves toward [Liked Track Title] which you liked (88% match)."*
+- Grounded strictly in calculated dot-product similarity to session liked track vectors.
+
+### 7.5 Portability & Complete Erasure
+
+Under Melovia's data sovereignty principles:
+- **Portable JSON Export** (`GET /profile/export`): Serializes all multi-modal channel vectors, weights, member seeds, and known tracks in a self-contained, versioned JSON schema.
+- **Complete Erasure** (`DELETE /profile`): Purges the device profile row from the database, deletes all recorded interaction events for that device, and flushes ephemeral in-memory session caches.

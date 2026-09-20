@@ -122,15 +122,15 @@ def evaluate_playlist_continuation(
 
         # Require at least 8 catalog-covered tracks: 4 seeds + >=4 ground-truth targets
         if len(covered_indices) >= 8:
-            valid_evaluation_playlists.append({
-                "title": pl.get("title", "Untitled"),
-                "seed_indices": covered_indices[:4],
-                "relevant_indices": set(covered_indices[4:]),
-            })
+            valid_evaluation_playlists.append(
+                {
+                    "title": pl.get("title", "Untitled"),
+                    "seed_indices": covered_indices[:4],
+                    "relevant_indices": set(covered_indices[4:]),
+                }
+            )
 
-    catalog_coverage_pct = (
-        (total_covered_tracks / max(1, total_playlist_tracks)) * 100.0
-    )
+    catalog_coverage_pct = (total_covered_tracks / max(1, total_playlist_tracks)) * 100.0
 
     print("\n" + "=" * 80)
     print("PLAYLIST CONTINUATION PROXY EVALUATION (ListenBrainz JSPF)")
@@ -164,9 +164,7 @@ def evaluate_playlist_continuation(
         modes = build_modes(seed_ids, catalog, config=config)
         pool = generate_candidates(modes, catalog, k_per_mode=config.k_candidates)
         scored = score_candidates(pool, catalog, config=config)
-        reranked = rerank_candidates(
-            pool, scored, catalog, discovery=0.35, n=k_eval, config=config
-        )
+        reranked = rerank_candidates(pool, scored, catalog, discovery=0.35, n=k_eval, config=config)
 
         rec_indices = [it.track_idx for it in reranked.items]
         hits_binary = [1 if idx in target_set else 0 for idx in rec_indices]

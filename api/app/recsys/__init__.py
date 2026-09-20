@@ -22,6 +22,13 @@ from app.recsys.catalog import (
 )
 from app.recsys.config import RecsysConfig
 from app.recsys.explain import ExplanationBuilder, ExplanationReason
+from app.recsys.feedback import (
+    FeedbackResult,
+    apply_feedback,
+    merge_modes,
+    modes_from_dict,
+    modes_to_dict,
+)
 from app.recsys.rerank import rerank_candidates
 from app.recsys.scoring import ScoredItem, ScoredList, score_candidates
 from app.recsys.taste import Modes, RecsysError, SeedNotFoundError, build_modes
@@ -51,4 +58,9 @@ __all__ = [
     "genre_baseline",
     "single_channel_t_baseline",
     "single_channel_a_baseline",
+    "FeedbackResult",
+    "apply_feedback",
+    "merge_modes",
+    "modes_from_dict",
+    "modes_to_dict",
 ]

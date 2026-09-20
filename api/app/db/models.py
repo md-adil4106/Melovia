@@ -120,8 +120,41 @@ class StagingTrack(Base):
     )
 
 
+class Profile(Base):
+    """Anonymous device taste profile stored persistently with explicit user consent."""
+
+    __tablename__ = "profiles"
+
+    device_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    persistent_modes: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    known_track_ids: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+
+class FeedbackEvent(Base):
+    """Individual interaction event (like, dislike, skip, save) logged anonymously."""
+
+    __tablename__ = "feedback_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    device_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    session_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    track_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    event: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
+    )
+
+
 # ==============================================================================
-# Placeholder Stubs (Required by Phase 1 specification; logic implemented later)
+# Placeholder Stubs (Preserved for initial migration compatibility)
 # ==============================================================================
 
 

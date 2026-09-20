@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.signals import RecSignals
 from app.schemas.tracks import TrackDetailResponse
@@ -12,10 +12,13 @@ class RecommendationRequest(BaseModel):
     """Payload for generating recommendations from seed tracks."""
 
     seed_track_ids: list[str] = Field(
-        ...,
-        min_length=1,
+        default_factory=list,
         max_length=10,
         description="List of 1 to 10 seed track UUIDs to base recommendations on",
+    )
+    use_saved_taste: bool = Field(
+        default=False,
+        description="Whether to use the persistent profile taste modes as the initial taste",
     )
     n: int = Field(
         default=30,
@@ -37,6 +40,14 @@ class RecommendationRequest(BaseModel):
         le=1.0,
         description="Discovery level between 0.0 (pure familiarity) and 1.0 (maximum discovery)",
     )
+
+    @model_validator(mode="after")
+    def check_seeds_or_saved_taste(self) -> "RecommendationRequest":
+        if not self.use_saved_taste and not self.seed_track_ids:
+            raise ValueError(
+                "At least 1 seed track ID must be provided when use_saved_taste is false."
+            )
+        return self
 
 
 class RerankRequest(BaseModel):

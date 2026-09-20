@@ -543,4 +543,301 @@ describe("Discovery Home Page (Phase 4 & Phase 5)", () => {
       expect(screen.queryByText(/energy \(\+50%\)/i)).toBeNull();
     });
   });
+
+  it("submits like feedback, displays taste shifted indicator, and marks track as liked", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "ok", catalog: null }),
+    });
+
+    useDiscoveryStore.getState().setCandidateSetId("cand-set-fb-1");
+    useDiscoveryStore.getState().setRecommendations([
+      {
+        track: {
+          id: "rec-fb-1",
+          track_idx: 1,
+          title: "Karma Police",
+          artist_id: "art-1",
+          artist_name: "Radiohead",
+          popularity_pct: 82,
+          has_a: true,
+          has_t: true,
+        },
+        score: 0.94,
+      },
+    ]);
+
+    renderWithClient(<DiscoveryHome />);
+
+    const likeBtn = screen.getByTestId("like-button-rec-fb-1");
+    expect(likeBtn).toBeDefined();
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        status: "ok",
+        event: "like",
+        track_id: "rec-fb-1",
+        mode_shifted: true,
+        nearest_mode_idx: 0,
+        cosine_shift: 0.125,
+        candidate_set_id: "cand-set-fb-1",
+        items: [
+          {
+            track: {
+              id: "rec-fb-1",
+              track_idx: 1,
+              title: "Karma Police",
+              artist_id: "art-1",
+              artist_name: "Radiohead",
+              popularity_pct: 82,
+              has_a: true,
+              has_t: true,
+            },
+            score: 0.98,
+          },
+        ],
+        applied_negatives_count: 0,
+      }),
+    });
+
+    fireEvent.click(likeBtn);
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/feedback"),
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining('"event":"like"'),
+        })
+      );
+      expect(useDiscoveryStore.getState().likedTrackIds).toContain("rec-fb-1");
+      expect(screen.getByTestId("taste-shifted-indicator")).toBeDefined();
+      expect(screen.getByText(/Taste shifted \(\+0.125 toward this vibe\)/i)).toBeDefined();
+    });
+  });
+
+  it("submits dislike feedback and excludes track from active recommendations", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "ok", catalog: null }),
+    });
+
+    useDiscoveryStore.getState().setCandidateSetId("cand-set-fb-2");
+    useDiscoveryStore.getState().setRecommendations([
+      {
+        track: {
+          id: "rec-fb-dislike",
+          track_idx: 1,
+          title: "Creep",
+          artist_id: "art-1",
+          artist_name: "Radiohead",
+          popularity_pct: 95,
+          has_a: true,
+          has_t: true,
+        },
+        score: 0.9,
+      },
+      {
+        track: {
+          id: "rec-fb-keep",
+          track_idx: 2,
+          title: "Paranoid Android",
+          artist_id: "art-1",
+          artist_name: "Radiohead",
+          popularity_pct: 88,
+          has_a: true,
+          has_t: true,
+        },
+        score: 0.85,
+      },
+    ]);
+
+    renderWithClient(<DiscoveryHome />);
+
+    const dislikeBtn = screen.getByTestId("dislike-button-rec-fb-dislike");
+    expect(dislikeBtn).toBeDefined();
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        status: "ok",
+        event: "dislike",
+        track_id: "rec-fb-dislike",
+        mode_shifted: true,
+        nearest_mode_idx: 0,
+        cosine_shift: -0.08,
+        candidate_set_id: "cand-set-fb-2",
+        items: [
+          {
+            track: {
+              id: "rec-fb-keep",
+              track_idx: 2,
+              title: "Paranoid Android",
+              artist_id: "art-1",
+              artist_name: "Radiohead",
+              popularity_pct: 88,
+              has_a: true,
+              has_t: true,
+            },
+            score: 0.85,
+          },
+        ],
+        applied_negatives_count: 1,
+      }),
+    });
+
+    fireEvent.click(dislikeBtn);
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/feedback"),
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining('"event":"dislike"'),
+        })
+      );
+      expect(useDiscoveryStore.getState().dislikedTrackIds).toContain("rec-fb-dislike");
+      expect(screen.queryByText("Creep")).toBeNull();
+      expect(screen.getByText("Paranoid Android")).toBeDefined();
+    });
+  });
+
+  it("submits 'remember this vibe' to merge session taste into persistent profile", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "ok", catalog: null }),
+    });
+
+    useDiscoveryStore.getState().setCandidateSetId("cand-set-rem-1");
+    useDiscoveryStore.getState().setRecommendations([
+      {
+        track: {
+          id: "rec-rem-1",
+          track_idx: 1,
+          title: "Lotus Flower",
+          artist_id: "art-1",
+          artist_name: "Radiohead",
+          popularity_pct: 70,
+          has_a: true,
+          has_t: true,
+        },
+        score: 0.88,
+      },
+    ]);
+
+    renderWithClient(<DiscoveryHome />);
+
+    const rememberBtn = screen.getByLabelText(/Remember this vibe/i);
+    expect(rememberBtn).toBeDefined();
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        status: "ok",
+        device_id_hash: "dc2ecfb8",
+        num_modes: 2,
+        known_tracks_count: 5,
+        updated_at: "2026-09-20T12:00:00Z",
+      }),
+    });
+
+    fireEvent.click(rememberBtn);
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/profile/remember"),
+        expect.objectContaining({ method: "POST" })
+      );
+      expect(useDiscoveryStore.getState().hasPersistentProfile).toBe(true);
+      expect(screen.getByText(/Saved 2 taste modes to persistent profile!/i)).toBeDefined();
+    });
+  });
+
+  it("starts recommendations from saved persistent taste", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "ok", catalog: null }),
+    });
+
+    useDiscoveryStore.getState().setHasPersistentProfile(true);
+
+    renderWithClient(<DiscoveryHome />);
+
+    const startSavedBtn = screen.getByLabelText(/Start discovery using saved persistent taste/i);
+    expect(startSavedBtn).toBeDefined();
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        candidate_set_id: "cand-set-from-saved",
+        total_candidates: 150,
+        items: [
+          {
+            track: {
+              id: "rec-saved-1",
+              track_idx: 99,
+              title: "Saved Taste Recommendation",
+              artist_id: "art-saved",
+              artist_name: "Saved Artist",
+              popularity_pct: 65,
+              has_a: true,
+              has_t: true,
+            },
+            score: 0.91,
+          },
+        ],
+      }),
+    });
+
+    fireEvent.click(startSavedBtn);
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/recommendations"),
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining('"use_saved_taste":true'),
+        })
+      );
+      expect(screen.getByText("Saved Taste Recommendation")).toBeDefined();
+    });
+  });
+
+  it("opens Settings drawer, views anonymous profile, and allows export/delete", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "ok", catalog: null }),
+    });
+
+    renderWithClient(<DiscoveryHome />);
+
+    // Mock GET /profile when opening drawer
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        has_profile: true,
+        device_id_hash: "dc2ecfb8",
+        num_modes: 3,
+        known_tracks_count: 12,
+        updated_at: "2026-09-20T12:00:00Z",
+      }),
+    });
+
+    const settingsBtn = screen.getByLabelText(/Open anonymous taste profile/i);
+    fireEvent.click(settingsBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("Taste Profile & Privacy")).toBeDefined();
+      expect(screen.getByText("#dc2ecfb8")).toBeDefined();
+      expect(screen.getByText("Export Taste Profile (JSON)")).toBeDefined();
+      expect(screen.getByText(/Delete Profile & Interaction History/i)).toBeDefined();
+    });
+
+    // Close drawer on Escape
+    fireEvent.keyDown(document, { key: "Escape" });
+    await waitFor(() => {
+      expect(screen.queryByText("Taste Profile & Privacy")).toBeNull();
+    });
+  });
 });

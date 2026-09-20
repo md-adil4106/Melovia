@@ -18,6 +18,7 @@ import numpy as np
 import numpy.typing as npt
 
 from app.recsys.catalog import CatalogStore
+from app.recsys.taste import Modes
 from app.schemas.refinement import Refinement
 from app.schemas.session import AppliedConstraint
 
@@ -83,6 +84,13 @@ class SessionData:
     constraints: list[AppliedConstraint] = field(default_factory=list)
     created_at: float = field(default_factory=time.time)
     last_accessed: float = field(default_factory=time.time)
+    # Phase 9: Feedback & Live Taste Adaptation
+    live_modes: Modes | None = None
+    negative_track_ids: set[str] = field(default_factory=set)
+    negative_artist_ids: set[str] = field(default_factory=set)
+    known_track_ids: set[str] = field(default_factory=set)
+    liked_track_ids: list[str] = field(default_factory=list)
+    feedback_events_count: int = 0
 
 
 class TokenBucketRateLimiter:
@@ -279,6 +287,10 @@ class SessionStore:
                 session = self._sessions[session_id]
                 session.context = SessionContext()
                 session.constraints = []
+                session.live_modes = None
+                session.negative_track_ids.clear()
+                session.negative_artist_ids.clear()
+                session.liked_track_ids.clear()
                 session.last_accessed = now
 
     def _rebuild_context_locked(self, session: SessionData) -> None:

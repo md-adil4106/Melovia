@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Request, Response, status
 
 from app.config import get_settings
 from app.errors import AppException
@@ -20,6 +20,7 @@ from app.recsys import (
     rerank_candidates,
     score_candidates,
 )
+from app.routers.cookies import get_or_create_device_id, get_or_create_session_id
 from app.schemas.recommendations import (
     RecommendationRequest,
     RecommendationResponse,
@@ -93,6 +94,7 @@ def _build_response_items(
 )
 async def create_recommendations(
     request: Request,
+    response: Response,
     payload: RecommendationRequest,
 ) -> RecommendationResponse:
     catalog_store: CatalogStore | None = getattr(request.app.state, "catalog_store", None)
@@ -103,23 +105,60 @@ async def create_recommendations(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
+    device_id, _ = get_or_create_device_id(request, response)
+    session_id = get_or_create_session_id(request, response)
     config = RecsysConfig()
 
-    # 1. Build taste modes (validating seeds exist)
-    try:
-        modes = build_modes(payload.seed_track_ids, catalog_store, config=config)
-    except SeedNotFoundError as e:
-        raise AppException(
-            code="TRACK_NOT_FOUND",
-            message=str(e),
-            status_code=status.HTTP_404_NOT_FOUND,
-        ) from e
-    except ValueError as e:
-        raise AppException(
-            code="INVALID_SEEDS",
-            message=str(e),
-            status_code=status.HTTP_400_BAD_REQUEST,
-        ) from e
+    # 1. Build taste modes (from saved taste or seeds)
+    if payload.use_saved_taste:
+        from sqlalchemy import select
+
+        from app.db.models import Profile
+        from app.db.session import async_session_factory
+        from app.recsys.feedback import modes_from_dict
+
+        async with async_session_factory() as db:
+            stmt = select(Profile).where(Profile.device_id == device_id)
+            res = await db.execute(stmt)
+            profile = res.scalar_one_or_none()
+
+        if not profile:
+            raise AppException(
+                code="PROFILE_NOT_FOUND",
+                message=(
+                    "No saved persistent taste profile found on this device. "
+                    "Like some tracks and click 'Remember this vibe' first."
+                ),
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        modes = modes_from_dict(profile.persistent_modes)
+    else:
+        if not payload.seed_track_ids:
+            raise AppException(
+                code="INVALID_SEEDS",
+                message="At least 1 seed track ID must be provided when use_saved_taste is false.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            modes = build_modes(payload.seed_track_ids, catalog_store, config=config)
+        except SeedNotFoundError as e:
+            raise AppException(
+                code="TRACK_NOT_FOUND",
+                message=str(e),
+                status_code=status.HTTP_404_NOT_FOUND,
+            ) from e
+        except ValueError as e:
+            raise AppException(
+                code="INVALID_SEEDS",
+                message=str(e),
+                status_code=status.HTTP_400_BAD_REQUEST,
+            ) from e
+
+    # Initialize live modes in session
+    from app.session.store import global_session_store
+
+    _, session_data = global_session_store.get_or_create(session_id)
+    session_data.live_modes = modes
 
     # 2. Retrieve candidates
     filters = CandidateFilters(
