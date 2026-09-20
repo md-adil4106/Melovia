@@ -95,9 +95,7 @@ async def sequence_tracks(
             )
         # Pull top candidates (either from latest reranking or initial scoring)
         source_items = (
-            cached.latest_reranked.items
-            if cached.latest_reranked
-            else cached.scored_list.items
+            cached.latest_reranked.items if cached.latest_reranked else cached.scored_list.items
         )
         for it in source_items:
             t_dict = catalog_store.get_track_dict(it.track_idx)

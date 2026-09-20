@@ -171,9 +171,7 @@ def test_transition_cost_reduction_vs_baselines():
         mean_cost_score_order - res_seq.mean_transition_cost
     ) / mean_cost_score_order
 
-    assert reduction_vs_random >= 0.25, (
-        f"Reduction vs random was {reduction_vs_random * 100:.1f}%"
-    )
+    assert reduction_vs_random >= 0.25, f"Reduction vs random was {reduction_vs_random * 100:.1f}%"
     assert reduction_vs_score >= 0.25, (
         f"Reduction vs score order was {reduction_vs_score * 100:.1f}%"
     )

@@ -283,12 +283,7 @@ def sequence_playlist(
             # Same artist penalty
             same_art = 1.0 if (artist_ids[i] and artist_ids[i] == artist_ids[j]) else 0.0
 
-            cost = (
-                w_tempo * t_diff
-                + w_energy * e_diff
-                + w_semantic * s_dist
-                + w_artist * same_art
-            )
+            cost = w_tempo * t_diff + w_energy * e_diff + w_semantic * s_dist + w_artist * same_art
             c_trans[i, j] = cost
             c_trans[j, i] = cost
 
@@ -392,9 +387,7 @@ def sequence_playlist(
         )
         total_transition_cost += step_cost
 
-    mean_trans_cost = (
-        total_transition_cost / (target_length - 1) if target_length > 1 else 0.0
-    )
+    mean_trans_cost = total_transition_cost / (target_length - 1) if target_length > 1 else 0.0
 
     arc_points: list[ArcPoint] = []
     realized_energies: list[float] = []

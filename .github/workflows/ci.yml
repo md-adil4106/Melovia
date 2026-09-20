@@ -41,5 +41,8 @@ jobs:
       - name: Install frontend dependencies
         run: cd web && pnpm install --frozen-lockfile
 
+      - name: Generate mock catalog bundle
+        run: make make-mock
+
       - name: Run make check
         run: make check
