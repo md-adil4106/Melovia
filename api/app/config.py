@@ -32,6 +32,9 @@ class LLMSettings(BaseModel):
         default=0.2, description="Sampling temperature for structured constraints"
     )
     max_tokens: int = Field(default=1024, description="Maximum completion tokens")
+    explain_llm_polish: bool = Field(
+        default=False, description="Enable verified LLM polish on explanations"
+    )
 
 
 class PlatformSettings(BaseModel):
@@ -100,6 +103,7 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = Field(default="", validation_alias="LLM_API_KEY")
     LLM_TEMPERATURE: float = Field(default=0.2, validation_alias="LLM_TEMPERATURE")
     LLM_MAX_TOKENS: int = Field(default=1024, validation_alias="LLM_MAX_TOKENS")
+    EXPLAIN_LLM_POLISH: bool = Field(default=False, validation_alias="EXPLAIN_LLM_POLISH")
 
     # PLATFORM
     PLATFORM_DEFAULT: str = Field(default="spotify", validation_alias="PLATFORM_DEFAULT")
@@ -135,6 +139,7 @@ class Settings(BaseSettings):
             api_key=self.LLM_API_KEY,
             temperature=self.LLM_TEMPERATURE,
             max_tokens=self.LLM_MAX_TOKENS,
+            explain_llm_polish=self.EXPLAIN_LLM_POLISH,
         )
 
     @property

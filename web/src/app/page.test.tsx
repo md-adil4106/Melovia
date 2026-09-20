@@ -289,4 +289,144 @@ describe("Discovery Home Page (Phase 4 & Phase 5)", () => {
     fireEvent.keyDown(slider, { key: "Home" });
     expect(screen.getByTestId("discovery-pct-badge").textContent).toBe("0%");
   });
+
+  it("opens Why drawer on clicking Why? button and displays explanation", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "ok", catalog: null }),
+    });
+
+    useDiscoveryStore.getState().setCandidateSetId("cand-set-why-1");
+    useDiscoveryStore.getState().setRecommendations([
+      {
+        track: {
+          id: "rec-why-1",
+          track_idx: 10,
+          title: "Karma Police",
+          artist_id: "art-1",
+          artist_name: "Radiohead",
+          popularity_pct: 82,
+          has_a: true,
+          has_t: true,
+        },
+        score: 0.94,
+        signals: {
+          novelty: 0.2,
+          familiarity: 0.8,
+          relevance: 0.94,
+        },
+      },
+    ]);
+
+    renderWithClient(<DiscoveryHome />);
+
+    const whyBtn = screen.getByTestId("why-button-rec-why-1");
+    expect(whyBtn).toBeDefined();
+
+    // Mock the Why endpoint response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        track_id: "rec-why-1",
+        title: "Karma Police",
+        artist_name: "Radiohead",
+        reasons: [
+          {
+            id: "SHARED_TAG_TOP",
+            text: "Shares alternative rock and art rock with your seed tracks",
+            signal_keys: ["shared_tags"],
+            evidence: { top_tag: "alternative rock" },
+            salience: 0.95,
+          },
+          {
+            id: "SEMANTIC_SIM_HIGH",
+            text: "Strong semantic similarity across community tagging folksonomy",
+            signal_keys: ["pct_t", "sim_t"],
+            evidence: { pct_t: 0.92 },
+            salience: 0.85,
+          },
+        ],
+        signals: {
+          sim_t: 0.85,
+          pct_t: 0.92,
+          sim_a: 0.78,
+          pct_a: 0.88,
+          novelty: 0.2,
+          popularity_pct: 82,
+        },
+        discovery_value: 0.35,
+        cached: true,
+      }),
+    });
+
+    fireEvent.click(whyBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("why-drawer")).toBeDefined();
+      expect(screen.getByText(/Why "Karma Police"\?/i)).toBeDefined();
+      expect(screen.getByText(/Shares alternative rock and art rock/i)).toBeDefined();
+      expect(screen.getByText(/Semantic Taste Alignment \(t\)/i)).toBeDefined();
+      expect(screen.getByText("92%")).toBeDefined();
+    });
+
+    // Close the drawer using the close button
+    const closeBtn = screen.getByTestId("why-drawer-close");
+    fireEvent.click(closeBtn);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("why-drawer")).toBeNull();
+    });
+  });
+
+  it("closes Why drawer when Escape key is pressed", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "ok", catalog: null }),
+    });
+
+    useDiscoveryStore.getState().setCandidateSetId("cand-set-why-2");
+    useDiscoveryStore.getState().setRecommendations([
+      {
+        track: {
+          id: "rec-why-2",
+          track_idx: 11,
+          title: "No Surprises",
+          artist_id: "art-1",
+          artist_name: "Radiohead",
+          popularity_pct: 79,
+          has_a: true,
+          has_t: true,
+        },
+        score: 0.91,
+      },
+    ]);
+
+    renderWithClient(<DiscoveryHome />);
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        track_id: "rec-why-2",
+        title: "No Surprises",
+        artist_name: "Radiohead",
+        reasons: [],
+        signals: {},
+        discovery_value: 0.35,
+        cached: true,
+      }),
+    });
+
+    fireEvent.click(screen.getByTestId("why-button-rec-why-2"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("why-drawer")).toBeDefined();
+    });
+
+    // Press Escape
+    fireEvent.keyDown(window, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("why-drawer")).toBeNull();
+    });
+  });
 });

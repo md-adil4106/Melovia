@@ -230,4 +230,42 @@ If either track lacks audio analysis, weights dynamically renormalize to $0.90 \
 #### 8. Deterministic Tie-Breaking
 Any ties in MMR score are broken deterministically by lexicographical order of `track_id`.
 
+---
+
+## 5. Explainability Framework (Signal-True Explanations)
+
+### 5.1 Architectural Principles
+Melovia enforces strict signal-grounding for every recommendation explanation (WOW #3):
+1. **Signal-True Invariant**: Every explanation sentence maps to $\ge 1$ named ranking signal in `RecSignals`. No sentence is ever emitted without quantifiable numerical evidence.
+2. **Proxy Qualification Invariant**: Heuristic proxies (`energy_idx`, `valence_idx`) are explicitly qualified with `(approx.)` in all user-facing copy to prevent misleading scientific claims.
+3. **Dynamic Salience Weighting**: Reasons are dynamically weighted by relevance and the Discovery Control parameter $d \in [0.0, 1.0]$. When $d \to 0.0$, familiarity, tag overlap, and acoustic texture are emphasized; when $d \to 1.0$, novelty, underground status, and exploratory aesthetic clusters take precedence.
+4. **Deterministic Rule Table**: The pure Python `ExplanationBuilder` maps ranking signals to natural-language explanations deterministically with zero external API dependencies.
+
+### 5.2 Rule Table Specification
+
+| Rule ID | Name | Trigger Condition / Threshold | Signal Keys | Salience Weight Function | Output Format / Example |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `RULE_SHARED_TAGS` | Shared Folksonomy Tags | Shared tags $\ge 1$ between candidate and seeds | `shared_tags` | $w = 1.0 + 0.3 \cdot \min(N, 3)$ | *"Shares alternative rock and post-punk with your seed tracks."* |
+| `RULE_ENERGY_MATCH` | Energy Match (Approx.) | $|\Delta\text{energy\_idx}| \le 0.12$ | `scalar_deltas`, `nearest_seed_id` | $w = (1 - |\Delta|) \cdot (1.0 - 0.3d)$ | *"Close to your preferred energy range (94% match) (approx.)."* |
+| `RULE_VALENCE_MATCH` | Mood Match (Approx.) | $|\Delta\text{valence\_idx}| \le 0.12$ | `scalar_deltas`, `nearest_seed_id` | $w = (1 - |\Delta|) \cdot (0.9 - 0.2d)$ | *"Matches the emotional mood of your seeds (92% match) (approx.)."* |
+| `RULE_NEW_ARTIST` | Artist Discovery | $\text{artist\_new} = \text{True}$ | `artist_new` | $w = 0.5 + 0.8d$ | *"Introduces [Artist], a new artist for your listening profile."* |
+| `RULE_SAME_ARTIST` | Catalog Familiarity | $\text{artist\_new} = \text{False}$ | `artist_new` | $w = 0.9 \cdot (1.0 - d)$ | *"From [Artist], expanding on your seed selection."* |
+| `RULE_HIGH_NOVELTY` | Exploratory Discovery | $\text{novelty} \ge 0.55$ | `novelty` | $w = \text{nov} \cdot (0.5 + 1.2d)$ | *"Expands into a less familiar sound within this genre space."* |
+| `RULE_LOW_NOVELTY` | Stylistic Anchor | $\text{novelty} \le 0.20$ | `novelty`, `familiarity` | $w = (1 - \text{nov}) \cdot (1.2 - 0.8d)$ | *"Solidifies familiar territory with core stylistic anchors."* |
+| `RULE_LESSER_KNOWN` | Underground Track | $\text{popularity\_pct} \le 35.0$ | `popularity_pct` | $w = \frac{35 - \text{pop}}{35} \cdot (0.6 + 0.9d)$ | *"Lesser-known underground track (18% popularity)."* |
+| `RULE_MAINSTREAM` | Mainstream Track | $\text{popularity\_pct} \ge 75.0$ | `popularity_pct` | $w = \frac{\text{pop}}{100} \cdot (1.0 - 0.5d)$ | *"Well-known staple within this musical realm (84% popularity)."* |
+| `RULE_SEMANTIC_MATCH` | High Semantic Similarity | $pct_t \ge 0.80$ | `pct_t`, `sim_t`, `nearest_seed_id` | $w = pct_t \cdot (1.2 - 0.4d)$ | *"Strong stylistic match with [Nearest Seed] (96% match)."* |
+| `RULE_ACOUSTIC_MATCH` | High Acoustic Texture Match | $pct_a \ge 0.70$ | `pct_a`, `sim_a` | $w = pct_a \cdot 1.1$ | *"Shares similar acoustic and rhythmic texture with your seeds (88% acoustic match)."* |
+| `RULE_REGION_ALIGNMENT` | Aesthetic Cluster / Region | Region label present | `region_id`, `region_label` | $w = 0.8 + 0.5d$ (exp) / $0.9(1-0.3d)$ | *"Anchored in the [Region] soundscape."* or *"Explores the [Region] aesthetic cluster."* |
+
+### 5.3 Verifier-Guarded LLM Polish Architecture
+
+Melovia includes an optional editorial polish interface (`api/app/llm/polish.py`) behind the setting flag `EXPLAIN_LLM_POLISH=false` (default disabled):
+- **Input Restricted**: The LLM receives strictly structured reason JSON (rule ID, text, signal keys, and numeric evidence). It never accesses the vector index or catalog directly.
+- **Output Invariants Enforced by `verify_polished_reason`**:
+  1. **Numeric Integrity**: Every integer or floating-point percentage in the output must match a value in the structured evidence dictionary within $\pm 0.5$ tolerance. Hallucinated numbers are rejected.
+  2. **Vocabulary & Entity Integrity**: Any named entities (artists, seeds) must exist in the source reason. Words resembling instrument solos, genres, or stylistic adjectives not grounded in evidence or the original template are rejected.
+  3. **Mandatory Fallback**: If verification fails for any reason, the system silently and safely falls back to the deterministic template reason. No user ever receives an ungrounded explanation.
+
+
 

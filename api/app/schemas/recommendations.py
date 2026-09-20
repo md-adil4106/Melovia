@@ -4,6 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.schemas.signals import RecSignals
 from app.schemas.tracks import TrackDetailResponse
 
 
@@ -63,6 +64,20 @@ class RerankRequest(BaseModel):
     )
 
 
+class WhyExplanationReason(BaseModel):
+    """An individual signal-grounded reason explaining why a track was recommended."""
+
+    id: str = Field(..., description="Unique rule identifier that triggered this reason")
+    text: str = Field(..., description="Human-readable explanation sentence")
+    signal_keys: list[str] = Field(
+        ..., description="List of named RecSignals fields backing this explanation sentence"
+    )
+    evidence: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Concrete numeric and factual values used to evaluate the rule",
+    )
+    weight: float = Field(..., description="Dynamic salience weight of this reason")
+
 
 class RecommendedTrackItem(BaseModel):
     """An individual recommended track item with ranking score and explanation signals."""
@@ -71,9 +86,19 @@ class RecommendedTrackItem(BaseModel):
     score: float = Field(
         ..., ge=0.0, le=1.0, description="Normalized multi-channel relevance score"
     )
-    signals: dict[str, Any] | None = Field(
+    discovery_value: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Lightweight discovery score in [0, 1]",
+    )
+    signals: RecSignals | dict[str, Any] | None = Field(
         default=None,
         description="Detailed similarity and percentile signals across channels",
+    )
+    reasons: list[WhyExplanationReason] | None = Field(
+        default=None,
+        description="Optional top 3-4 reasons explaining this recommendation",
     )
 
 
@@ -91,4 +116,22 @@ class RecommendationResponse(BaseModel):
     items: list[RecommendedTrackItem] = Field(
         default_factory=list,
         description="Ranked list of recommended tracks",
+    )
+
+
+class WhyExplanationResponse(BaseModel):
+    """Full explainability payload detailing why a specific track was recommended."""
+
+    candidate_set_id: str = Field(..., description="Candidate pool UUID")
+    track_id: str = Field(..., description="Track UUID being explained")
+    reasons: list[WhyExplanationReason] = Field(
+        ..., description="Top 3-4 signal-backed explanation sentences"
+    )
+    signals: RecSignals = Field(..., description="Full numeric ranking signals")
+    discovery_value: float = Field(
+        ..., ge=0.0, le=1.0, description="Effective discovery level when explained"
+    )
+    llm_polished: bool = Field(
+        default=False,
+        description="True if sentence phrasing was styled by the optional verified LLM polish",
     )

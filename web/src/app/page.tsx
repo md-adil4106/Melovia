@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Compass,
   Headphones,
+  HelpCircle,
   Music,
   Plus,
   RefreshCw,
@@ -15,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { Track, RecommendedItem, useDiscoveryStore } from "./store";
+import { WhyDrawer } from "./components/WhyDrawer";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -37,6 +39,13 @@ export default function DiscoveryHome() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [sliderValue, setSliderValue] = useState(discovery);
+  const [selectedTrackForWhy, setSelectedTrackForWhy] = useState<Track | null>(null);
+  const [isWhyDrawerOpen, setIsWhyDrawerOpen] = useState(false);
+
+  const handleOpenWhy = (track: Track) => {
+    setSelectedTrackForWhy(track);
+    setIsWhyDrawerOpen(true);
+  };
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -623,6 +632,18 @@ export default function DiscoveryHome() {
                         </span>
                         <span className="text-[10px] text-[#8c96a8]">match</span>
                       </div>
+
+                      {/* Why Explanation Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenWhy(item.track)}
+                        data-testid={`why-button-${item.track.id}`}
+                        aria-label={`Why was ${item.track.title} recommended?`}
+                        className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-[#1b2230] border border-[#2b354a] hover:border-[#d4af37]/60 text-[#c8d0de] hover:text-[#d4af37] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+                      >
+                        <HelpCircle className="w-3.5 h-3.5 text-[#d4af37]" />
+                        <span>Why?</span>
+                      </button>
                     </div>
                   </article>
                 );
@@ -631,6 +652,15 @@ export default function DiscoveryHome() {
           )}
         </section>
       </div>
+
+      {/* Accessible Explainability Drawer */}
+      <WhyDrawer
+        isOpen={isWhyDrawerOpen}
+        onClose={() => setIsWhyDrawerOpen(false)}
+        track={selectedTrackForWhy}
+        candidateSetId={candidateSetId}
+        apiBase={API_BASE}
+      />
     </main>
   );
 }

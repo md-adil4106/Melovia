@@ -299,6 +299,7 @@ def rerank_candidates(
                 "relevance": round(float(surv_relevance[c]), 4),
                 "utility": round(float(surv_utility[c]), 4),
                 "discovery_score": round(float(surv_d_score[c]), 4),
+                "discovery_value": round(float(surv_d_score[c]), 4),
                 "discovery_d": round(d, 3),
             }
         )

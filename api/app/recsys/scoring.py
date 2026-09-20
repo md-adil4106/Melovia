@@ -143,12 +143,23 @@ def score_candidates(
             # Renormalize when audio is masked
             combined_scores[i] = z_t[i]
 
-    # 4. Compute nearest seed for explainability signals
+    # 4. Compute nearest seed and context for explainability signals
     all_seed_ids: list[str] = [sid for m_seeds in modes.member_seed_ids for sid in m_seeds]
     seed_indices = [catalog.get_idx(sid) for sid in all_seed_ids if catalog.contains_id(sid)]
     seed_vecs_t = (
         catalog.vectors_t[seed_indices] if seed_indices else np.empty((0, 128), dtype=np.float32)
     )
+
+    # Pre-extract seed metadata dictionaries
+    seed_dict: dict[str, dict[str, Any]] = {
+        sid: catalog.get_track_dict(sid) for sid in all_seed_ids if catalog.contains_id(sid)
+    }
+
+    region_name_map: dict[int, str] = {
+        int(r["region_id"]): str(r["name"])
+        for r in catalog.regions
+        if isinstance(r, dict) and "region_id" in r and "name" in r
+    }
 
     # Sub-vectors for pool
     sub_vecs_t = catalog.vectors_t[track_indices]  # (P, dim_t)
@@ -157,6 +168,10 @@ def score_candidates(
         if seed_vecs_t.shape[0] > 0
         else np.zeros((p_size, 0), dtype=np.float32)
     )
+
+    # Pre-extract track metadata columns
+    region_col = catalog._tracks_metadata.get("region_id", [None] * catalog.track_count)
+    tags_col = catalog._tracks_metadata.get("tags", [[]] * catalog.track_count)
 
     # 5. Build ScoredItems
     scored_items: list[ScoredItem] = []
@@ -172,15 +187,55 @@ def score_candidates(
             nearest_seed_id = all_seed_ids[best_seed_k]
             nearest_seed_sim = round(float(seed_sims_matrix[i, best_seed_k]), 4)
 
+        best_seed_meta = seed_dict.get(nearest_seed_id, {})
+        seed_title = best_seed_meta.get("title")
+        seed_artist = best_seed_meta.get("artist_name")
+
+        # Shared folksonomy tags
+        track_tags = set(tags_col[t_idx] if t_idx < len(tags_col) and tags_col[t_idx] else [])
+        seed_tags = set(best_seed_meta.get("tags") or [])
+        shared_set = track_tags.intersection(seed_tags)
+        shared_tags_list = [
+            {"tag": tag, "idf": 2.5, "weight": 1.0}
+            for tag in sorted(shared_set)
+        ]
+
+        # Scalar deltas against nearest seed
+        scalar_deltas: dict[str, float] = {}
+        if catalog.scalars:
+            for s_key in (
+                "energy_idx", "valence_idx", "tempo_norm", "danceability", "acousticness"
+            ):
+                if s_key in catalog.scalars:
+                    track_val = catalog.scalars[s_key][t_idx]
+                    seed_val = best_seed_meta.get("scalars", {}).get(s_key)
+                    if track_val is not None and seed_val is not None:
+                        scalar_deltas[s_key] = round(float(track_val - seed_val), 4)
+
+        # Region metadata
+        region_id = region_col[t_idx] if t_idx < len(region_col) else None
+        region_label = region_name_map.get(region_id) if region_id is not None else None
+
         has_a = bool(sub_mask_a[i] and has_audio_modes)
         signals: dict[str, Any] = {
+            "sim_t": round(float(s_t[i]), 4),
+            "pct_t": round(float(z_t[i]), 4),
             "raw_sim_t": round(float(s_t[i]), 4),
             "percentile_t": round(float(z_t[i]), 4),
+            "sim_a": round(float(s_a[i]), 4) if has_a else None,
+            "pct_a": round(float(z_a[i]), 4) if has_a else None,
             "raw_sim_a": round(float(s_a[i]), 4) if has_a else None,
             "percentile_a": round(float(z_a[i]), 4) if has_a else None,
             "has_audio": has_a,
             "nearest_seed_id": nearest_seed_id,
+            "nearest_seed_title": seed_title,
+            "nearest_seed_artist": seed_artist,
             "nearest_seed_similarity": nearest_seed_sim,
+            "shared_tags": shared_tags_list,
+            "scalar_deltas": scalar_deltas,
+            "region_id": region_id,
+            "region_label": region_label,
+            "session_facets_matched": [],
         }
 
         scored_items.append(

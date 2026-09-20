@@ -26,12 +26,18 @@ export interface Track {
 }
 
 export interface RecommendationSignals {
+  sim_t?: number;
+  pct_t?: number;
+  sim_a?: number | null;
+  pct_a?: number | null;
   raw_sim_t?: number;
   percentile_t?: number;
   raw_sim_a?: number | null;
   percentile_a?: number | null;
   has_audio?: boolean;
   nearest_seed_id?: string;
+  nearest_seed_title?: string;
+  nearest_seed_artist?: string;
   nearest_seed_similarity?: number;
   novelty?: number;
   familiarity?: number;
@@ -41,12 +47,35 @@ export interface RecommendationSignals {
   relevance?: number;
   utility?: number;
   discovery_score?: number;
+  discovery_value?: number;
   discovery_d?: number;
+  region_id?: number | null;
+  region_label?: string | null;
+  shared_tags?: Array<{ tag: string; idf: number; weight: number }>;
+  scalar_deltas?: Record<string, number>;
+}
+
+export interface WhyExplanationReason {
+  id: string;
+  text: string;
+  signal_keys: string[];
+  evidence: Record<string, any>;
+  weight: number;
+}
+
+export interface WhyExplanationData {
+  candidate_set_id: string;
+  track_id: string;
+  reasons: WhyExplanationReason[];
+  signals: RecommendationSignals;
+  discovery_value: number;
+  llm_polished: boolean;
 }
 
 export interface RecommendedItem {
   track: Track;
   score: number;
+  discovery_value?: number;
   signals?: RecommendationSignals | null;
 }
 

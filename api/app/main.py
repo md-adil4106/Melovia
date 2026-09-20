@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.errors import register_exception_handlers
+from app.llm.polish import LLMPolishService
 from app.logging import RequestLoggingMiddleware, logger, setup_logging
 from app.recsys.catalog import CatalogCorruptError, CatalogStore
 from app.routers.health import router as health_router
@@ -22,6 +23,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     settings = get_settings()
     setup_logging(debug=settings.DEBUG)
     logger.info("Starting Melovia API backend", extra={"env": settings.ENV, "version": "0.1.0"})
+
+    app.state.settings = settings
+    app.state.llm_polish_service = LLMPolishService(enabled=settings.EXPLAIN_LLM_POLISH)
 
     # Mount immutable vector catalog bundle
     bundle_path = Path(settings.CATALOG_BUNDLE_PATH)

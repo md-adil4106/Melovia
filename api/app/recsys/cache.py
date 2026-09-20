@@ -13,13 +13,15 @@ from app.recsys.config import RecsysConfig
 from app.recsys.scoring import ScoredList
 
 
-@dataclass(frozen=True)
+@dataclass
 class CachedCandidateSet:
     candidate_set_id: str
     pool: CandidatePool
     scored_list: ScoredList
     config: RecsysConfig
     created_at: float
+    latest_reranked: ScoredList | None = None
+    discovery: float = 0.35
 
 
 class CandidateCache:
@@ -36,6 +38,8 @@ class CandidateCache:
         pool: CandidatePool,
         scored_list: ScoredList,
         config: RecsysConfig,
+        latest_reranked: ScoredList | None = None,
+        discovery: float = 0.35,
     ) -> None:
         """Store candidate pool and scored list in cache with current timestamp."""
         now = time.time()
@@ -47,7 +51,22 @@ class CandidateCache:
                 scored_list=scored_list,
                 config=config,
                 created_at=now,
+                latest_reranked=latest_reranked,
+                discovery=discovery,
             )
+
+    def update_reranked(
+        self,
+        candidate_set_id: str,
+        latest_reranked: ScoredList,
+        discovery: float,
+    ) -> None:
+        """Update cached set with latest reranked result and discovery level."""
+        with self._lock:
+            entry = self._cache.get(candidate_set_id)
+            if entry:
+                entry.latest_reranked = latest_reranked
+                entry.discovery = discovery
 
     def get(self, candidate_set_id: str) -> CachedCandidateSet | None:
         """Retrieve cached candidate set if present and not expired."""
