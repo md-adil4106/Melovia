@@ -85,7 +85,7 @@ api-lint:
 api-typecheck:
 	$(UV) run --directory api mypy app
 
-api-test:
+api-test: make-mock
 	$(UV) run --directory api pytest
 
 # Web Targets
