@@ -85,6 +85,13 @@ class CatalogStore:
         self._id_to_idx: dict[str, int] = {tid: idx for idx, tid in enumerate(track_ids)}
         self._idx_to_id: dict[int, str] = dict(enumerate(track_ids))
 
+        # Index mapping for MBIDs if present
+        self._mbid_to_idx: dict[str, int] = {}
+        if "mbid" in self._tracks_metadata:
+            for idx, mbid_val in enumerate(self._tracks_metadata["mbid"]):
+                if mbid_val:
+                    self._mbid_to_idx[str(mbid_val).lower()] = idx
+
     @classmethod
     def load(cls, bundle_path_str: str | Path) -> "CatalogStore":
         """Load and validate an immutable catalog bundle from disk."""
@@ -226,6 +233,20 @@ class CatalogStore:
 
     def contains_id(self, track_id: str) -> bool:
         return track_id in self._id_to_idx
+
+    def contains_mbid(self, mbid: str) -> bool:
+        """Check if recording MBID or track ID is present in catalog."""
+        norm = mbid.lower()
+        return norm in self._mbid_to_idx or norm in self._id_to_idx
+
+    def get_idx_by_mbid(self, mbid: str) -> int:
+        """Return integer row index for an MBID or track ID."""
+        norm = mbid.lower()
+        if norm in self._mbid_to_idx:
+            return self._mbid_to_idx[norm]
+        if norm in self._id_to_idx:
+            return self._id_to_idx[norm]
+        raise KeyError(f"MBID '{mbid}' not found in catalog")
 
     def get_track_dict(self, track_idx_or_id: int | str) -> dict[str, Any]:
         """Return full metadata dictionary for a track."""

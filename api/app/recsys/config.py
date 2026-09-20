@@ -61,3 +61,11 @@ class RecsysConfig:
     # Default random seed for deterministic baselines and tie-breaking
     seed: int = 42
 
+    # Ablation and Feature Switches for Evaluation
+    use_audio: bool = True
+    use_mmr: bool = True
+    popularity_correction: bool = True
+    use_context: bool = False  # Architecture placeholder
+    use_feedback: bool = False  # Architecture placeholder
+
+

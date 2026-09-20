@@ -12,6 +12,7 @@ import numpy as np
 import numpy.typing as npt
 
 from app.recsys.catalog import CatalogStore
+from app.recsys.config import RecsysConfig
 from app.recsys.taste import Modes
 
 
@@ -51,6 +52,7 @@ def generate_candidates(
     catalog: CatalogStore,
     filters: CandidateFilters | None = None,
     k_per_mode: int = 500,
+    config: RecsysConfig | None = None,
 ) -> CandidatePool:
     """Generate candidate pool via exact vector dot products per mode per channel.
 
@@ -60,6 +62,7 @@ def generate_candidates(
     3. Exclude seed tracks and any excluded artists.
     4. Compute and return per-channel similarity matrices.
     """
+    cfg = config or RecsysConfig()
     filt = filters or CandidateFilters()
     n_catalog = catalog.track_count
 
@@ -98,8 +101,8 @@ def generate_candidates(
             top_idx = np.arange(n_catalog)
         candidate_indices_set.update(int(idx) for idx in top_idx)
 
-    # 2. Channel a candidates (if available)
-    if modes.has_channel.get("a", False):
+    # 2. Channel a candidates (if available and audio is enabled)
+    if cfg.use_audio and modes.has_channel.get("a", False):
         vecs_a = catalog.vectors_a  # (N, dim_a)
         modes_a = modes.channel_vectors["a"]  # (M, dim_a)
         mask_a = catalog.mask_a
@@ -164,7 +167,7 @@ def generate_candidates(
     raw_sims_t = np.dot(sub_vecs_t, modes.channel_vectors["t"].T).astype(np.float32)
 
     raw_sims_a = np.zeros((p_size, m_count), dtype=np.float32)
-    if modes.has_channel.get("a", False):
+    if cfg.use_audio and modes.has_channel.get("a", False):
         sub_vecs_a = catalog.vectors_a[pool_indices]  # (P, dim_a)
         sub_mask_a = catalog.mask_a[pool_indices]
         raw_sims_a_full = np.dot(sub_vecs_a, modes.channel_vectors["a"].T).astype(np.float32)

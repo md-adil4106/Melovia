@@ -108,12 +108,18 @@ def rerank_candidates(
     sigma_sq = cfg.novelty_sigma**2
     n_score = np.exp(-((nov - mu) ** 2) / (2.0 * sigma_sq)).astype(np.float32)
 
-    # 6. Discovery score D_i
-    d_score = (
-        cfg.discovery_w_novelty * n_score
-        + cfg.discovery_w_artist * a_new
-        + cfg.discovery_w_popularity * (1.0 - pop_norm)
-    ).astype(np.float32)
+    # 6. Discovery score D_i (with popularity_correction switch)
+    if cfg.popularity_correction:
+        d_score = (
+            cfg.discovery_w_novelty * n_score
+            + cfg.discovery_w_artist * a_new
+            + cfg.discovery_w_popularity * (1.0 - pop_norm)
+        ).astype(np.float32)
+    else:
+        denom = cfg.discovery_w_novelty + cfg.discovery_w_artist
+        w_nov = cfg.discovery_w_novelty / denom
+        w_art = cfg.discovery_w_artist / denom
+        d_score = (w_nov * n_score + w_art * a_new).astype(np.float32)
 
     # 7. Map base relevance scores R_i from scored_list
     idx_to_relevance = {item.track_idx: item.score for item in scored_list.items}
@@ -144,7 +150,7 @@ def rerank_candidates(
     artist_cap = (
         cfg.artist_cap_discovery if d >= cfg.artist_cap_threshold_d else cfg.artist_cap_default
     )
-    mmr_lambda = cfg.mmr_lambda_base - cfg.mmr_lambda_slope * d
+    mmr_lambda = (cfg.mmr_lambda_base - cfg.mmr_lambda_slope * d) if cfg.use_mmr else 1.0
 
     # Pre-extract vector representations and metadata for surviving pool
     surv_track_indices = track_indices[surviving_indices]
@@ -157,12 +163,13 @@ def rerank_candidates(
 
     surv_vecs_t = catalog.vectors_t[surv_track_indices]  # (S_pool, dim_t)
 
-    # Audio vectors and masks
+    # Audio vectors and masks (respecting cfg.use_audio)
     has_audio_catalog = catalog.mask_a
     surv_mask_a = has_audio_catalog[surv_track_indices]
+    use_audio_ch = bool(cfg.use_audio and modes.has_channel.get("a", False))
     surv_vecs_a = (
         catalog.vectors_a[surv_track_indices]
-        if modes.has_channel.get("a", False)
+        if use_audio_ch
         else np.empty((len(surviving_indices), 0), dtype=np.float32)
     )
 
@@ -240,7 +247,7 @@ def rerank_candidates(
 
         # Update max_sim_to_s for remaining candidates with respect to c_star
         vec_t_star = surv_vecs_t[c_star]
-        has_a_star = surv_mask_a[c_star]
+        has_a_star = bool(surv_mask_a[c_star] and use_audio_ch)
         vec_a_star = surv_vecs_a[c_star] if has_a_star and surv_vecs_a.shape[1] > 0 else None
 
         # Dot products with c_star across all surviving candidates in channel t

@@ -16,6 +16,8 @@ import json
 from pathlib import Path
 import uuid
 
+from typing import Any
+
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -27,7 +29,7 @@ DIM_T = 128
 DIM_A = 128
 MISSING_A_RATIO = 0.05  # Exactly 5% (150 tracks)
 
-REGIONS_DEF = [
+REGIONS_DEF: list[dict[str, Any]] = [
     {
         "region_id": 0,
         "name": "Neon Nocturne",

@@ -72,3 +72,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Evaluation reports
+eval/reports/*
+!eval/reports/.gitkeep
+

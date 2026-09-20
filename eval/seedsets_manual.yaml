@@ -1,0 +1,317 @@
+# eval/seedsets_manual.yaml
+# ==============================================================================
+# MELOVIA MANUAL EVALUATION SEED SETS TEMPLATE
+# ==============================================================================
+# Instructions for User:
+# This file provides a structured template of 30 curated seed sets across
+# popular genres and eras.
+#
+# DO NOT INVENT TRACK IDENTIFIERS.
+# When evaluating against a real catalog (e.g. ListenBrainz / MusicBrainz dumps),
+# fill in the exact `seed_track_ids` (UUIDs or MBIDs) present in your catalog bundle.
+#
+# Each seed set should contain 3 to 4 representative anchor tracks.
+# ==============================================================================
+
+version: "1.0"
+description: "Template for user-specified ground-truth mainstream seed sets"
+seed_sets:
+  - id: manual_01
+    name: "90s Grunge & Alternative Rock"
+    description: "Classic Pacific Northwest grunge and post-punk alternative rock."
+    seed_track_ids: []  # USER ACTION: Fill with catalog UUIDs
+    target_titles:
+      - "Smells Like Teen Spirit"
+      - "Black Hole Sun"
+      - "Alive"
+      - "Come As You Are"
+
+  - id: manual_02
+    name: "80s Synth-Pop & New Wave"
+    description: "Synthesizer-driven hooks, gated reverb drums, and expressive vocals."
+    seed_track_ids: []
+    target_titles:
+      - "Blue Monday"
+      - "Take On Me"
+      - "Just Can't Get Enough"
+      - "Sweet Dreams (Are Made of This)"
+
+  - id: manual_03
+    name: "Late 90s French Touch House"
+    description: "Phased disco samples, funky basslines, and side-chained four-on-the-floor."
+    seed_track_ids: []
+    target_titles:
+      - "Around the World"
+      - "Music Sounds Better with You"
+      - "Lady (Hear Me Tonight)"
+      - "One More Time"
+
+  - id: manual_04
+    name: "Classic 70s Psychedelic Rock"
+    description: "Expansive dynamic arrangements, Hammond organs, and soaring guitar solos."
+    seed_track_ids: []
+    target_titles:
+      - "Comfortably Numb"
+      - "Stairway to Heaven"
+      - "Riders on the Storm"
+      - "Echoes"
+
+  - id: manual_05
+    name: "00s Post-Rock & Crescendocore"
+    description: "Climactic instrumental rock with delay-drenched guitars and orchestral swells."
+    seed_track_ids: []
+    target_titles:
+      - "Your Hand in Mine"
+      - "First Breath After Coma"
+      - "Storm"
+      - "The Only Moment We Were Alone"
+
+  - id: manual_06
+    name: "Deep Ambient & Drone"
+    description: "Beatless, timbral soundscapes exploring space, decay, and meditative resonance."
+    seed_track_ids: []
+    target_titles:
+      - "An Ending (Ascent)"
+      - "Weightless"
+      - "Stone in Focus"
+      - "Thursday Afternoon"
+
+  - id: manual_07
+    name: "Minimalist Modern Classical"
+    description: "Repetitive acoustic piano motifs, string quartets, and tape tape loops."
+    seed_track_ids: []
+    target_titles:
+      - "On the Nature of Daylight"
+      - "Divenire"
+      - "Spiegel im Spiegel"
+      - "Avril 14th"
+
+  - id: manual_08
+    name: "Golden Age Hip Hop"
+    description: "Boom-bap production, SP-1200 drum breaks, and intricate lyricism."
+    seed_track_ids: []
+    target_titles:
+      - "N.Y. State of Mind"
+      - "Juicy"
+      - "Shook Ones, Pt. II"
+      - "They Reminisce Over You"
+
+  - id: manual_09
+    name: "Modern Neo-Soul & R&B"
+    description: "Laid-back pocket drumming, Fender Rhodes chords, and intimate vocal arrangements."
+    seed_track_ids: []
+    target_titles:
+      - "Redbone"
+      - "Devil's Pie"
+      - "Brown Sugar"
+      - "Get You"
+
+  - id: manual_10
+    name: "Dream Pop & Ethereal Wave"
+    description: "Shimmering chorus-effect guitars, reverb-drenched female vocals, and nostalgic melody."
+    seed_track_ids: []
+    target_titles:
+      - "Cherry-coloured Funk"
+      - "Heaven or Las Vegas"
+      - "Fade Into You"
+      - "Space Song"
+
+  - id: manual_11
+    name: "Detroit Minimal Techno"
+    description: "Hypnotic analog percussion, Roland 909 rhythms, and industrial ambiance."
+    seed_track_ids: []
+    target_titles:
+      - "Strings of Life"
+      - "The Bells"
+      - "Subtle Tease"
+      - "Good Life"
+
+  - id: manual_12
+    name: "Modern Indie Folk"
+    description: "Acoustic fingerpicking, vocal harmonies, and warm organic instrumentation."
+    seed_track_ids: []
+    target_titles:
+      - "Skinny Love"
+      - "Holocene"
+      - "The Suburbs"
+      - "White Winter Hymnal"
+
+  - id: manual_13
+    name: "Heavy Shoegaze & Noise Pop"
+    description: "Fuzz-saturated offset guitars, reverse reverb, and buried melodies."
+    seed_track_ids: []
+    target_titles:
+      - "Only Shallow"
+      - "When You Sleep"
+      - "Alison"
+      - "Vapour Trail"
+
+  - id: manual_14
+    name: "Progressive Metal & Djent"
+    description: "Polyrhythmic riffing, downtuned 7-string guitars, and technical drumming."
+    seed_track_ids: []
+    target_titles:
+      - "Bleed"
+      - "The Czar"
+      - "Lateralus"
+      - "Physical Education"
+
+  - id: manual_15
+    name: "Lo-Fi Instrumental Beats"
+    description: "Side-chained vinyl crackle, downtempo MPC grooves, and relaxed Rhodes chords."
+    seed_track_ids: []
+    target_titles:
+      - "Affection"
+      - "Again"
+      - "I'm Closing My Eyes"
+      - "Coffee"
+
+  - id: manual_16
+    name: "Midwest Emo & Math Rock"
+    description: "Twinkly open-tuning guitars, erratic time signatures, and emotive delivery."
+    seed_track_ids: []
+    target_titles:
+      - "Never Meant"
+      - "Spit Fountain"
+      - "Guns Don't Kill People, Robo-Cops Do"
+      - "Cinco de Mayo Shit Show"
+
+  - id: manual_17
+    name: "Bossa Nova Classics"
+    description: "Swaying acoustic guitar rhythm, understated percussion, and melancholic harmony."
+    seed_track_ids: []
+    target_titles:
+      - "The Girl from Ipanema"
+      - "Desafinado"
+      - "Corcovado"
+      - "Wave"
+
+  - id: manual_18
+    name: "Hard Bop Jazz"
+    description: "Fast tempo acoustic piano, walking double bass, and blues-infused saxophone."
+    seed_track_ids: []
+    target_titles:
+      - "Moanin'"
+      - "So What"
+      - "Take Five"
+      - "Blue Train"
+
+  - id: manual_19
+    name: "Darkwave & Gothic Rock"
+    description: "Minor-key synthesizer arpeggios, baritone vocals, and drum-machine drive."
+    seed_track_ids: []
+    target_titles:
+      - "A Forest"
+      - "Bela Lugosi's Dead"
+      - "Lucretia My Reflection"
+      - "She's in Parties"
+
+  - id: manual_20
+    name: "UK Garage & 2-Step"
+    description: "Shuffled syncopated hi-hats, pitched vocal chops, and deep sub-bass."
+    seed_track_ids: []
+    target_titles:
+      - "Archangel"
+      - "Battle"
+      - "Re-Rewind"
+      - "Flowers"
+
+  - id: manual_21
+    name: "Liquid Drum & Bass"
+    description: "174 BPM rolling breakbeats, lush synth pads, and soulful vocal samples."
+    seed_track_ids: []
+    target_titles:
+      - "Brown Paper Bag"
+      - "Timeless"
+      - "Twilight's Last Gleaming"
+      - "Just One Second"
+
+  - id: manual_22
+    name: "Synthwave / Outrun"
+    description: "Arpeggiated basslines, 80s gated snare drums, and neon nostalgia."
+    seed_track_ids: []
+    target_titles:
+      - "Nightcall"
+      - "Tech Noir"
+      - "Resonance"
+      - "Sunset"
+
+  - id: manual_23
+    name: "Dub Techno"
+    description: "Echoing tape delays, analog synthesizer chords, and hypnotic ocean sub-frequencies."
+    seed_track_ids: []
+    target_titles:
+      - "Phylyps Trak"
+      - "Radiance II"
+      - "Vapourspace"
+      - "King Midas Sound"
+
+  - id: manual_24
+    name: "Indie Pop & Jangle Pop"
+    description: "Clean Rickenbacker chords, melodic basslines, and bright upbeat tempos."
+    seed_track_ids: []
+    target_titles:
+      - "There Is a Light That Never Goes Out"
+      - "Friday I'm in Love"
+      - "This Charming Man"
+      - "Oxford Comma"
+
+  - id: manual_25
+    name: "Delta Blues & Country Blues"
+    description: "Raw acoustic slide guitar, foot stomping, and emotional vocal storytelling."
+    seed_track_ids: []
+    target_titles:
+      - "Cross Road Blues"
+      - "Death Letter Blues"
+      - "Hellhound on My Trail"
+      - "Dark Was the Night, Cold Was the Ground"
+
+  - id: manual_26
+    name: "Americana & Alt-Country"
+    description: "Pedal steel guitar, acoustic rhythm strumming, and dust-bowl harmonies."
+    seed_track_ids: []
+    target_titles:
+      - "Windfall"
+      - "I Still Miss Someone"
+      - "Copperhead Road"
+      - "No Depression"
+
+  - id: manual_27
+    name: "Krautrock & Motorik"
+    description: "Hypnotic 4/4 motorik pulse, modular synthesizers, and continuous experimentation."
+    seed_track_ids: []
+    target_titles:
+      - "Hallogallo"
+      - "Autobahn"
+      - "Vitamin C"
+      - "Mother Sky"
+
+  - id: manual_28
+    name: "Industrial & EBM"
+    description: "Aggressive sequencing, distorted machine percussion, and harsh vocal delivery."
+    seed_track_ids: []
+    target_titles:
+      - "Head Like a Hole"
+      - "Join in the Chant"
+      - "Stigmata"
+      - "Assimilate"
+
+  - id: manual_29
+    name: "IDM & Glitch"
+    description: "Micro-edited drum programming, mathematical structures, and warm melodic counterpoints."
+    seed_track_ids: []
+    target_titles:
+      - "Windowlicker"
+      - "Gantz Graf"
+      - "Vordhosbn"
+      - "Flutter"
+
+  - id: manual_30
+    name: "Baroque Classical"
+    description: "Polyphonic counterpoint, harpsichord continuo, and ornate string arrangements."
+    seed_track_ids: []
+    target_titles:
+      - "Brandenburg Concerto No. 3"
+      - "The Four Seasons: Spring"
+      - "Toccata and Fugue in D minor"
+      - "Canon in D Major"

@@ -113,7 +113,7 @@ def score_candidates(
     # 1. Smooth max aggregation per channel
     s_t = _smooth_max_aggregation(pool.raw_sims_t, weights, tau=tau)
 
-    has_audio_modes = modes.has_channel.get("a", False)
+    has_audio_modes = cfg.use_audio and modes.has_channel.get("a", False)
     if has_audio_modes:
         s_a = _smooth_max_aggregation(pool.raw_sims_a, weights, tau=tau)
     else:
