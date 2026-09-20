@@ -7,7 +7,8 @@ Performs:
 4. Normalizes all coordinates into a unit cube [-1.0, 1.0].
 5. Computes neighborhood preservation trustworthiness (k=15) and continuity metrics.
 6. Generates a stratified render sample index (<= 15,000 points, region-balanced).
-7. Saves layout3d.npy, layout2d.npy, render_sample.json and updates manifest.json with fresh SHA-256 checksums.
+7. Saves layout3d.npy, layout2d.npy, render_sample.json,
+   and updates manifest.json with fresh SHA-256 checksums.
 """
 
 import argparse
@@ -68,7 +69,7 @@ def generate_stratified_sample(
 
     sampled_indices: list[int] = []
     # Allocate sample quota proportionally per region
-    for reg, idxs in region_to_indices.items():
+    for _reg, idxs in region_to_indices.items():
         quota = max(1, int(round(len(idxs) / n_total * max_points)))
         if len(idxs) <= quota:
             sampled_indices.extend(idxs)
@@ -171,7 +172,10 @@ def build_layout(
             n_neighbors=15,
         )
 
-    print(f"3D Layout ({method_3d}) — Trustworthiness (k=15): {tw_k15:.4f}, Continuity: {cont_k15:.4f}")
+    print(
+        f"3D Layout ({method_3d}) — Trustworthiness (k=15): {tw_k15:.4f}, "
+        f"Continuity: {cont_k15:.4f}"
+    )
 
     # 6. Stratified Render Sample
     region_col = tracks_dict.get("region_id", [0] * n_tracks)
@@ -199,7 +203,7 @@ def build_layout(
 
     # 8. Update manifest.json with layout metrics and fresh hashes
     manifest_file = bundle_path / "manifest.json"
-    with open(manifest_file, "r", encoding="utf-8") as f:
+    with open(manifest_file, encoding="utf-8") as f:
         manifest = json.load(f)
 
     files_dict = manifest.get("files", {})

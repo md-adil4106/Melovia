@@ -9,9 +9,7 @@ class UniverseMetrics(BaseModel):
     trustworthiness_k15: float = Field(
         ..., description="Trustworthiness metric at k=15 measuring neighborhood preservation"
     )
-    continuity_k15: float = Field(
-        ..., description="Continuity metric measuring rank preservation"
-    )
+    continuity_k15: float = Field(..., description="Continuity metric measuring rank preservation")
     method_3d: str = Field(..., description="Method used for 3D projection ('umap-3d' or 'pca-3d')")
     method_2d: str = Field(..., description="Method used for 2D fallback ('pca-2d')")
     sample_count: int = Field(..., description="Total points included in the render sample")
@@ -45,7 +43,7 @@ class UniverseResponse(BaseModel):
         ...,
         description=(
             "Flat Int16-quantized array: [qx_0, qy_0, qz_0, reg_0, trk_0, qx_1, ...] "
-            "where qx/qy/qz are scaled by 32767 to map [-1.0, 1.0] coordinates into compact integers."
+            "where qx/qy/qz are scaled by 32767 to map [-1.0, 1.0] coordinates into integers."
         ),
     )
     point_count: int = Field(..., description="Total number of points encoded in the points array")
@@ -65,9 +63,12 @@ class UniversePlaceRequest(BaseModel):
         default=None, description="Optional catalog track IDs to place"
     )
     mode_vectors: list[list[float]] | None = Field(
-        default=None, description="Optional high-dimensional taste mode vectors (128d or 256d) to place"
+        default=None,
+        description="Optional high-dimensional taste mode vectors (128d or 256d) to place",
     )
-    k: int = Field(default=10, ge=1, le=30, description="Number of nearest neighbors for interpolation")
+    k: int = Field(
+        default=10, ge=1, le=30, description="Number of nearest neighbors for interpolation"
+    )
 
 
 class PlacedUniverseItem(BaseModel):
@@ -90,7 +91,9 @@ class PlacedUniverseItem(BaseModel):
 class UniversePlaceResponse(BaseModel):
     """Response containing 3D/2D positions for requested items."""
 
-    items: list[PlacedUniverseItem] = Field(default_factory=list, description="List of placed items")
+    items: list[PlacedUniverseItem] = Field(
+        default_factory=list, description="List of placed items"
+    )
 
 
 class UniverseNeighborItem(BaseModel):

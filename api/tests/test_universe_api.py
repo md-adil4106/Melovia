@@ -12,9 +12,9 @@ Verifies:
 import json
 from pathlib import Path
 
-from httpx import ASGITransport, AsyncClient
 import numpy as np
 import pytest
+from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 from app.recsys.catalog import CatalogStore
@@ -30,7 +30,7 @@ def catalog_store() -> CatalogStore:
 
 
 def test_quantization_and_dequantization_roundtrip():
-    """Verify Int16 quantization and dequantization preserves coordinates within precision tolerance."""
+    """Verify Int16 quantization and dequantization preserves coordinates within tolerance."""
     rng = np.random.default_rng(42)
     n = 100
     points = rng.uniform(-1.0, 1.0, size=(n, 3)).astype(np.float32)
@@ -167,7 +167,7 @@ async def test_universe_place_endpoint_determinism(catalog_store: CatalogStore):
 
 @pytest.mark.asyncio
 async def test_universe_neighbors_endpoint(catalog_store: CatalogStore):
-    """Verify GET /universe/neighbors/{track_id} returns true original-space neighbors with distortion disclosure."""
+    """Verify GET /universe/neighbors/{track_id} returns true neighbors with distortion warning."""
     app.state.catalog_store = catalog_store
     target_id = catalog_store.track_ids[0]
 

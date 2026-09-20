@@ -1,10 +1,7 @@
-"""FastAPI router for 3D/2D Taste Universe endpoints (Phase 12)."""
-
 import logging
-from typing import Any
 
-from fastapi import APIRouter, Depends, Path, Request, Response, status
 import numpy as np
+from fastapi import APIRouter, Depends, Path, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -66,6 +63,7 @@ async def get_universe(
     db: AsyncSession = Depends(get_db_session),
 ) -> UniverseResponse:
     catalog = _get_catalog(request)
+    assert catalog.layout3d is not None
 
     # 1. Determine user exposure per region from active session and persistent profile
     device_id, _ = get_or_create_device_id(request, response)
@@ -149,6 +147,7 @@ async def place_points(
     request: Request,
 ) -> UniversePlaceResponse:
     catalog = _get_catalog(request)
+    assert catalog.layout3d is not None
     placed_items: list[PlacedUniverseItem] = []
 
     # 1. Place requested track IDs

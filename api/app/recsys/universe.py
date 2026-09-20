@@ -4,7 +4,8 @@ Architecture Constraints:
 - Pure Python and NumPy (zero imports from FastAPI, Starlette, SQLAlchemy, or DB).
 - Strictly deterministic tie-breaking.
 - Non-linear distortion disclosures for 3D map projections.
-- Recommendation decisions ALWAYS use high-dimensional vectors; 3D coordinates are visualization-only.
+- Recommendation decisions ALWAYS use high-dimensional vectors.
+  3D coordinates are visualization-only.
 """
 
 from collections.abc import Sequence
@@ -59,7 +60,7 @@ def quantize_points(
 
 
 def dequantize_points(flat: list[int]) -> tuple[np.ndarray, list[int], list[int]]:
-    """Dequantize flat Int16 coordinate array back into Float32 (N, 3), regions, and track indices."""
+    """Dequantize flat Int16 coordinate array back into Float32 (N, 3), regions, and tracks."""
     if len(flat) % 5 != 0:
         raise ValueError(f"Flat array length {len(flat)} is not a multiple of 5")
 
@@ -120,7 +121,7 @@ def place_in_universe(
     elif dim == catalog.dim_t + catalog.dim_a:
         fused = np.hstack([catalog.vectors_t, catalog.vectors_a])
         norms = np.linalg.norm(fused, axis=1, keepdims=True)
-        ref_matrix = fused / np.maximum(norms, 1e-9)
+        ref_matrix = (fused / np.maximum(norms, 1e-9)).astype(np.float32)
     else:
         raise ValueError(
             f"Input vector dimension {dim} does not match catalog taste ({catalog.dim_t}) "
@@ -215,7 +216,7 @@ def find_original_neighbors(
     for neighbor_idx in candidate_indices:
         nb_dict = catalog.get_track_dict(neighbor_idx)
         nb_tags = set(nb_dict.get("tags") or [])
-        shared = sorted(list(target_tags.intersection(nb_tags)))
+        shared = sorted(target_tags.intersection(nb_tags))
 
         sim_a_val: float | None = None
         if has_a and catalog.mask_a[neighbor_idx]:
