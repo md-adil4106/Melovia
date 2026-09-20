@@ -24,6 +24,7 @@ class CandidateFilters:
     excluded_track_ids: set[str] = field(default_factory=set)
     min_year: int | None = None
     max_year: int | None = None
+    region_id: int | None = None
 
 
 @dataclass(frozen=True)
@@ -121,6 +122,16 @@ def generate_candidates(
                     if mask_a[idx]:
                         candidate_indices_set.add(int(idx))
 
+    # If exploring a specific region, ensure tracks from that region are included
+    if filt.region_id is not None:
+        reg_primaries = catalog._tracks_metadata.get("region_id", [])
+        reg_secondaries = catalog._tracks_metadata.get("region_id_secondary", reg_primaries)
+        for idx in range(n_catalog):
+            if (idx < len(reg_primaries) and reg_primaries[idx] == filt.region_id) or (
+                idx < len(reg_secondaries) and reg_secondaries[idx] == filt.region_id
+            ):
+                candidate_indices_set.add(idx)
+
     # 3. Apply exclusions (seeds, artists, year)
     valid_indices: list[int] = []
     years_col = catalog._tracks_metadata.get("year", [])
@@ -144,6 +155,16 @@ def generate_candidates(
         if filt.max_year is not None and years_col:
             yr = years_col[idx]
             if yr is not None and yr > filt.max_year:
+                continue
+
+        # Region restriction (Phase 11: Explore this region)
+        if filt.region_id is not None:
+            reg_primaries = catalog._tracks_metadata.get("region_id", [])
+            reg_secondaries = catalog._tracks_metadata.get("region_id_secondary", reg_primaries)
+            is_in_region = (idx < len(reg_primaries) and reg_primaries[idx] == filt.region_id) or (
+                idx < len(reg_secondaries) and reg_secondaries[idx] == filt.region_id
+            )
+            if not is_in_region:
                 continue
 
         valid_indices.append(idx)

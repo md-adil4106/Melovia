@@ -450,3 +450,52 @@ This allows real-time session steering to modify the arc shape without changing 
 | Arc correlation (build/wind_down) | $r \ge 0.60$ (Pearson) |
 | Artist adjacency | No consecutive same-artist tracks |
 | Determinism | Identical input → identical output (seeded RNG, stable tie-breaks) |
+
+---
+
+## 9. Taste Profile, Archetypes, and Blindspot Discovery (Phase 11)
+
+### 9.1 Discovered Regions & Tag-Lift Labeling
+To support multi-cluster taste representation beyond simple genre tags, the catalog is partitioned into $k = 24$ discovered acoustic regions:
+- **Clustering**: Pure NumPy deterministic KMeans++ on fused and L2-normalized $[t \mid a]$ vectors with fixed random seed ($42$).
+- **Soft Top-2 Assignments**: For every track $i$, probabilities across all centroids $c_r$ are computed via softmax over negative Euclidean distance:
+  $$P(r \mid i) = \frac{\exp(-\|x_i - c_r\|_2)}{\sum_{j=1}^{24} \exp(-\|x_i - c_j\|_2)}$$
+  The top-2 assignments are recorded in `tracks.parquet` as `region_id`, `region_id_secondary`, `region_weight_primary`, and `region_weight_secondary`.
+- **Statistical Tag-Lift Labeling**: For each region $r$ and tag $t$, lift over the catalog baseline rate is calculated:
+  $$\text{Lift}(t, r) = \frac{P(t \mid r)}{P(t \mid \text{catalog})}$$
+  Tags with $\ge 2$ occurrences in $r$ are ranked by lift descending. Overrides can be provided in `pipelines/region_labels.yaml`.
+- **Adjacency Graph**: Region-to-region centroid cosine similarity defines musical adjacencies, ensuring each region connects to its nearest topological neighbors.
+
+### 9.2 Five Core Taste Dimensions & Bootstrap Confidence Intervals
+All displayed taste metrics trace directly to computed features without evaluative judgments (no taste is "better" than another):
+
+1. **Breadth** ($[0.0, 1.0]$): Normalized Shannon entropy across the 24 discovered regions:
+   $$\text{Breadth} = \frac{-\sum_{r=0}^{23} p_r \ln(p_r + 1e-12)}{\ln(24)}$$
+2. **Rarity** ($[0.0, 1.0]$): Mean catalog unpopularity of known tracks:
+   $$\text{Rarity} = 1.0 - \frac{1}{N} \sum_{i=1}^N \frac{\text{popularity\_pct}_i}{100}$$
+3. **Range** ($[0.0, 1.0]$): Average normalized variance across acoustic scalars (`tempo_norm`, `energy_idx`, `valence_idx`, `acousticness`):
+   $$\text{Range} = \frac{1}{4} \sum_{k \in \text{scalars}} 4 \cdot \text{Var}(s_k)$$
+4. **Cohesion** ($[0.0, 1.0]$): Harmonic concentration measured as mean pairwise cosine similarity between known taste vectors:
+   $$\text{Cohesion} = \frac{2}{N(N-1)} \sum_{i < j} \cos(t_i, t_j)$$
+5. **Adventurousness** ($[0.0, 1.0]$): Dynamic willingness to explore, computed only when $\ge 10$ feedback events exist (otherwise `null`). Measures the mean jump distance between consecutive feedback interactions.
+
+**90% Bootstrap Confidence Intervals**: For each dimension, 200 deterministic bootstrap resamples (seed 42) compute the 5th and 95th percentiles (`ci_low`, `ci_high`).
+**Confidence Flag**: If fewer than 8 known tracks exist in the profile, the profile is flagged with `confidence: "low"` and displays guidance indicating the small sample size.
+
+### 9.3 Deterministic Rule-Based Archetypes
+User taste is mapped deterministically to 9 rule-based archetypes using strictly descriptive, non-evaluative language:
+- **Eclectic Polymath**: High breadth ($\ge 0.65$) across diverse regions.
+- **Harmony Purist**: High cohesion ($\ge 0.65$), concentrated acoustic affinity.
+- **Deep Diver**: High rarity ($\ge 0.65$), gravitating toward obscure catalog gems.
+- **Dynamic Explorer**: High range ($\ge 0.65$), appreciating varied energetic and emotional registers.
+- **Curious Adventurer**: High adventurousness ($\ge 0.65$) in feedback steering.
+- **Comfort Listener**: Focused breadth ($< 0.40$), consistent sound world.
+- **Mainstream Aficionado**: Low rarity ($< 0.35$), affinity for widespread popular anthems.
+- **Acoustic Traditionalist**: Moderate cohesion with high acousticness preference.
+- **Time Traveler**: Broad historical distribution across multiple release eras.
+
+### 9.4 Blindspot Detection & Bridge Recommendations
+Unexplored catalog regions are discovered by identifying regions with low user exposure ($< 0.05$) that are topologically adjacent to the user's taste centroids:
+$$\text{Rank Score}(r) = \text{Adjacency}(r, \text{Modes}) \times (1.0 - \text{Exposure}(r))$$
+For top blindspot regions, bridge tags connecting user taste to the region are surfaced, and `/recommendations` with `region_id` provides higher-novelty candidates serving as accessible gateway tracks into unfamiliar musical territory.
+

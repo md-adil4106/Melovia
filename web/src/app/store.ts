@@ -87,6 +87,64 @@ export interface RecommendedItem {
   signals?: RecommendationSignals | null;
 }
 
+export interface TasteDimension {
+  name: string;
+  key: string;
+  value: number;
+  percentile: number;
+  ci_90: [number, number];
+  description: string;
+  definition_tooltip: string;
+}
+
+export interface RegionExposure {
+  region_id: number;
+  name: string;
+  genre_focus: string;
+  exposure: number;
+}
+
+export interface BlindspotItem {
+  region_id: number;
+  name: string;
+  genre_focus: string;
+  description: string;
+  top_tags: string[];
+  exposure: number;
+  adjacency_score: number;
+  rank_score: number;
+  bridge_tags: string[];
+  sample_tracks: Track[];
+}
+
+export interface TasteProfileData {
+  known_track_count: number;
+  confidence: "low" | "high";
+  confidence_reason: string;
+  dimensions: {
+    breadth: TasteDimension | null;
+    rarity: TasteDimension | null;
+    range: TasteDimension | null;
+    cohesion: TasteDimension | null;
+    adventurousness: TasteDimension | null;
+  };
+  music_dna: {
+    dominant_tags: Array<{ tag: string; count: number; share: number }>;
+    mean_scalars: Record<string, { mean: number; min: number; max: number }>;
+    dominant_regions: RegionExposure[];
+  };
+  archetype: {
+    id: string;
+    name: string;
+    tagline: string;
+    description: string;
+    criteria_summary: string;
+    matched_rules: string[];
+    is_fallback: boolean;
+  };
+  region_exposures: RegionExposure[];
+}
+
 interface DiscoveryStore {
   seeds: Track[];
   addSeed: (track: Track) => boolean;
@@ -133,6 +191,12 @@ interface DiscoveryStore {
   setSelectedArc: (arc: "steady" | "build" | "wave" | "wind_down") => void;
   playlistLength: number;
   setPlaylistLength: (len: number) => void;
+  // Phase 11: Taste Profile & Region Exploration
+  activeTab: "discover" | "profile";
+  setActiveTab: (tab: "discover" | "profile") => void;
+  exploringRegion: { id: number; name: string } | null;
+  setExploringRegion: (region: { id: number; name: string } | null) => void;
+  clearExploringRegion: () => void;
 }
 
 export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
@@ -231,4 +295,10 @@ export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
   setSelectedArc: (arc) => set({ selectedArc: arc }),
   playlistLength: 15,
   setPlaylistLength: (len) => set({ playlistLength: Math.max(2, Math.min(30, len)) }),
+  // Phase 11: Taste Profile & Region Exploration
+  activeTab: "discover",
+  setActiveTab: (tab) => set({ activeTab: tab }),
+  exploringRegion: null,
+  setExploringRegion: (region) => set({ exploringRegion: region }),
+  clearExploringRegion: () => set({ exploringRegion: null }),
 }));

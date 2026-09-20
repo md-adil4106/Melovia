@@ -74,7 +74,7 @@ class RecsysConfig:
     seq_w_energy: float = 0.35  # Weight for energy difference
     seq_w_semantic: float = 0.30  # Weight for semantic cosine distance (1 - cos_t)
     seq_w_artist_penalty: float = 5.0  # High penalty for adjacent same artist
-    seq_w_arc: float = 0.40  # Weight for arc adherence penalty
+    seq_w_arc: float = 0.80  # Weight for arc adherence penalty
     seq_max_2opt_iters: int = 150  # Maximum 2-opt search passes
     seq_min_scalar_coverage: float = 0.70  # Minimum scalar coverage to include in cost
 

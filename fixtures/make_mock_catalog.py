@@ -42,7 +42,7 @@ REGIONS_DEF: list[dict[str, Any]] = [
     },
     {
         "region_id": 1,
-        "name": "Ethereal Dream Pop",
+        "name": "Ethereal Drift",
         "genre_focus": "Dream Pop / Shoegaze",
         "description": "Lush, reverberant textures, washed guitars, and gentle melancholy.",
         "bpm_range": (85, 115),
@@ -52,8 +52,8 @@ REGIONS_DEF: list[dict[str, Any]] = [
     },
     {
         "region_id": 2,
-        "name": "Post-Rock Horizons",
-        "genre_focus": "Post-Rock / Cinematic",
+        "name": "Cinematic Horizons",
+        "genre_focus": "Post-Rock / Instrumental",
         "description": "Dynamic crescendo-driven instrumental rock exploring expansive dynamics.",
         "bpm_range": (70, 110),
         "energy_mean": 0.60,
@@ -62,8 +62,8 @@ REGIONS_DEF: list[dict[str, Any]] = [
     },
     {
         "region_id": 3,
-        "name": "Cerebral Techno",
-        "genre_focus": "Minimal / Deep Techno",
+        "name": "Deep Chamber",
+        "genre_focus": "Minimal Techno / Microhouse",
         "description": "Hypnotic, repetitious, sub-heavy electronic pulse designed for deep focus.",
         "bpm_range": (125, 135),
         "energy_mean": 0.75,
@@ -72,8 +72,8 @@ REGIONS_DEF: list[dict[str, Any]] = [
     },
     {
         "region_id": 4,
-        "name": "Lo-Fi Midnight",
-        "genre_focus": "Lo-Fi Hip Hop / Chillhop",
+        "name": "Faded Cassette",
+        "genre_focus": "Lo-Fi Beats / Chillhop",
         "description": "Warm tape saturation, dusty jazz piano loops, and relaxed beats.",
         "bpm_range": (75, 90),
         "energy_mean": 0.35,
@@ -82,47 +82,57 @@ REGIONS_DEF: list[dict[str, Any]] = [
     },
     {
         "region_id": 5,
-        "name": "Acoustic Folk Noir",
-        "genre_focus": "Dark Folk / Indie Acoustic",
-        "description": "Intimate fingerpicked guitars, raw acoustics, and brooding storytelling.",
+        "name": "Solar Groove",
+        "genre_focus": "Nu-Disco / French Touch",
+        "description": "Funky compressed basslines, bright sweeping phasers, and euphoric dancefloor energy.",
+        "bpm_range": (115, 128),
+        "energy_mean": 0.85,
+        "valence_mean": 0.80,
+        "top_tags": ["nu-disco", "french-touch", "funk", "disco", "dance"],
+    },
+    {
+        "region_id": 6,
+        "name": "Sacred Timber",
+        "genre_focus": "Nordic Folk / Dark Ambient",
+        "description": "Traditional bowed strings, resonant frame drums, and atmospheric nature recordings.",
+        "bpm_range": (60, 90),
+        "energy_mean": 0.35,
+        "valence_mean": 0.30,
+        "top_tags": ["nordic-folk", "dark-ambient", "folk", "acoustic", "drone"],
+    },
+    {
+        "region_id": 7,
+        "name": "Analog Odyssey",
+        "genre_focus": "Berlin School / Krautrock",
+        "description": "Extended modular sequencer patterns, vintage Moog leads, and cosmic motorik rhythms.",
+        "bpm_range": (110, 130),
+        "energy_mean": 0.65,
+        "valence_mean": 0.60,
+        "top_tags": ["berlin-school", "krautrock", "analog", "modular", "cosmic"],
+    },
+    {
+        "region_id": 8,
+        "name": "Dusk Reverie",
+        "genre_focus": "Indie Folk / Chamber Acoustic",
+        "description": "Intimate fingerpicked acoustic guitars, upright bass, and delicate vocal arrangements.",
         "bpm_range": (90, 120),
         "energy_mean": 0.30,
         "valence_mean": 0.25,
         "top_tags": ["folk", "acoustic", "indie-folk", "intimate", "dark-folk"],
     },
     {
-        "region_id": 6,
-        "name": "Ambient Solitude",
-        "genre_focus": "Drone / Ambient",
-        "description": "Beatless, evolving acoustic and modular soundscapes fostering stillness.",
-        "bpm_range": (50, 75),
-        "energy_mean": 0.15,
-        "valence_mean": 0.40,
-        "top_tags": ["ambient", "drone", "meditative", "soundscape", "minimalist"],
-    },
-    {
-        "region_id": 7,
-        "name": "Nu-Jazz Fusion",
-        "genre_focus": "Nu-Jazz / Broken Beat",
-        "description": "Complex syncopation, warm rhodes keyboards, and contemporary groove.",
-        "bpm_range": (100, 128),
-        "energy_mean": 0.65,
-        "valence_mean": 0.70,
-        "top_tags": ["nu-jazz", "jazz-fusion", "broken-beat", "groove", "funk"],
-    },
-    {
-        "region_id": 8,
-        "name": "Dark Industrial",
-        "genre_focus": "Industrial / EBM",
-        "description": "Aggressive mechanical rhythms, metallic percussion, and distortion.",
-        "bpm_range": (120, 140),
-        "energy_mean": 0.90,
-        "valence_mean": 0.20,
-        "top_tags": ["industrial", "ebm", "darkwave", "heavy", "mechanical"],
-    },
-    {
         "region_id": 9,
-        "name": "Math Rock Resonance",
+        "name": "Subterranean Bass",
+        "genre_focus": "UK Garage / Future Garage",
+        "description": "Syncopated 2-step rhythms, pitched vocal chops, and deep oceanic sub-frequencies.",
+        "bpm_range": (130, 140),
+        "energy_mean": 0.75,
+        "valence_mean": 0.45,
+        "top_tags": ["garage", "future-garage", "bass", "2-step", "dubstep"],
+    },
+    {
+        "region_id": 10,
+        "name": "Polyphonic Pulse",
         "genre_focus": "Math Rock / Midwest Emo",
         "description": "Angular guitar tapping, odd time signatures, and emotive melodic hooks.",
         "bpm_range": (115, 145),
@@ -131,24 +141,134 @@ REGIONS_DEF: list[dict[str, Any]] = [
         "top_tags": ["math-rock", "midwest-emo", "twinkle", "indie-rock", "complex"],
     },
     {
-        "region_id": 10,
-        "name": "Psychedelic Mirage",
-        "genre_focus": "Neo-Psychedelia / Space Rock",
-        "description": "Swirling phasers, motorik grooves, and cosmic analog synthesis.",
+        "region_id": 11,
+        "name": "Infinite Drone",
+        "genre_focus": "Drone Ambient / Contemporary Classical",
+        "description": "Beatless, evolving acoustic and modular soundscapes fostering stillness.",
+        "bpm_range": (50, 75),
+        "energy_mean": 0.15,
+        "valence_mean": 0.40,
+        "top_tags": ["ambient", "drone", "meditative", "soundscape", "minimalist"],
+    },
+    {
+        "region_id": 12,
+        "name": "Glitch & Resonance",
+        "genre_focus": "IDM / Glitch Ambient",
+        "description": "Intricate micro-percussion, warm analog distortion, and evolving generative pads.",
+        "bpm_range": (95, 125),
+        "energy_mean": 0.55,
+        "valence_mean": 0.45,
+        "top_tags": ["idm", "glitch", "ambient", "electronic", "experimental"],
+    },
+    {
+        "region_id": 13,
+        "name": "Velvet Groove",
+        "genre_focus": "Neo-Soul / Acid Jazz",
+        "description": "Silky electric piano chords, syncopated jazz swing, and warm basslines.",
+        "bpm_range": (85, 105),
+        "energy_mean": 0.55,
+        "valence_mean": 0.70,
+        "top_tags": ["neo-soul", "jazz", "soul", "groove", "smooth"],
+    },
+    {
+        "region_id": 14,
+        "name": "Industrial Monolith",
+        "genre_focus": "Dark Techno / EBM",
+        "description": "Aggressive mechanical rhythms, metallic percussion, and distortion.",
+        "bpm_range": (120, 140),
+        "energy_mean": 0.90,
+        "valence_mean": 0.20,
+        "top_tags": ["industrial", "ebm", "darkwave", "heavy", "mechanical"],
+    },
+    {
+        "region_id": 15,
+        "name": "Desert Mirage",
+        "genre_focus": "Psych Rock / Desert Blues",
+        "description": "Fuzzy pentatonic riffs, hypnotic hand drums, and sun-baked psychedelic reverbs.",
         "bpm_range": (105, 125),
         "energy_mean": 0.65,
         "valence_mean": 0.60,
-        "top_tags": ["psychedelic", "space-rock", "krautrock", "trippy", "fuzzy"],
+        "top_tags": ["psychedelic", "space-rock", "desert-rock", "fuzzy", "blues"],
     },
     {
-        "region_id": 11,
-        "name": "Neo-Classical Echoes",
-        "genre_focus": "Contemporary Classical",
-        "description": "Felted piano, intimate string quartets, and subtle tape delay treatments.",
+        "region_id": 16,
+        "name": "Hyper-Echo",
+        "genre_focus": "Dub Techno / Deep Ambient",
+        "description": "Infinite tape-delay chords, cavernous reverb washes, and gentle rhythmic propulsion.",
+        "bpm_range": (115, 125),
+        "energy_mean": 0.50,
+        "valence_mean": 0.35,
+        "top_tags": ["dub-techno", "deep-ambient", "echo", "reverb", "electronic"],
+    },
+    {
+        "region_id": 17,
+        "name": "Cloud Mirage",
+        "genre_focus": "Ambient Trap / Cloud Rap",
+        "description": "Spacious pitched-down synth pads, skittering hi-hats, and hazy sub-bass atmospheres.",
+        "bpm_range": (120, 140),
+        "energy_mean": 0.45,
+        "valence_mean": 0.50,
+        "top_tags": ["trap", "cloud-rap", "ambient", "chill", "atmospheric"],
+    },
+    {
+        "region_id": 18,
+        "name": "Midnight Bop",
+        "genre_focus": "Modal Jazz / Hard Bop",
+        "description": "Acoustic upright bass walks, swinging brush drums, and expressive brass interplay.",
+        "bpm_range": (110, 160),
+        "energy_mean": 0.65,
+        "valence_mean": 0.60,
+        "top_tags": ["jazz", "hard-bop", "acoustic", "swing", "brass"],
+    },
+    {
+        "region_id": 19,
+        "name": "Static & Rust",
+        "genre_focus": "Noise Pop / Post-Punk",
+        "description": "Angular basslines, motorik drumming, and waves of intentional feedback.",
+        "bpm_range": (125, 150),
+        "energy_mean": 0.80,
+        "valence_mean": 0.40,
+        "top_tags": ["post-punk", "noise-rock", "indie", "raw", "motorik"],
+    },
+    {
+        "region_id": 20,
+        "name": "Baroque Twilight",
+        "genre_focus": "Chamber Pop / Art Pop",
+        "description": "Orchestral woodwinds, harpsichord accents, and eccentric avant-pop melodies.",
+        "bpm_range": (70, 105),
+        "energy_mean": 0.40,
+        "valence_mean": 0.45,
+        "top_tags": ["chamber-pop", "art-pop", "orchestral", "baroque", "indie"],
+    },
+    {
+        "region_id": 21,
+        "name": "Vapor Echoes",
+        "genre_focus": "Vaporwave / Slushwave",
+        "description": "Slowed mall-soft saxophone melodies, phaser-laden funk chops, and nostalgic dreamscapes.",
+        "bpm_range": (70, 95),
+        "energy_mean": 0.35,
+        "valence_mean": 0.65,
+        "top_tags": ["vaporwave", "slushwave", "chill", "retro", "nostalgic"],
+    },
+    {
+        "region_id": 22,
+        "name": "Galactic Bass",
+        "genre_focus": "Neurofunk / Liquid Drum & Bass",
+        "description": "Fast breakbeats, liquid Rhodes pads, and heavily modulated neuro bass lines.",
+        "bpm_range": (170, 175),
+        "energy_mean": 0.90,
+        "valence_mean": 0.55,
+        "top_tags": ["dnb", "neurofunk", "liquid", "bass", "fast"],
+    },
+    {
+        "region_id": 23,
+        "name": "Acoustic Solitude",
+        "genre_focus": "Solo Acoustic / Primitive Guitar",
+        "description": "Resonant open-tuned steel strings, alternating thumb bass, and woody room presence.",
         "bpm_range": (60, 95),
         "energy_mean": 0.25,
         "valence_mean": 0.35,
-        "top_tags": ["modern-classical", "piano", "strings", "cinematic", "peaceful"],
+        "top_tags": ["acoustic", "guitar", "folk", "solo", "intimate"],
     },
 ]
 
@@ -380,16 +500,21 @@ def generate_mock_catalog(output_dir: Path) -> dict[str, str]:
     pq.write_table(tracks_table, tracks_file)
 
     # Save scalars.parquet
+    scalar_tempo_norm = np.clip((scalar_bpm - 50.0) / 150.0, 0.0, 1.0)
     scalars_table = pa.table({
         "track_idx": pa.array(range(TRACK_COUNT), type=pa.int64()),
         "bpm": pa.array(scalar_bpm, type=pa.float32()),
         "tempo_bpm": pa.array(scalar_bpm, type=pa.float32()),
+        "tempo_norm": pa.array(scalar_tempo_norm, type=pa.float32()),
         "energy": pa.array(scalar_energy, type=pa.float32()),
+        "energy_idx": pa.array(scalar_energy, type=pa.float32()),
         "valence": pa.array(scalar_valence, type=pa.float32()),
+        "valence_idx": pa.array(scalar_valence, type=pa.float32()),
         "danceability": pa.array(scalar_danceability, type=pa.float32()),
         "acousticness": pa.array(scalar_acousticness, type=pa.float32()),
         "instrumentalness": pa.array(scalar_instrumentalness, type=pa.float32()),
         "loudness_db": pa.array(scalar_loudness, type=pa.float32()),
+        "popularity_pct": pa.array(popularity_pct, type=pa.float32()),
     })
     scalars_file = output_dir / "scalars.parquet"
     pq.write_table(scalars_table, scalars_file)
@@ -425,8 +550,20 @@ def generate_mock_catalog(output_dir: Path) -> dict[str, str]:
     with open(manifest_file, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
 
+    # Phase 11: Discover 24 clusters with tag lift and soft assignments
+    try:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        from pipelines.build_regions import build_regions
+        build_regions(output_dir, k=24)
+        # Re-read files_hashes from updated manifest
+        with open(manifest_file, "r", encoding="utf-8") as f:
+            files_hashes = json.load(f).get("files", files_hashes)
+    except Exception as e:
+        print(f"Notice: build_regions post-processing skipped: {e}")
+
     print(f"Successfully generated mock catalog bundle at: {output_dir}")
-    print(f"Tracks: {TRACK_COUNT}, Artists: {len(artists)}, Regions: {len(REGIONS_DEF)}")
+    print(f"Tracks: {TRACK_COUNT}, Artists: {len(artists)}, Discovered Regions: 24")
     print(f"Missing channel a: {len(missing_a_indices)} tracks ({len(missing_a_indices)/TRACK_COUNT*100:.1f}%)")
     return files_hashes
 

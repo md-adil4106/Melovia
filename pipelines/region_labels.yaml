@@ -1,0 +1,126 @@
+# Regional label overrides for Melovia discovered regions.
+# Format:
+# region_id:
+#   name: "Display Name"
+#   genre_focus: "Genre Focus"
+#   description: "Evocative, non-evaluative musical description."
+
+0:
+  name: "Neon Nocturne"
+  genre_focus: "Synthwave / Dark Electro"
+  description: "Driving synthesized arpeggios with nostalgic retro-futuristic aesthetics."
+
+1:
+  name: "Ethereal Drift"
+  genre_focus: "Dream Pop / Shoegaze"
+  description: "Lush, reverberant textures, washed guitars, and gentle melancholic harmonies."
+
+2:
+  name: "Cinematic Horizons"
+  genre_focus: "Post-Rock / Instrumental"
+  description: "Dynamic crescendo-driven instrumental rock exploring expansive atmospheric dynamics."
+
+3:
+  name: "Deep Chamber"
+  genre_focus: "Minimal Techno / Microhouse"
+  description: "Sparse, hypnotic sub-bass pulses designed for late-night acoustic immersion."
+
+4:
+  name: "Faded Cassette"
+  genre_focus: "Lo-Fi Beats / Chillhop"
+  description: "Warm tape-saturated Rhodes keys, vinyl crackle, and dusty head-nodding drums."
+
+5:
+  name: "Solar Groove"
+  genre_focus: "Nu-Disco / French Touch"
+  description: "Funky compressed basslines, bright sweeping phasers, and euphoric dancefloor energy."
+
+6:
+  name: "Sacred Timber"
+  genre_focus: "Nordic Folk / Dark Ambient"
+  description: "Traditional bowed strings, resonant frame drums, and atmospheric nature field recordings."
+
+7:
+  name: "Analog Odyssey"
+  genre_focus: "Berlin School / Krautrock"
+  description: "Extended modular sequencer patterns, vintage Moog leads, and cosmic motorik rhythms."
+
+8:
+  name: "Dusk Reverie"
+  genre_focus: "Indie Folk / Chamber Acoustic"
+  description: "Intimate fingerpicked acoustic guitars, upright bass, and delicate vocal arrangements."
+
+9:
+  name: "Subterranean Bass"
+  genre_focus: "UK Garage / Future Garage"
+  description: "Syncopated 2-step rhythms, pitched vocal chops, and deep oceanic sub-frequencies."
+
+10:
+  name: "Polyphonic Pulse"
+  genre_focus: "Math Rock / Midwest Emo"
+  description: "Complex interlocking clean guitar tap motifs, odd time signatures, and raw dynamism."
+
+11:
+  name: "Infinite Drone"
+  genre_focus: "Drone Ambient / Contemporary Classical"
+  description: "Slow-shifting sustained harmonium, bowing drones, and meditative stillness."
+
+12:
+  name: "Glitch & Resonance"
+  genre_focus: "IDM / Glitch Ambient"
+  description: "Intricate micro-percussion, warm analog distortion, and evolving generative pads."
+
+13:
+  name: "Velvet Groove"
+  genre_focus: "Neo-Soul / Acid Jazz"
+  description: "Silky electric piano chords, syncopated jazz swing, and warm basslines."
+
+14:
+  name: "Industrial Monolith"
+  genre_focus: "Dark Techno / EBM"
+  description: "Relentless mechanical percussion, distorted bass pulses, and cold metallic soundscapes."
+
+15:
+  name: "Desert Mirage"
+  genre_focus: "Psych Rock / Desert Blues"
+  description: "Fuzzy pentatonic riffs, hypnotic hand drums, and sun-baked psychedelic reverbs."
+
+16:
+  name: "Hyper-Echo"
+  genre_focus: "Dub Techno / Deep Ambient"
+  description: "Infinite tape-delay chords, cavernous reverb washes, and gentle rhythmic propulsion."
+
+17:
+  name: "Cloud Mirage"
+  genre_focus: "Ambient Trap / Cloud Rap"
+  description: "Spacious pitched-down synth pads, skittering hi-hats, and hazy sub-bass atmospheres."
+
+18:
+  name: "Midnight Bop"
+  genre_focus: "Modal Jazz / Hard Bop"
+  description: "Acoustic upright bass walks, swinging brush drums, and expressive brass interplay."
+
+19:
+  name: "Static & Rust"
+  genre_focus: "Noise Pop / Post-Punk"
+  description: "Angular basslines, motorik drumming, and waves of intentional feedback."
+
+20:
+  name: "Baroque Twilight"
+  genre_focus: "Chamber Pop / Art Pop"
+  description: "Orchestral woodwinds, harpsichord accents, and eccentric avant-pop melodies."
+
+21:
+  name: "Vapor Echoes"
+  genre_focus: "Vaporwave / Slushwave"
+  description: "Slowed mall-soft saxophone melodies, phaser-laden funk chops, and nostalgic dreamscapes."
+
+22:
+  name: "Galactic Bass"
+  genre_focus: "Neurofunk / Liquid Drum & Bass"
+  description: "Fast breakbeats, liquid Rhodes pads, and heavily modulated neuro bass lines."
+
+23:
+  name: "Acoustic Solitude"
+  genre_focus: "Solo Acoustic / Primitive Guitar"
+  description: "Resonant open-tuned steel strings, alternating thumb bass, and woody room presence."

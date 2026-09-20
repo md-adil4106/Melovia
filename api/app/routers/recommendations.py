@@ -1,6 +1,7 @@
 """Recommendations API router for generating and reranking recommendations."""
 
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, Request, Response, status
 
@@ -39,6 +40,7 @@ def _build_response_items(
     top_items: list[ScoredItem],
     catalog_store: CatalogStore,
     include_signals: bool,
+    bridge_info: dict[str, Any] | None = None,
 ) -> list[RecommendedTrackItem]:
     """Helper to convert ScoredItems into API response schemas."""
     response_items: list[RecommendedTrackItem] = []
@@ -66,9 +68,12 @@ def _build_response_items(
         )
 
         discovery_val = 0.0
-        if item.signals:
+        sig_dict = dict(item.signals) if item.signals else {}
+        if bridge_info:
+            sig_dict.update(bridge_info)
+        if sig_dict:
             discovery_val = float(
-                item.signals.get("discovery_value", item.signals.get("discovery_score", 0.0))
+                sig_dict.get("discovery_value", sig_dict.get("discovery_score", 0.0))
             )
 
         response_items.append(
@@ -76,7 +81,7 @@ def _build_response_items(
                 track=track_resp,
                 score=item.score,
                 discovery_value=discovery_val,
-                signals=item.signals if include_signals else None,
+                signals=sig_dict if include_signals else None,
             )
         )
     return response_items
@@ -163,6 +168,7 @@ async def create_recommendations(
     # 2. Retrieve candidates
     filters = CandidateFilters(
         excluded_artist_ids=set(payload.excluded_artist_ids),
+        region_id=payload.region_id,
     )
     pool = generate_candidates(
         modes=modes,
@@ -202,12 +208,27 @@ async def create_recommendations(
         discovery=payload.discovery,
     )
 
-    # 6. Build response items
+    # 6. Build response items with bridge info if region exploration is active
+    bridge_info: dict[str, Any] | None = None
+    if payload.region_id is not None:
+        reg_name = f"Region {payload.region_id}"
+        if catalog_store.regions:
+            for r in catalog_store.regions:
+                if r.get("region_id") == payload.region_id:
+                    reg_name = r.get("name", reg_name)
+                    break
+        bridge_info = {
+            "region_id": payload.region_id,
+            "bridge_region_name": reg_name,
+            "bridge_reason": f"Bridging your taste into {reg_name} (adjacent musical cluster).",
+        }
+
     top_items = final_list.top_n(payload.n)
     response_items = _build_response_items(
         top_items=top_items,
         catalog_store=catalog_store,
         include_signals=payload.include_signals,
+        bridge_info=bridge_info,
     )
 
     return RecommendationResponse(

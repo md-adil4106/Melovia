@@ -40,6 +40,10 @@ class RecommendationRequest(BaseModel):
         le=1.0,
         description="Discovery level between 0.0 (pure familiarity) and 1.0 (maximum discovery)",
     )
+    region_id: int | None = Field(
+        default=None,
+        description="Optional region ID to explore and restrict candidates within",
+    )
 
     @model_validator(mode="after")
     def check_seeds_or_saved_taste(self) -> "RecommendationRequest":

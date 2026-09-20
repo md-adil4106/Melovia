@@ -165,6 +165,16 @@ def _extract_track_scalar(track: dict[str, Any], key: str) -> float | None:
                         return f
                 except (ValueError, TypeError):
                     pass
+        # Check alias if key is tempo_norm
+        if key == "tempo_norm":
+            t_bpm = scalars.get("tempo_bpm") or scalars.get("bpm")
+            if t_bpm is not None:
+                try:
+                    f = float(t_bpm)
+                    if not np.isnan(f):
+                        return float(np.clip((f - 50.0) / 150.0, 0.0, 1.0))
+                except (ValueError, TypeError):
+                    pass
     return None
 
 
@@ -247,6 +257,10 @@ def sequence_playlist(
         w_energy = 0.0
         w_arc = 0.0
         dropped_features.append("energy_idx")
+    else:
+        arc_str = arc.value if isinstance(arc, ArcType) else str(arc).lower()
+        if arc_str == ArcType.STEADY.value:
+            w_arc = cfg.seq_w_arc * 0.25
 
     active_weights = {
         "tempo": w_tempo,

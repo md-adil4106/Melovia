@@ -1,5 +1,10 @@
 """Main entrypoint for Melovia FastAPI application."""
 
+import sys
+if sys.platform == "win32":
+    import asyncio
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -8,6 +13,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.db.base import Base
+from app.db.session import engine
 from app.errors import register_exception_handlers
 from app.llm.client import get_llm_client
 from app.llm.polish import LLMPolishService
@@ -18,6 +25,7 @@ from app.routers.health import router as health_router
 from app.routers.playlist import router as playlist_router
 from app.routers.recommendations import router as recommendations_router
 from app.routers.refine import router as refine_router
+from app.routers.taste import router as taste_router
 from app.routers.tracks import router as tracks_router
 from app.session.store import global_session_store
 
@@ -28,6 +36,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     settings = get_settings()
     setup_logging(debug=settings.DEBUG)
     logger.info("Starting Melovia API backend", extra={"env": settings.ENV, "version": "0.1.0"})
+
+    # Ensure database schema is initialized
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
     app.state.settings = settings
     app.state.llm_polish_service = LLMPolishService(enabled=settings.EXPLAIN_LLM_POLISH)
@@ -109,6 +121,7 @@ def create_app() -> FastAPI:
     app.include_router(refine_router)
     app.include_router(feedback_router)
     app.include_router(playlist_router)
+    app.include_router(taste_router)
 
     return app
 

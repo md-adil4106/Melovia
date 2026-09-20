@@ -29,6 +29,7 @@ import { WhyDrawer } from "./components/WhyDrawer";
 import { ChatDrawer } from "./components/ChatDrawer";
 import { SettingsDrawer } from "./components/SettingsDrawer";
 import { PlaylistBuilder } from "./components/PlaylistBuilder";
+import { ProfileView } from "./components/ProfileView";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -62,6 +63,11 @@ export default function DiscoveryHome() {
     toggleSavedTrack,
     isPlaylistBuilderOpen,
     setPlaylistBuilderOpen,
+    activeTab,
+    setActiveTab,
+    exploringRegion,
+    setExploringRegion,
+    clearExploringRegion,
   } = useDiscoveryStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -150,10 +156,12 @@ export default function DiscoveryHome() {
       seedIds,
       d,
       useSavedTaste = false,
+      regionId = null,
     }: {
       seedIds?: string[];
       d: number;
       useSavedTaste?: boolean;
+      regionId?: number | null;
     }) => {
       const res = await fetch(`${API_BASE}/recommendations`, {
         method: "POST",
@@ -164,6 +172,7 @@ export default function DiscoveryHome() {
           use_saved_taste: useSavedTaste,
           n: 30,
           discovery: d,
+          region_id: regionId,
           include_signals: true,
         }),
       });
@@ -339,7 +348,21 @@ export default function DiscoveryHome() {
     recommendMutation.mutate({
       seedIds: seeds.map((s) => s.id),
       d: sliderValue,
+      regionId: exploringRegion?.id || null,
     });
+  };
+
+  const handleExploreRegion = (regionId: number, regionName: string) => {
+    setExploringRegion({ id: regionId, name: regionName });
+    setActiveTab("discover");
+    if (seeds.length > 0 || hasPersistentProfile) {
+      recommendMutation.mutate({
+        seedIds: seeds.map((s) => s.id),
+        d: sliderValue,
+        useSavedTaste: seeds.length === 0 && hasPersistentProfile,
+        regionId: regionId,
+      });
+    }
   };
 
   // Close search dropdown when clicking outside
@@ -376,6 +399,33 @@ export default function DiscoveryHome() {
             </div>
           </div>
 
+          {/* Navigation Tabs (Discover vs Taste Profile) */}
+          <nav className="flex items-center bg-[#0d1017] p-1 rounded-xl border border-[#202736]">
+            <button
+              type="button"
+              onClick={() => setActiveTab("discover")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "discover"
+                  ? "bg-[#1b2230] text-[#d4af37] shadow"
+                  : "text-[#8c96a8] hover:text-[#f1f3f7]"
+              }`}
+            >
+              Discover
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("profile")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                activeTab === "profile"
+                  ? "bg-[#1b2230] text-[#d4af37] shadow"
+                  : "text-[#8c96a8] hover:text-[#f1f3f7]"
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Taste DNA</span>
+            </button>
+          </nav>
+
           {/* Right Header Actions */}
           <div className="flex items-center gap-3 text-xs">
             {/* Anonymous Taste Profile & Settings Button */}
@@ -386,7 +436,7 @@ export default function DiscoveryHome() {
               className="flex items-center gap-1.5 text-xs text-[#c8d0de] hover:text-[#d4af37] bg-[#141923] hover:bg-[#1b2230] border border-[#232a3b] px-3 py-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
             >
               <Shield className="w-3.5 h-3.5 text-[#d4af37]" />
-              <span>Taste Profile</span>
+              <span>Privacy & Sync</span>
               {hasPersistentProfile && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Profile saved" />
               )}
@@ -410,6 +460,46 @@ export default function DiscoveryHome() {
 
       {/* Main Container */}
       <div className="max-w-4xl mx-auto px-4 pt-8">
+        {activeTab === "profile" ? (
+          <ProfileView onExploreRegion={handleExploreRegion} />
+        ) : (
+          <>
+            {/* Exploring Region Banner */}
+            {exploringRegion && (
+              <div className="mb-6 p-4 bg-[#d4af37]/10 border border-[#d4af37]/40 rounded-2xl flex items-center justify-between shadow-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#d4af37]/20 border border-[#d4af37]/40 flex items-center justify-center text-[#d4af37]">
+                    <Compass className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-[#d4af37] uppercase tracking-wider">
+                        Exploring Region {exploringRegion.id}
+                      </span>
+                      <span className="text-xs text-[#8c96a8]">• Adjacent Blindspot</span>
+                    </div>
+                    <h4 className="text-sm font-bold text-[#f1f3f7]">{exploringRegion.name}</h4>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearExploringRegion();
+                    if (seeds.length > 0 || hasPersistentProfile) {
+                      recommendMutation.mutate({
+                        seedIds: seeds.map((s) => s.id),
+                        d: sliderValue,
+                        useSavedTaste: seeds.length === 0 && hasPersistentProfile,
+                        regionId: null,
+                      });
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-[#1b2230] hover:bg-[#252e42] border border-[#2d374d] text-xs text-[#c8d0de] hover:text-[#f1f3f7] rounded-xl transition-colors"
+                >
+                  Exit Exploration
+                </button>
+              </div>
+            )}
         {/* Hero Section */}
         <section className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1b212d] border border-[#2b3345] text-xs text-[#d4af37] mb-3">
@@ -957,6 +1047,8 @@ export default function DiscoveryHome() {
             </div>
           )}
         </section>
+        </>
+        )}
       </div>
 
       {/* Floating Taste Shifted Micro-Indicator (Phase 9) */}
