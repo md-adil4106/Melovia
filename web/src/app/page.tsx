@@ -7,6 +7,7 @@ import {
   BookmarkCheck,
   BookmarkPlus,
   Compass,
+  Globe,
   Headphones,
   HelpCircle,
   ListMusic,
@@ -24,12 +25,18 @@ import {
   Volume2,
   X,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Track, RecommendedItem, useDiscoveryStore } from "./store";
 import { WhyDrawer } from "./components/WhyDrawer";
 import { ChatDrawer } from "./components/ChatDrawer";
 import { SettingsDrawer } from "./components/SettingsDrawer";
 import { PlaylistBuilder } from "./components/PlaylistBuilder";
 import { ProfileView } from "./components/ProfileView";
+
+const TasteUniverseModal = dynamic(
+  () => import("./components/universe/TasteUniverseModal"),
+  { ssr: false }
+);
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -68,6 +75,8 @@ export default function DiscoveryHome() {
     exploringRegion,
     setExploringRegion,
     clearExploringRegion,
+    setUniverseModalOpen,
+    setUniverseFocusedRegionId,
   } = useDiscoveryStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -428,6 +437,17 @@ export default function DiscoveryHome() {
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-3 text-xs">
+            {/* 3D Taste Universe Map Button (Phase 12) */}
+            <button
+              type="button"
+              onClick={() => setUniverseModalOpen(true)}
+              aria-label="Open 3D Taste Universe interactive starfield map"
+              className="flex items-center gap-1.5 text-xs text-[#d4af37] hover:text-[#f5ecd5] bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/40 px-3 py-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+            >
+              <Globe className="w-3.5 h-3.5 text-[#d4af37]" />
+              <span className="font-semibold">3D Universe</span>
+            </button>
+
             {/* Anonymous Taste Profile & Settings Button */}
             <button
               type="button"
@@ -740,6 +760,17 @@ export default function DiscoveryHome() {
                 >
                   <ListMusic className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Build Playlist</span>
+                </button>
+
+                {/* 3D Taste Universe Map button (Phase 12) */}
+                <button
+                  type="button"
+                  onClick={() => setUniverseModalOpen(true)}
+                  aria-label="Open interactive 3D Taste Universe"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-sky-600/15 border border-sky-500/40 text-sky-300 hover:bg-sky-600/25 hover:border-sky-500/60 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"
+                >
+                  <Globe className="w-3.5 h-3.5 text-sky-400" />
+                  <span>3D Map</span>
                 </button>
 
                 <button
@@ -1093,6 +1124,9 @@ export default function DiscoveryHome() {
         onClose={() => setPlaylistBuilderOpen(false)}
         apiBase={API_BASE}
       />
+
+      {/* 3D Taste Universe Interactive Modal (Phase 12, lazy chunk) */}
+      <TasteUniverseModal />
     </main>
   );
 }

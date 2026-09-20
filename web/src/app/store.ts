@@ -197,6 +197,13 @@ interface DiscoveryStore {
   exploringRegion: { id: number; name: string } | null;
   setExploringRegion: (region: { id: number; name: string } | null) => void;
   clearExploringRegion: () => void;
+  // Phase 12: 3D Taste Universe
+  isUniverseModalOpen: boolean;
+  setUniverseModalOpen: (open: boolean) => void;
+  universeFocusedRegionId: number | null;
+  setUniverseFocusedRegionId: (id: number | null) => void;
+  universeFocusedTrackId: string | null;
+  setUniverseFocusedTrackId: (id: string | null) => void;
 }
 
 export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
@@ -301,4 +308,11 @@ export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
   exploringRegion: null,
   setExploringRegion: (region) => set({ exploringRegion: region }),
   clearExploringRegion: () => set({ exploringRegion: null }),
+  // Phase 12: 3D Taste Universe
+  isUniverseModalOpen: false,
+  setUniverseModalOpen: (open) => set({ isUniverseModalOpen: open }),
+  universeFocusedRegionId: null,
+  setUniverseFocusedRegionId: (id) => set({ universeFocusedRegionId: id }),
+  universeFocusedTrackId: null,
+  setUniverseFocusedTrackId: (id) => set({ universeFocusedTrackId: id }),
 }));

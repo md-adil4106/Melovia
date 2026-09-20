@@ -38,10 +38,13 @@ Melovia is an explainable, user-steerable music-discovery engine designed with s
   - `add_tracks(playlist_id: str, track_ids: list[str]) -> bool`
 - **Zero Leakage**: No platform-specific models or types leak into `api/app/recsys/`.
 
-### 4. Catalog & Vector Storage (`data/bundles/<version>/`)
+### 4. Catalog, Vector Storage & 3D Visualization (`data/bundles/<version>/`)
 - Stored as immutable, versioned, checksummed bundles.
-- Recommendation decisions rely exclusively on high-dimensional vectors.
-- 3D coordinates (e.g. UMAP / t-SNE) are strictly for visual representation in the client and never used in recommendation math.
+- **Strict Boundary: 3D is Visualization-Only**:
+  - Recommendation decisions, nearest-seed similarity, MMR diversity, and filtering rely **exclusively** on the true high-dimensional vectors (256d: text + audio).
+  - 3D coordinates (computed via deterministic PCA/UMAP) are strictly for client visualization and universe navigation.
+  - 3D spatial proximity is explicitly documented to users as an approximate projection with a distortion disclosure; track inspector calls always fetch true original-space cosine nearest neighbors.
+  - Dynamically placed taste modes and arbitrary tracks use $k=10$ kNN inverse-distance-weighted interpolation (`place_in_universe`) without expensive per-request dimensional reductions.
 - PostgreSQL 16 is used for relational user state and catalog metadata. **No Redis, No pgvector**.
 
 ### 5. Input Validation & Error Envelopes

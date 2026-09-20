@@ -550,17 +550,19 @@ def generate_mock_catalog(output_dir: Path) -> dict[str, str]:
     with open(manifest_file, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
 
-    # Phase 11: Discover 24 clusters with tag lift and soft assignments
+    # Phase 11 & 12: Discover 24 clusters with tag lift and generate 3D/2D layouts
     try:
         import sys
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
         from pipelines.build_regions import build_regions
+        from pipelines.build_layout import build_layout
         build_regions(output_dir, k=24)
+        build_layout(output_dir)
         # Re-read files_hashes from updated manifest
         with open(manifest_file, "r", encoding="utf-8") as f:
             files_hashes = json.load(f).get("files", files_hashes)
     except Exception as e:
-        print(f"Notice: build_regions post-processing skipped: {e}")
+        print(f"Notice: pipeline post-processing skipped: {e}")
 
     print(f"Successfully generated mock catalog bundle at: {output_dir}")
     print(f"Tracks: {TRACK_COUNT}, Artists: {len(artists)}, Discovered Regions: 24")

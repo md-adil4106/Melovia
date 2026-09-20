@@ -48,6 +48,7 @@ class CatalogManifest:
     dim_t: int
     dim_a: int
     files: dict[str, str]
+    layout_metrics: dict[str, Any] | None = None
 
 
 class CatalogStore:
@@ -67,6 +68,8 @@ class CatalogStore:
         tag_vocab: dict[str, Any] | None = None,
         regions: list[dict[str, Any]] | None = None,
         layout3d: npt.NDArray[np.float32] | None = None,
+        layout2d: npt.NDArray[np.float32] | None = None,
+        render_sample: list[int] | None = None,
     ) -> None:
         self.bundle_path = bundle_path
         self.manifest = manifest
@@ -80,6 +83,8 @@ class CatalogStore:
         self.tag_vocab = tag_vocab or {}
         self.regions = regions or []
         self.layout3d = layout3d
+        self.layout2d = layout2d
+        self.render_sample = render_sample
 
         # Bidirectional index mappings
         self._id_to_idx: dict[str, int] = {tid: idx for idx, tid in enumerate(track_ids)}
@@ -122,6 +127,7 @@ class CatalogStore:
             dim_t=int(manifest_data["dim_t"]),
             dim_a=int(manifest_data["dim_a"]),
             files=dict(manifest_data["files"]),
+            layout_metrics=manifest_data.get("layout_metrics"),
         )
 
         # 1. Checksum validation: Every file in manifest must match expected hash
@@ -196,6 +202,18 @@ class CatalogStore:
         if layout3d_file.exists():
             layout3d = np.load(layout3d_file, mmap_mode="r")
 
+        layout2d: npt.NDArray[np.float32] | None = None
+        layout2d_file = path / "layout2d.npy"
+        if layout2d_file.exists():
+            layout2d = np.load(layout2d_file, mmap_mode="r")
+
+        render_sample: list[int] | None = None
+        sample_file = path / "render_sample.json"
+        if sample_file.exists():
+            with open(sample_file, encoding="utf-8") as f:
+                s_data = json.load(f)
+                render_sample = s_data.get("sample_indices")
+
         return cls(
             bundle_path=path,
             manifest=manifest,
@@ -209,6 +227,8 @@ class CatalogStore:
             tag_vocab=tag_vocab,
             regions=regions,
             layout3d=layout3d,
+            layout2d=layout2d,
+            render_sample=render_sample,
         )
 
     @property

@@ -27,6 +27,7 @@ from app.routers.recommendations import router as recommendations_router
 from app.routers.refine import router as refine_router
 from app.routers.taste import router as taste_router
 from app.routers.tracks import router as tracks_router
+from app.routers.universe import router as universe_router
 from app.session.store import global_session_store
 
 
@@ -122,6 +123,7 @@ def create_app() -> FastAPI:
     app.include_router(feedback_router)
     app.include_router(playlist_router)
     app.include_router(taste_router)
+    app.include_router(universe_router)
 
     return app
 

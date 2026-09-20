@@ -14,6 +14,7 @@ import {
   HelpCircle,
   BarChart2,
   Table as TableIcon,
+  Globe,
 } from "lucide-react";
 import {
   useDiscoveryStore,
@@ -29,7 +30,7 @@ interface ProfileViewProps {
 
 export function ProfileView({ onExploreRegion }: ProfileViewProps) {
   const queryClient = useQueryClient();
-  const { seeds } = useDiscoveryStore();
+  const { seeds, setUniverseModalOpen, setUniverseFocusedRegionId } = useDiscoveryStore();
   const [showTableAlternative, setShowTableAlternative] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
@@ -518,15 +519,29 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
                   </div>
                 </div>
 
-                {/* Explore Button */}
-                <button
-                  type="button"
-                  onClick={() => onExploreRegion(b.region_id, b.name)}
-                  className="w-full flex items-center justify-center gap-2 bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/30 hover:border-[#d4af37] text-xs font-semibold text-[#d4af37] py-2 px-3 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
-                >
-                  <span>Explore this region</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onExploreRegion(b.region_id, b.name)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/30 hover:border-[#d4af37] text-xs font-semibold text-[#d4af37] py-2 px-3 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+                  >
+                    <span>Explore this region</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUniverseFocusedRegionId(b.region_id);
+                      setUniverseModalOpen(true);
+                    }}
+                    title="Focus region in 3D Taste Universe"
+                    aria-label={`View region ${b.region_id} in 3D Taste Universe`}
+                    className="p-2 bg-[#1a2230] hover:bg-[#252f44] border border-[#2b354a] hover:border-[#38bdf8] text-[#38bdf8] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#38bdf8]"
+                  >
+                    <Globe className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -536,10 +551,24 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
       {/* 24-Region Exposure Breakdown */}
       <div className="bg-[#141923] border border-[#232a3b] rounded-2xl p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-[#f1f3f7] uppercase tracking-wider">
-            24-Region Listening Footprint
-          </h3>
-          <span className="text-xs text-[#647187]">Soft cluster assignments</span>
+          <div>
+            <h3 className="text-sm font-bold text-[#f1f3f7] uppercase tracking-wider">
+              24-Region Listening Footprint
+            </h3>
+            <span className="text-xs text-[#647187]">Soft cluster assignments</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setUniverseFocusedRegionId(null);
+              setUniverseModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#18202e] hover:bg-[#252f44] border border-[#2b374d] text-xs font-semibold text-[#d4af37] hover:text-[#f5ecd5] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+          >
+            <Globe className="w-3.5 h-3.5 text-[#d4af37]" />
+            <span>View in 3D Universe</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">

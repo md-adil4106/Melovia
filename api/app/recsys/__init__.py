@@ -53,6 +53,13 @@ from app.recsys.sequencing import (
     sequence_playlist,
 )
 from app.recsys.taste import Modes, RecsysError, SeedNotFoundError, build_modes
+from app.recsys.universe import (
+    compute_region_3d_centroids,
+    dequantize_points,
+    find_original_neighbors,
+    place_in_universe,
+    quantize_points,
+)
 
 __all__ = [
     "CatalogCorruptError",
@@ -100,4 +107,9 @@ __all__ = [
     "ARCHETYPE_CATALOG",
     "BlindspotRegion",
     "detect_blindspots",
+    "quantize_points",
+    "dequantize_points",
+    "place_in_universe",
+    "find_original_neighbors",
+    "compute_region_3d_centroids",
 ]
