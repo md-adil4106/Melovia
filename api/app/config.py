@@ -92,7 +92,12 @@ class Settings(BaseSettings):
     API_HOST: str = Field(default="0.0.0.0", validation_alias="API_HOST")
     API_PORT: int = Field(default=8000, validation_alias="API_PORT")
     API_CORS_ORIGINS: list[str] = Field(
-        default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"],
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:3507",
+            "http://127.0.0.1:3507",
+        ],
         validation_alias="API_CORS_ORIGINS",
     )
 
