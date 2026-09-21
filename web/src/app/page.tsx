@@ -811,44 +811,69 @@ export default function DiscoveryHome() {
             )}
 
             {/* Dropdown Suggestions */}
-            {isDropdownOpen && searchResults && searchResults.length > 0 && (
+            {isDropdownOpen && debouncedQuery.length >= 2 && (
               <div
                 ref={dropdownRef}
-                className="absolute left-0 right-0 top-full mt-2 bg-[#12161f] border border-[#2a3347] rounded-xl shadow-2xl z-50 overflow-hidden max-h-72 overflow-y-auto"
+                className="absolute left-0 right-0 top-full mt-2 bg-[#12161f] border border-[#2a3347] rounded-xl shadow-2xl z-50 overflow-hidden max-h-80 overflow-y-auto"
               >
-                <div className="p-1.5 divide-y divide-[#1e2535]">
-                  {searchResults.map((t, idx) => {
-                    const isAlreadySeed = seeds.some((s) => s.id === t.id);
-                    const isHighlighted = idx === highlightedIndex;
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => handleSelectTrack(t)}
-                        disabled={isAlreadySeed}
-                        className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between transition-colors ${
-                          isHighlighted ? "bg-[#1f2738]" : "hover:bg-[#181f2d]"
-                        } ${isAlreadySeed ? "opacity-40 cursor-not-allowed" : ""}`}
-                      >
-                        <div className="min-w-0 pr-3">
-                          <p className="text-sm font-medium text-[#f1f3f7] truncate">{t.title}</p>
-                          <p className="text-xs text-[#8c96a8] truncate">
-                            {t.artist_name} {t.year ? `• ${t.year}` : ""}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-[#d4af37]">
-                          {isAlreadySeed ? (
-                            <span className="text-[#647187]">Selected</span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-xs bg-[#242b3a] px-2 py-0.5 rounded text-[#c8d0de]">
-                              <Plus className="w-3 h-3 text-[#d4af37]" /> Add
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                {searchResults && searchResults.length > 0 ? (
+                  <div className="p-1.5 divide-y divide-[#1e2535]">
+                    {searchResults.map((t, idx) => {
+                      const isAlreadySeed = seeds.some((s) => s.id === t.id);
+                      const isHighlighted = idx === highlightedIndex;
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => handleSelectTrack(t)}
+                          disabled={isAlreadySeed}
+                          className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between gap-3 transition-colors ${
+                            isHighlighted ? "bg-[#1f2738]" : "hover:bg-[#181f2d]"
+                          } ${isAlreadySeed ? "opacity-40 cursor-not-allowed" : ""}`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0 pr-2">
+                            {t.artwork_url ? (
+                              <img
+                                src={t.artwork_url}
+                                alt=""
+                                className="w-10 h-10 rounded-md object-cover bg-[#262e40] flex-shrink-0 shadow-sm"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-md bg-[#1c2333] border border-[#263147] flex items-center justify-center flex-shrink-0 text-[#d4af37]">
+                                <Music className="w-4 h-4" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-[#f1f3f7] truncate">{t.title}</p>
+                              <div className="flex items-center gap-1.5 text-xs text-[#8c96a8] truncate">
+                                <span className="truncate">{t.artist_name}</span>
+                                {t.year ? <span>• {t.year}</span> : null}
+                                {t.tags && t.tags.length > 0 && (
+                                  <span className="text-[10px] bg-[#1a212f] text-[#a0aec0] px-1.5 py-0.5 rounded border border-[#2b3548] hidden sm:inline">
+                                    {t.tags[0]}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs flex-shrink-0">
+                            {isAlreadySeed ? (
+                              <span className="text-[#647187] text-xs font-medium">Selected</span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-xs bg-[#242b3a] hover:bg-[#2e374a] px-2.5 py-1 rounded text-[#c8d0de]">
+                                <Plus className="w-3 h-3 text-[#d4af37]" /> Add
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : !isSearchLoading ? (
+                  <div className="p-4 text-center text-xs text-[#8c96a8]">
+                    No tracks found matching &ldquo;{debouncedQuery}&rdquo;.
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
@@ -864,9 +889,13 @@ export default function DiscoveryHome() {
                 {seeds.map((s) => (
                   <div
                     key={s.id}
-                    className="inline-flex items-center gap-2 bg-[#1b2230] border border-[#2b354a] rounded-lg px-3 py-1.5 text-xs text-[#f1f3f7] shadow-sm animate-in fade-in duration-200"
+                    className="inline-flex items-center gap-2 bg-[#1b2230] border border-[#2b354a] rounded-lg px-2.5 py-1.5 text-xs text-[#f1f3f7] shadow-sm animate-in fade-in duration-200"
                   >
-                    <Music className="w-3.5 h-3.5 text-[#d4af37]" />
+                    {s.artwork_url ? (
+                      <img src={s.artwork_url} alt="" className="w-4 h-4 rounded object-cover flex-shrink-0" />
+                    ) : (
+                      <Music className="w-3.5 h-3.5 text-[#d4af37] flex-shrink-0" />
+                    )}
                     <span className="font-medium max-w-[160px] truncate">{s.title}</span>
                     <span className="text-[#8c96a8] max-w-[100px] truncate">({s.artist_name})</span>
                     <button
@@ -1181,9 +1210,17 @@ export default function DiscoveryHome() {
                       <span className="w-7 text-center font-mono text-xs font-semibold text-[#5a667d]">
                         #{idx + 1}
                       </span>
-                      <div className="w-9 h-9 rounded-lg bg-[#1c2230] border border-[#2a3449] flex items-center justify-center text-[#d4af37] flex-shrink-0">
-                        <Volume2 className="w-4 h-4" />
-                      </div>
+                      {item.track.artwork_url ? (
+                        <img
+                          src={item.track.artwork_url}
+                          alt=""
+                          className="w-9 h-9 rounded-lg object-cover border border-[#2a3449] flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-lg bg-[#1c2230] border border-[#2a3449] flex items-center justify-center text-[#d4af37] flex-shrink-0">
+                          <Volume2 className="w-4 h-4" />
+                        </div>
+                      )}
                       <div className="min-w-0">
                         <h4 className="text-sm font-semibold text-[#f1f3f7] truncate group-hover:text-[#d4af37] transition-colors">
                           {item.track.title}

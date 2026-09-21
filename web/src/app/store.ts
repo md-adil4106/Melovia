@@ -24,6 +24,9 @@ export interface Track {
     instrumentalness?: number | null;
     loudness_db?: number | null;
   } | null;
+  artwork_url?: string | null;
+  preview_url?: string | null;
+  album_name?: string | null;
 }
 
 export interface RecommendationSignals {

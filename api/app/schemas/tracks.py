@@ -37,6 +37,9 @@ class TrackDetailResponse(BaseModel):
     tags: list[str] = Field(
         default_factory=list, description="Associated genre and folksonomy tags"
     )
+    artwork_url: str | None = Field(default=None, description="Album artwork image URL")
+    preview_url: str | None = Field(default=None, description="Audio preview clip URL")
+    album_name: str | None = Field(default=None, description="Album or collection name")
 
 
 class TrackSearchResponse(BaseModel):

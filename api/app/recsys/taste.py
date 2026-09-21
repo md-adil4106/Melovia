@@ -172,21 +172,34 @@ def build_modes(
             f"Seed count must be between {cfg.min_seeds} and {cfg.max_seeds}, got {n_seeds}"
         )
 
-    # 1. Resolve and validate all seed IDs
-    seed_indices: list[int] = []
-    for sid in seed_ids:
-        if not catalog.contains_id(sid):
-            raise SeedNotFoundError(f"Seed track ID '{sid}' not found in catalog")
-        seed_indices.append(catalog.get_idx(sid))
-
-    # Extract seed vectors
-    vecs_t = catalog.vectors_t[seed_indices]
-    vecs_a = catalog.vectors_a[seed_indices]
-    mask_a_seeds = catalog.mask_a[seed_indices]
-
-    has_audio_any = bool(np.any(mask_a_seeds))
     dim_t = catalog.vectors_t.shape[1]
     dim_a = catalog.vectors_a.shape[1]
+
+    vecs_t = np.zeros((n_seeds, dim_t), dtype=np.float32)
+    vecs_a = np.zeros((n_seeds, dim_a), dtype=np.float32)
+    mask_a_seeds = np.zeros(n_seeds, dtype=np.bool_)
+
+    for i, sid in enumerate(seed_ids):
+        if not catalog.contains_id(sid):
+            raise SeedNotFoundError(f"Seed track ID '{sid}' not found in catalog")
+
+        if sid in catalog._id_to_idx:
+            idx = catalog.get_idx(sid)
+            vecs_t[i] = catalog.vectors_t[idx]
+            vecs_a[i] = catalog.vectors_a[idx]
+            mask_a_seeds[i] = catalog.mask_a[idx]
+        else:
+            # Dynamic external track registered on-the-fly
+            dyn_vt = catalog.get_dynamic_vector_t(sid)
+            if dyn_vt is not None:
+                vecs_t[i] = dyn_vt
+            else:
+                rnd_v = np.ones(dim_t, dtype=np.float32)
+                vecs_t[i] = rnd_v / np.linalg.norm(rnd_v)
+            vecs_a[i] = np.zeros(dim_a, dtype=np.float32)
+            mask_a_seeds[i] = False
+
+    has_audio_any = bool(np.any(mask_a_seeds))
 
     # 2. Determine clustering / modes
     if n_seeds < cfg.k_medoids_threshold_seeds:

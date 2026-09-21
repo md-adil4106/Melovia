@@ -16,6 +16,7 @@ In accordance with Melovia Standing Rules, only official APIs or openly licensed
 | [ListenBrainz](https://listenbrainz.org) | Data Dumps: CC0; Public API: MetaBrainz Terms | 2026-09-19 | Popularity percentiles, top recordings by artist, collaborative filtering listen signals, JSPF playlists |
 | [AcousticBrainz Archive](https://acousticbrainz.org) | CC0 (Public Domain) | 2026-09-19 | Offline acoustic feature extraction benchmark, audio feature exploration (2015–2022 recordings) |
 | [Free Music Archive (FMA)](https://github.com/mdeff/fma) | Metadata: CC BY 4.0; Audio: CC Licenses (various) | 2026-09-19 | Openly licensed audio benchmarks, Essentia feature extraction, fallback evaluation dataset |
+| [iTunes Search API](https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI/index.html) | Apple Affiliate & Public Search Terms | 2026-09-21 | Live, public, keyless search for commercial music up to today's date, 30s audio previews, cover art |
 
 ---
 
@@ -165,4 +166,15 @@ In accordance with Melovia Standing Rules, only official APIs or openly licensed
   - Re-running ingestion produces zero duplicates and updates existing entries idempotently.
 - **Representative Seed Dataset**:
   - When raw external dumps are not pre-downloaded, the pipeline automatically provides a 5,000-track real-world seed dataset (comprising canonical classics from Queen, Nirvana, The Beatles, Fleetwood Mac, Michael Jackson, Radiohead, Pink Floyd, David Bowie, Daft Punk, etc.) ensuring `make ingest-sample` and `make dq-report` run reliably out-of-the-box.
+ 
+ 
+### 8. iTunes Search API (Live Public Music Search)
+- **Official Documentation**: `https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI/index.html`
+- **Retrieval Date**: 2026-09-21
+- **License / Terms**: Apple Affiliate & Public Search Service Terms. Completely free, public, keyless API.
+- **Endpoint**: `GET https://itunes.apple.com/search?term={query}&entity=song&media=music&limit={n}`
+- **Lookup Endpoint**: `GET https://itunes.apple.com/lookup?id={trackId}`
+- **Used For**: Real-time discovery of live music releases up to today's date (e.g. searching "secondhand" by Don Toliver), high-resolution album artwork thumbnails, and 30-second AAC audio preview clips.
+- **Rate Limits**: Generous rate limit (approx. 20 requests/min burst); responses are cached with a 10-minute in-memory TTL in `api/app/services/live_search.py`.
+- **Recsys Integration**: Dynamically resolved external tracks receive deterministic synthetic semantic tag vectors and canonical identifiers (`ext:itunes:{trackId}`). Precomputed acoustic features are omitted with `has_a: false`, strictly adhering to Melovia's missing audio invariant.
 

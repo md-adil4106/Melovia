@@ -27,7 +27,7 @@ def random_baseline(
 ) -> list[dict[str, Any]]:
     """Uniform random selection of non-seed catalog tracks."""
     rng = np.random.default_rng(seed)
-    seed_indices = {catalog.get_idx(sid) for sid in seed_ids if catalog.contains_id(sid)}
+    seed_indices = {catalog.get_idx(sid) for sid in seed_ids if catalog.has_idx(sid)}
 
     all_indices = np.arange(catalog.track_count)
     rng.shuffle(all_indices)
@@ -42,17 +42,18 @@ def genre_baseline(
     n: int = 30,
 ) -> list[dict[str, Any]]:
     """Genre and tag overlap baseline (ranks by number of shared folksonomy tags)."""
-    seed_indices = {catalog.get_idx(sid) for sid in seed_ids if catalog.contains_id(sid)}
+    seed_indices = {catalog.get_idx(sid) for sid in seed_ids if catalog.has_idx(sid)}
 
     # Collect seed tags
     seed_tags: set[str] = set()
-    for s_idx in seed_indices:
-        t_dict = catalog.get_track_dict(s_idx)
-        raw_tags = t_dict.get("tags") or []
-        for item in raw_tags:
-            tname = item if isinstance(item, str) else item.get("name", "")
-            if tname:
-                seed_tags.add(tname.lower().strip())
+    for sid in seed_ids:
+        if catalog.contains_id(sid):
+            t_dict = catalog.get_track_dict(sid)
+            raw_tags = t_dict.get("tags") or []
+            for item in raw_tags:
+                tname = item if isinstance(item, str) else item.get("name", "")
+                if tname:
+                    seed_tags.add(tname.lower().strip())
 
     scored_candidates: list[tuple[int, float, str, int]] = []
     popularities = catalog._tracks_metadata.get("popularity_pct", [50.0] * catalog.track_count)
@@ -85,13 +86,13 @@ def single_channel_t_baseline(
     n: int = 30,
 ) -> list[dict[str, Any]]:
     """Single-channel cosine similarity baseline in semantic taste space (t)."""
-    seed_indices = {catalog.get_idx(sid) for sid in seed_ids if catalog.contains_id(sid)}
-    if not seed_indices:
+    seed_indices = {catalog.get_idx(sid) for sid in seed_ids if catalog.has_idx(sid)}
+    seed_vecs_list = [catalog.get_vector_t(sid) for sid in seed_ids if catalog.contains_id(sid)]
+    if not seed_vecs_list:
         return []
 
     # Mean seed vector in t
-    sub_vecs = catalog.vectors_t[list(seed_indices)]
-    mean_vec = np.mean(sub_vecs, axis=0)
+    mean_vec = np.mean(seed_vecs_list, axis=0)
     norm = float(np.linalg.norm(mean_vec))
     if norm > 1e-12:
         mean_vec /= norm
@@ -110,7 +111,7 @@ def single_channel_a_baseline(
     n: int = 30,
 ) -> list[dict[str, Any]]:
     """Single-channel cosine similarity baseline in acoustic audio space (a)."""
-    seed_indices = [catalog.get_idx(sid) for sid in seed_ids if catalog.contains_id(sid)]
+    seed_indices = [catalog.get_idx(sid) for sid in seed_ids if catalog.has_idx(sid)]
     audio_seed_indices = [idx for idx in seed_indices if catalog.mask_a[idx]]
 
     if not audio_seed_indices:

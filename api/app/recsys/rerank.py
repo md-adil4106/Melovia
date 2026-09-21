@@ -64,19 +64,21 @@ def rerank_candidates(
 
     # 1. Identify known seeds K and known artists
     all_seed_ids: list[str] = [sid for m_seeds in modes.member_seed_ids for sid in m_seeds]
-    seed_indices = [catalog.get_idx(sid) for sid in all_seed_ids if catalog.contains_id(sid)]
-
-    artist_col = catalog._tracks_metadata.get("artist_id", [])
+    seed_indices = [catalog.get_idx(sid) for sid in all_seed_ids if catalog.has_idx(sid)]
     known_artists: set[str] = set()
-    for s_idx in seed_indices:
-        if artist_col and s_idx < len(artist_col):
-            art_id = str(artist_col[s_idx])
+    seed_vecs_list = []
+
+    for sid in all_seed_ids:
+        if catalog.contains_id(sid):
+            track_data = catalog.get_track_dict(sid)
+            art_id = track_data.get("artist_id")
             if art_id:
-                known_artists.add(art_id)
+                known_artists.add(str(art_id))
+            seed_vecs_list.append(catalog.get_vector_t(sid))
 
     # Semantic taste vectors of seeds (shape: (K, dim_t))
-    if seed_indices:
-        seed_vecs_t = catalog.vectors_t[seed_indices]
+    if seed_vecs_list:
+        seed_vecs_t = np.array(seed_vecs_list, dtype=np.float32)
     else:
         seed_vecs_t = np.empty((0, 128), dtype=np.float32)
 
@@ -90,6 +92,7 @@ def rerank_candidates(
         nov = np.ones(p_size, dtype=np.float32)
 
     # 3. Artist newness A_i in {0, 1}
+    artist_col = catalog._tracks_metadata.get("artist_id", [])
     a_new = np.zeros(p_size, dtype=np.float32)
     for i in range(p_size):
         t_idx = int(track_indices[i])

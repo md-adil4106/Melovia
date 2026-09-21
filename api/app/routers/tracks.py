@@ -51,10 +51,10 @@ def _build_track_detail(raw_dict: dict[str, Any], store: CatalogStore) -> TrackD
             loudness_db=float(raw_scalars["loudness_db"]) if "loudness_db" in raw_scalars else None,
         )
 
-    # Resolve tags: from region top_tags if region_id is available
-    tags: list[str] = []
+    # Resolve tags: from raw_dict or region top_tags if region_id is available
+    tags: list[str] = list(raw_dict.get("tags") or [])
     region_id = raw_dict.get("region_id")
-    if region_id is not None and store.regions:
+    if not tags and region_id is not None and store.regions:
         for r in store.regions:
             if r.get("region_id") == region_id:
                 tags = list(r.get("top_tags", []))
@@ -81,6 +81,9 @@ def _build_track_detail(raw_dict: dict[str, Any], store: CatalogStore) -> TrackD
         region_id=int(region_id) if region_id is not None else None,
         scalars=scalars,
         tags=tags,
+        artwork_url=raw_dict.get("artwork_url"),
+        preview_url=raw_dict.get("preview_url"),
+        album_name=raw_dict.get("album_name"),
     )
 
 
@@ -185,12 +188,35 @@ async def search_tracks(
     except Exception:
         pass
 
-    # 3. Merge and deduplicate by canonical (title, artist)
+    # 3. Search live public music releases (iTunes Search API)
+    live_items: list[TrackDetailResponse] = []
+    if len(q.strip()) >= 2:
+        from app.services.live_search import live_search_service
+
+        try:
+            live_tracks = await live_search_service.search_tracks(q.strip(), limit=limit)
+            for raw_live in live_tracks:
+                store.register_dynamic_track(raw_live)
+                live_items.append(_build_track_detail(raw_live, store))
+        except Exception:
+            pass
+
+    # 4. Merge and deduplicate by canonical (title, artist)
+    # Curated DB tracks take precedence, enriched with live artwork/preview if available
+    db_lookup = {(t.title.lower().strip(), t.artist_name.lower().strip()): t for t in db_items}
+    for live_item in live_items:
+        key = (live_item.title.lower().strip(), live_item.artist_name.lower().strip())
+        if key in db_lookup:
+            dbt = db_lookup[key]
+            if not dbt.artwork_url and live_item.artwork_url:
+                dbt.artwork_url = live_item.artwork_url
+            if not dbt.preview_url and live_item.preview_url:
+                dbt.preview_url = live_item.preview_url
+
     seen_keys: set[tuple[str, str]] = set()
     merged: list[TrackDetailResponse] = []
 
-    # Prioritize real DB tracks if matched, else bundle tracks
-    for t in db_items + items:
+    for t in db_items + live_items + items:
         key = (t.title.lower().strip(), t.artist_name.lower().strip())
         if key not in seen_keys:
             seen_keys.add(key)
@@ -219,12 +245,24 @@ async def get_track(
     store: CatalogStore = Depends(get_catalog_store),
     session: AsyncSession = Depends(get_db_session),
 ) -> TrackDetailResponse:
-    # 1. Try store first
+    # 1. Try store first (includes dynamic registered tracks)
     if store.contains_id(id):
         raw_track = store.get_track_dict(id)
         return _build_track_detail(raw_track, store)
 
-    # 2. Try database staging_tracks by id or mbid
+    # 2. Try live lookup if external ID
+    if id.startswith("ext:itunes:"):
+        from app.services.live_search import live_search_service
+
+        try:
+            live_track = await live_search_service.get_track_by_id(id)
+            if live_track:
+                store.register_dynamic_track(live_track)
+                return _build_track_detail(live_track, store)
+        except Exception:
+            pass
+
+    # 3. Try database staging_tracks by id or mbid
     try:
         stmt = select(StagingTrack).where(or_(StagingTrack.id == id, StagingTrack.mbid == id))
         res = await session.execute(stmt)

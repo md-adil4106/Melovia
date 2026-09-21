@@ -73,9 +73,9 @@ def generate_candidates(
         seed_ids_set.update(mode_seeds)
     seed_ids_set.update(filt.excluded_track_ids)
 
-    # Convert excluded seeds to integer catalog indices
+    # Convert excluded seeds to integer catalog indices (only for bundle tracks)
     seed_indices_set: set[int] = {
-        catalog.get_idx(sid) for sid in seed_ids_set if catalog.contains_id(sid)
+        catalog.get_idx(sid) for sid in seed_ids_set if catalog.has_idx(sid)
     }
 
     # Extract artist exclusions

@@ -90,6 +90,10 @@ class CatalogStore:
         self._id_to_idx: dict[str, int] = {tid: idx for idx, tid in enumerate(track_ids)}
         self._idx_to_id: dict[int, str] = dict(enumerate(track_ids))
 
+        # Dynamic external tracks registry
+        self._dynamic_tracks: dict[str, dict[str, Any]] = {}
+        self._dynamic_vectors_t: dict[str, npt.NDArray[np.float32]] = {}
+
         # Index mapping for MBIDs if present
         self._mbid_to_idx: dict[str, int] = {}
         if "mbid" in self._tracks_metadata:
@@ -260,7 +264,19 @@ class CatalogStore:
             ) from None
 
     def contains_id(self, track_id: str) -> bool:
+        return track_id in self._id_to_idx or track_id in self._dynamic_tracks
+
+    def has_idx(self, track_id: str) -> bool:
+        """Check if track ID exists as a physical row index in the catalog bundle matrix."""
         return track_id in self._id_to_idx
+
+    def get_vector_t(self, track_id: str) -> npt.NDArray[np.float32]:
+        """Return 128-d semantic vector t for any known catalog or dynamic track."""
+        if track_id in self._id_to_idx:
+            return np.asarray(self.vectors_t[self._id_to_idx[track_id]], dtype=np.float32)
+        if track_id in self._dynamic_vectors_t:
+            return np.asarray(self._dynamic_vectors_t[track_id], dtype=np.float32)
+        raise KeyError(f"Track ID '{track_id}' not found in catalog or dynamic tracks")
 
     def contains_mbid(self, mbid: str) -> bool:
         """Check if recording MBID or track ID is present in catalog."""
@@ -276,8 +292,53 @@ class CatalogStore:
             return self._id_to_idx[norm]
         raise KeyError(f"MBID '{mbid}' not found in catalog")
 
+    def register_dynamic_track(
+        self,
+        raw_track: dict[str, Any],
+        vector_t: npt.NDArray[np.float32] | None = None,
+    ) -> str:
+        """Register a dynamic external track into the in-memory catalog index."""
+        track_id = str(raw_track["id"])
+        if track_id in self._id_to_idx:
+            return track_id
+
+        if vector_t is None:
+            # Generate a semantic vector using tag facets or title/artist hash projection
+            tags = raw_track.get("tags") or []
+            tag_vectors: list[npt.NDArray[np.float32]] = []
+            for t in tags:
+                fv = self.get_tag_facet_vector(str(t))
+                if np.linalg.norm(fv) > 1e-6:
+                    tag_vectors.append(fv)
+
+            if tag_vectors:
+                mean_v = np.mean(tag_vectors, axis=0)
+                norm = float(np.linalg.norm(mean_v))
+                vector_t = mean_v / norm if norm > 1e-6 else np.zeros(self.dim_t, dtype=np.float32)
+            else:
+                title_str = raw_track.get('title', '')
+                artist_str = raw_track.get('artist_name', '')
+                tags_str = ' '.join(str(t) for t in tags)
+                text = f"{title_str} {artist_str} {tags_str}"
+                h_int = int(hashlib.md5(text.lower().encode("utf-8")).hexdigest()[:8], 16)
+                rng = np.random.default_rng(h_int % (2**31))
+                rnd_v = rng.normal(0.0, 1.0, size=self.dim_t).astype(np.float32)
+                norm = float(np.linalg.norm(rnd_v))
+                vector_t = rnd_v / (norm + 1e-12)
+
+        self._dynamic_tracks[track_id] = dict(raw_track)
+        self._dynamic_vectors_t[track_id] = np.asarray(vector_t, dtype=np.float32)
+        return track_id
+
+    def get_dynamic_vector_t(self, track_id: str) -> npt.NDArray[np.float32] | None:
+        """Retrieve dynamic vector t for an external track."""
+        return self._dynamic_vectors_t.get(track_id)
+
     def get_track_dict(self, track_idx_or_id: int | str) -> dict[str, Any]:
         """Return full metadata dictionary for a track."""
+        if isinstance(track_idx_or_id, str) and track_idx_or_id in self._dynamic_tracks:
+            return dict(self._dynamic_tracks[track_idx_or_id])
+
         idx = track_idx_or_id if isinstance(track_idx_or_id, int) else self.get_idx(track_idx_or_id)
         record: dict[str, Any] = {}
         for col_name, col_values in self._tracks_metadata.items():
