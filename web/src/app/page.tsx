@@ -7,6 +7,7 @@ import {
   BookmarkCheck,
   BookmarkPlus,
   Compass,
+  Download,
   Globe,
   Headphones,
   HelpCircle,
@@ -32,6 +33,7 @@ import { ChatDrawer } from "./components/ChatDrawer";
 import { SettingsDrawer } from "./components/SettingsDrawer";
 import { PlaylistBuilder } from "./components/PlaylistBuilder";
 import { ProfileView } from "./components/ProfileView";
+import { ExportModal } from "./components/export/ExportModal";
 
 const TasteUniverseModal = dynamic(
   () => import("./components/universe/TasteUniverseModal"),
@@ -86,6 +88,7 @@ export default function DiscoveryHome() {
   const [sliderValue, setSliderValue] = useState(discovery);
   const [selectedTrackForWhy, setSelectedTrackForWhy] = useState<Track | null>(null);
   const [isWhyDrawerOpen, setIsWhyDrawerOpen] = useState(false);
+  const [isMainExportOpen, setIsMainExportOpen] = useState(false);
 
   const handleOpenWhy = (track: Track) => {
     setSelectedTrackForWhy(track);
@@ -878,9 +881,20 @@ export default function DiscoveryHome() {
               Recommended Tracks
             </h3>
             {recommendations.length > 0 && (
-              <span className="text-xs text-[#8c96a8] bg-[#141923] px-2.5 py-1 rounded-full border border-[#232a3b]">
-                {recommendations.length} recommendations ranked
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsMainExportOpen(true)}
+                  aria-label="Export recommended tracks"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-[#d4af37] hover:text-[#f5ecd5] bg-[#141923] hover:bg-[#1b2230] border border-[#d4af37]/40 px-3 py-1 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#d4af37]"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export</span>
+                </button>
+                <span className="text-xs text-[#8c96a8] bg-[#141923] px-2.5 py-1 rounded-full border border-[#232a3b]">
+                  {recommendations.length} recommendations ranked
+                </span>
+              </div>
             )}
           </div>
 
@@ -1127,6 +1141,15 @@ export default function DiscoveryHome() {
 
       {/* 3D Taste Universe Interactive Modal (Phase 12, lazy chunk) */}
       <TasteUniverseModal />
+
+      {/* Main Recommendations Export Modal (Phase 13) */}
+      <ExportModal
+        isOpen={isMainExportOpen}
+        onClose={() => setIsMainExportOpen(false)}
+        tracks={recommendations}
+        playlistName="Melovia Recommended Tracks"
+        apiBase={API_BASE}
+      />
     </main>
   );
 }

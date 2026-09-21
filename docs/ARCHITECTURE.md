@@ -29,14 +29,19 @@ Melovia is an explainable, user-steerable music-discovery engine designed with s
   - The LLM **never** invents metadata or track attributes.
   - The LLM **never** writes ungrounded explanations; explanations must strictly derive from computed ranking signals.
 
-### 3. Music Platforms (`api/app/platforms/*`)
+### 3. Music Platforms & File Export (`api/app/platforms/*`)
 - Confined behind `PlatformAdapter` interface:
-  - `search_track(query: str) -> list[TrackMetadata]`
-  - `get_metadata(platform_id: str) -> TrackMetadata`
-  - `authenticate(code: str) -> AuthCredentials`
-  - `create_playlist(user_id: str, title: str) -> PlaylistInfo`
+  - `search_track(query: str, artist: str | None, isrc: str | None) -> list[dict[str, Any]]`
+  - `get_metadata(platform_id: str) -> dict[str, Any]`
+  - `authenticate(code: str) -> dict[str, Any]`
+  - `create_playlist(user_id: str, name: str, track_ids: list[str] | None) -> dict[str, Any]`
   - `add_tracks(playlist_id: str, track_ids: list[str]) -> bool`
+- **Offline File Export**: `FileExportAdapter` provides 100% offline file generation (CSV, JSPF JSON, Extended M3U, Plain Text) with zero network calls.
+- **Platform Adapter**: `SpotifyAdapter` implements OAuth 2.0 PKCE, loopback redirection (`127.0.0.1`), batch track insertion ($\le 100$), and rate limit handling.
+- **Track Matching**: `TrackMatcher` uses a 2-stage cascade (exact ISRC search first $\to$ fuzzy title+artist matching fallback) with result caching.
 - **Zero Leakage**: No platform-specific models or types leak into `api/app/recsys/`.
+- **Zero Token Persistence**: Tokens are stored strictly in server memory during active sessions and never written to disk, database, or logs.
+- See [`docs/PLATFORMS.md`](file:///c:/Users/Mohommed%20Adil/Desktop/Melovia/docs/PLATFORMS.md) for full configuration details.
 
 ### 4. Catalog, Vector Storage & 3D Visualization (`data/bundles/<version>/`)
 - Stored as immutable, versioned, checksummed bundles.

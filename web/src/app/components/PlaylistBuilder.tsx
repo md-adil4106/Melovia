@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import {
   ArrowDown,
   ArrowUp,
+  Download,
   ListMusic,
   Minus,
   Music,
@@ -19,6 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useDiscoveryStore, RecommendedItem, Track } from "../store";
+import { ExportModal } from "./export/ExportModal";
 
 /* ── Types ─────────────────────────────────────────────── */
 
@@ -81,6 +83,7 @@ export function PlaylistBuilder({
 
   const [result, setResult] = useState<SequenceResponse | null>(null);
   const [localTracks, setLocalTracks] = useState<RecommendedItem[]>([]);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   // Sequence mutation
@@ -456,10 +459,20 @@ export function PlaylistBuilder({
 
               {/* Sequenced Track List */}
               <div>
-                <h3 className="text-xs font-semibold text-[#8c96a8] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Music className="w-3.5 h-3.5 text-[#d4af37]" />
-                  Sequenced Tracks ({localTracks.length})
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-semibold text-[#8c96a8] uppercase tracking-wider flex items-center gap-1.5">
+                    <Music className="w-3.5 h-3.5 text-[#d4af37]" />
+                    Sequenced Tracks ({localTracks.length})
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsExportOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#1b2230] hover:bg-[#252f42] text-[#d4af37] border border-[#d4af37]/40 transition-colors focus:outline-none focus:ring-1 focus:ring-[#d4af37]"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Export
+                  </button>
+                </div>
                 <div className="space-y-1">
                   {localTracks.map((item, idx) => {
                     const energy = item.track.scalars?.energy;
@@ -537,6 +550,14 @@ export function PlaylistBuilder({
           )}
         </div>
       </div>
+
+      <ExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        tracks={localTracks}
+        playlistName={`Melovia - ${ARC_INFO[selectedArc].label} Arc`}
+        apiBase={apiBase}
+      />
     </>
   );
 }

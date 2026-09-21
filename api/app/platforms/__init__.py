@@ -5,5 +5,18 @@ PlatformAdapter in base.py. No platform-specific types may leak into the recsys 
 """
 
 from app.platforms.base import PlatformAdapter
+from app.platforms.files import FileExportAdapter
+from app.platforms.matching import MatchStatus, TrackMatcher, TrackMatchResult
+from app.platforms.registry import get_adapter, list_supported_platforms
+from app.platforms.spotify import SpotifyAdapter
 
-__all__ = ["PlatformAdapter"]
+__all__ = [
+    "PlatformAdapter",
+    "FileExportAdapter",
+    "SpotifyAdapter",
+    "TrackMatcher",
+    "TrackMatchResult",
+    "MatchStatus",
+    "get_adapter",
+    "list_supported_platforms",
+]

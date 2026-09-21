@@ -39,11 +39,19 @@ class LLMSettings(BaseModel):
 
 class PlatformSettings(BaseModel):
     default_platform: str = Field(default="spotify", description="Default platform adapter")
-    client_id: str = Field(default="", description="Platform API client ID")
-    client_secret: str = Field(default="", description="Platform API client secret")
+    spotify_client_id: str = Field(default="", description="Spotify Developer API client ID")
+    spotify_client_secret: str = Field(
+        default="", description="Spotify Developer API client secret"
+    )
+    spotify_redirect_uri: str = Field(
+        default="http://127.0.0.1:8000/export/spotify/callback",
+        description="Spotify OAuth PKCE callback URL (requires 127.0.0.1, not localhost)",
+    )
+    client_id: str = Field(default="", description="Platform API client ID (legacy)")
+    client_secret: str = Field(default="", description="Platform API client secret (legacy)")
     redirect_uri: str = Field(
-        default="http://localhost:8000/platforms/callback",
-        description="OAuth callback URL",
+        default="http://127.0.0.1:8000/export/spotify/callback",
+        description="OAuth callback URL (legacy)",
     )
 
 
@@ -110,8 +118,14 @@ class Settings(BaseSettings):
     PLATFORM_CLIENT_ID: str = Field(default="", validation_alias="PLATFORM_CLIENT_ID")
     PLATFORM_CLIENT_SECRET: str = Field(default="", validation_alias="PLATFORM_CLIENT_SECRET")
     PLATFORM_REDIRECT_URI: str = Field(
-        default="http://localhost:8000/platforms/callback",
+        default="http://127.0.0.1:8000/export/spotify/callback",
         validation_alias="PLATFORM_REDIRECT_URI",
+    )
+    SPOTIFY_CLIENT_ID: str = Field(default="", validation_alias="SPOTIFY_CLIENT_ID")
+    SPOTIFY_CLIENT_SECRET: str = Field(default="", validation_alias="SPOTIFY_CLIENT_SECRET")
+    SPOTIFY_REDIRECT_URI: str = Field(
+        default="http://127.0.0.1:8000/export/spotify/callback",
+        validation_alias="SPOTIFY_REDIRECT_URI",
     )
 
     # CATALOG
@@ -144,11 +158,17 @@ class Settings(BaseSettings):
 
     @property
     def PLATFORM(self) -> PlatformSettings:
+        cid = self.SPOTIFY_CLIENT_ID or self.PLATFORM_CLIENT_ID
+        csec = self.SPOTIFY_CLIENT_SECRET or self.PLATFORM_CLIENT_SECRET
+        redir = self.SPOTIFY_REDIRECT_URI or self.PLATFORM_REDIRECT_URI
         return PlatformSettings(
             default_platform=self.PLATFORM_DEFAULT,
-            client_id=self.PLATFORM_CLIENT_ID,
-            client_secret=self.PLATFORM_CLIENT_SECRET,
-            redirect_uri=self.PLATFORM_REDIRECT_URI,
+            spotify_client_id=cid,
+            spotify_client_secret=csec,
+            spotify_redirect_uri=redir,
+            client_id=cid,
+            client_secret=csec,
+            redirect_uri=redir,
         )
 
     @property

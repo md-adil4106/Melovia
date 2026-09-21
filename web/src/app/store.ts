@@ -8,6 +8,7 @@ export interface Track {
   artist_id: string;
   artist_name: string;
   year?: number | null;
+  isrcs?: string[];
   popularity_pct: number;
   has_a: boolean;
   has_t: boolean;
