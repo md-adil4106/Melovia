@@ -34,6 +34,14 @@ import { SettingsDrawer } from "./components/SettingsDrawer";
 import { PlaylistBuilder } from "./components/PlaylistBuilder";
 import { ProfileView } from "./components/ProfileView";
 import { ExportModal } from "./components/export/ExportModal";
+import { HeroParticleField } from "./components/HeroParticleField";
+import { Button } from "./components/ui/Button";
+import { Card } from "./components/ui/Card";
+import { Chip } from "./components/ui/Chip";
+import { Slider } from "./components/ui/Slider";
+import { Toast } from "./components/ui/Toast";
+import { ErrorState } from "./components/ui/ErrorState";
+import { FlaskConical } from "lucide-react";
 
 const TasteUniverseModal = dynamic(
   () => import("./components/universe/TasteUniverseModal"),
@@ -41,6 +49,107 @@ const TasteUniverseModal = dynamic(
 );
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+interface SeedPreset {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  tracks: Track[];
+}
+
+const SAMPLE_PRESETS: SeedPreset[] = [
+  {
+    id: "night-drive",
+    name: "Night Drive",
+    icon: "🚗",
+    description: "Driving synths & dark electric energy",
+    tracks: [
+      {
+        id: "e6e33bfb-d1c8-52c4-b400-09b91558864b",
+        track_idx: 1,
+        title: "Electric Gravity",
+        artist_name: "Ghost Echo",
+        artist_id: "artist_1",
+        year: 2020,
+        popularity_pct: 70,
+        has_a: true,
+        has_t: true,
+      },
+      {
+        id: "9558a519-9578-5a1e-bf33-0e61c9c274b4",
+        track_idx: 4,
+        title: "Fractured Glitch",
+        artist_name: "Stellar Shade",
+        artist_id: "artist_4",
+        year: 2021,
+        popularity_pct: 65,
+        has_a: true,
+        has_t: true,
+      },
+    ],
+  },
+  {
+    id: "ambient-focus",
+    name: "Ambient Focus",
+    icon: "🧘",
+    description: "Deep starlight, spatial resonance & calm",
+    tracks: [
+      {
+        id: "b7ac542c-1b90-550d-a778-f94510231bd5",
+        track_idx: 2,
+        title: "Quiet Starlight",
+        artist_name: "Mirage Signals",
+        artist_id: "artist_2",
+        year: 2019,
+        popularity_pct: 60,
+        has_a: true,
+        has_t: true,
+      },
+      {
+        id: "c73dc950-5de6-54c7-8fb6-2d8c095521ef",
+        track_idx: 3,
+        title: "Floating Resonance",
+        artist_name: "Amber Frequency",
+        artist_id: "artist_3",
+        year: 2022,
+        popularity_pct: 58,
+        has_a: true,
+        has_t: true,
+      },
+    ],
+  },
+  {
+    id: "cosmic-drift",
+    name: "Cosmic Drift",
+    icon: "🌌",
+    description: "Reflective space ambient & subtle pulses",
+    tracks: [
+      {
+        id: "f312f449-e24b-5b91-83a4-69c6e61ff5b1",
+        track_idx: 0,
+        title: "Endless Reflection, Pt. 1",
+        artist_name: "Lunar Fables",
+        artist_id: "artist_0",
+        year: 2018,
+        popularity_pct: 62,
+        has_a: true,
+        has_t: true,
+      },
+      {
+        id: "ee84d0a1-0a12-5973-9b4e-de6a9635b586",
+        track_idx: 8,
+        title: "Quiet Pulse",
+        artist_name: "Azure Frequency",
+        artist_id: "artist_8",
+        year: 2023,
+        popularity_pct: 55,
+        has_a: true,
+        has_t: true,
+      },
+    ],
+  },
+];
 
 export default function DiscoveryHome() {
   const {
@@ -89,6 +198,36 @@ export default function DiscoveryHome() {
   const [selectedTrackForWhy, setSelectedTrackForWhy] = useState<Track | null>(null);
   const [isWhyDrawerOpen, setIsWhyDrawerOpen] = useState(false);
   const [isMainExportOpen, setIsMainExportOpen] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(true);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("melovia_onboarding_dismissed");
+      if (!saved) {
+        setOnboardingDismissed(false);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleDismissOnboarding = () => {
+    setOnboardingDismissed(true);
+    try {
+      localStorage.setItem("melovia_onboarding_dismissed", "true");
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleApplyPreset = (preset: SeedPreset) => {
+    clearSeeds();
+    preset.tracks.forEach((t) => addSeed(t));
+    recommendMutation.mutate({
+      seedIds: preset.tracks.map((t) => t.id),
+      d: sliderValue,
+    });
+  };
 
   const handleOpenWhy = (track: Track) => {
     setSelectedTrackForWhy(track);
@@ -479,6 +618,16 @@ export default function DiscoveryHome() {
               <span className="font-semibold hidden sm:inline">3D Universe</span>
             </button>
 
+            {/* Study Mode Button (Phase 15) */}
+            <a
+              href="/study"
+              aria-label="Open blind A/B evaluation study mode"
+              className="flex items-center gap-1.5 text-xs text-[#38bdf8] hover:text-[#7dd3fc] bg-[#38bdf8]/10 hover:bg-[#38bdf8]/20 border border-[#38bdf8]/40 px-3 py-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#38bdf8]"
+            >
+              <FlaskConical className="w-3.5 h-3.5 text-[#38bdf8]" />
+              <span className="font-semibold hidden sm:inline">Study Mode</span>
+            </a>
+
             {/* Anonymous Taste Profile & Settings Button */}
             <button
               type="button"
@@ -551,19 +700,75 @@ export default function DiscoveryHome() {
                 </button>
               </div>
             )}
-        {/* Hero Section */}
-        <section className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1b212d] border border-[#2b3345] text-xs text-[#d4af37] mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Interactive Discovery Control (WOW #1)</span>
+        {/* Hero Section with Ambient 2D Point-Field Canvas */}
+        <section className="relative overflow-hidden rounded-3xl p-8 mb-8 border border-[#232a3b] bg-gradient-to-b from-[#111520] to-[#0c0e14] text-center shadow-2xl">
+          <HeroParticleField />
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1b212d]/80 border border-[#2b3345] text-xs text-[#d4af37] mb-3 backdrop-blur-sm">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Interactive Discovery Control (WOW #1)</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#f1f3f7] tracking-tight mb-2 font-serif-display">
+              Steerable Discovery from Seed Tracks
+            </h2>
+            <p className="text-sm sm:text-base text-[#8c96a8] max-w-xl mx-auto mb-6">
+              Choose 1 to 10 seed tracks, then dynamically tune the Familiarity ↔ Discovery slider to traverse from familiar sounds to exploratory musical horizons.
+            </p>
+
+            {/* Curated Sample Seed Presets (<= 2 clicks to recommendations) */}
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
+              <span className="text-xs text-[#647187] font-semibold uppercase tracking-wider mr-1">
+                Quick Presets:
+              </span>
+              {SAMPLE_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handleApplyPreset(preset)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-[#161c28]/90 hover:bg-[#20293d] border border-[#2a364d] hover:border-[#d4af37]/60 text-[#f1f3f7] transition-all transform active:scale-95 shadow-sm"
+                  title={preset.description}
+                >
+                  <span>{preset.icon}</span>
+                  <span className="font-semibold">{preset.name}</span>
+                </button>
+              ))}
+            </div>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#f1f3f7] tracking-tight mb-2 font-serif-display">
-            Steerable Discovery from Seed Tracks
-          </h2>
-          <p className="text-sm sm:text-base text-[#8c96a8] max-w-xl mx-auto">
-            Choose 1 to 10 seed tracks, then dynamically tune the Familiarity ↔ Discovery slider to traverse from familiar sounds to exploratory musical horizons.
-          </p>
         </section>
+
+        {/* 3-Step First-Run Hint Banner (Dismissible + Remembered) */}
+        {!onboardingDismissed && (
+          <div className="mb-6 p-4 bg-[#11141d] border border-[#d4af37]/30 rounded-2xl relative shadow-xl animate-in fade-in duration-300">
+            <button
+              type="button"
+              onClick={handleDismissOnboarding}
+              aria-label="Dismiss quick start guide"
+              className="absolute top-3 right-3 text-[#8c96a8] hover:text-[#f1f3f7] p-1 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#d4af37]"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-4 h-4 text-[#d4af37]" />
+              <h3 className="text-xs font-bold text-[#f1f3f7] uppercase tracking-wider">
+                Quick Start Guide (3 Simple Steps)
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-[#8c96a8]">
+              <div className="p-3 bg-[#171b26] rounded-xl border border-[#232b3d]">
+                <strong className="text-[#f1f3f7] block mb-1">1. Pick Seeds</strong>
+                Search tracks or click a Quick Preset above to establish your initial taste beacon.
+              </div>
+              <div className="p-3 bg-[#171b26] rounded-xl border border-[#232b3d]">
+                <strong className="text-[#d4af37] block mb-1">2. Set Discovery</strong>
+                Slide from Familiarity (0%) toward adventurous musical Discovery (100%).
+              </div>
+              <div className="p-3 bg-[#171b26] rounded-xl border border-[#232b3d]">
+                <strong className="text-[#38bdf8] block mb-1">3. Steer with Vibe</strong>
+                Like, dislike, or use Conversational Refine to guide your path in real-time.
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Seed Search & Input Box */}
         <section className="bg-[#141923] border border-[#232a3b] rounded-2xl p-6 mb-6 shadow-xl relative">

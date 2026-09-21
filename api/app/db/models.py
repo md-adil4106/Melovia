@@ -153,6 +153,33 @@ class FeedbackEvent(Base):
     )
 
 
+class StudyRating(Base):
+    """Anonymous blind A/B evaluation rating comparing Hybrid vs Baseline (Phase 15)."""
+
+    __tablename__ = "study_ratings"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    session_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    participant_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    seed_set_id: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    arm_order: Mapped[str] = mapped_column(String(16), nullable=False)
+    playlist_a_arm: Mapped[str] = mapped_column(String(16), nullable=False)
+    playlist_b_arm: Mapped[str] = mapped_column(String(16), nullable=False)
+    relevance_a: Mapped[int] = mapped_column(Integer, nullable=False)
+    discovery_a: Mapped[int] = mapped_column(Integer, nullable=False)
+    flow_a: Mapped[int] = mapped_column(Integer, nullable=False)
+    satisfaction_a: Mapped[int] = mapped_column(Integer, nullable=False)
+    relevance_b: Mapped[int] = mapped_column(Integer, nullable=False)
+    discovery_b: Mapped[int] = mapped_column(Integer, nullable=False)
+    flow_b: Mapped[int] = mapped_column(Integer, nullable=False)
+    satisfaction_b: Mapped[int] = mapped_column(Integer, nullable=False)
+    preferred_overall: Mapped[str] = mapped_column(String(16), nullable=False)
+    feedback_text: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
+    )
+
+
 # ==============================================================================
 # Placeholder Stubs (Preserved for initial migration compatibility)
 # ==============================================================================

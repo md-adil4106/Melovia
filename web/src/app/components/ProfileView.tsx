@@ -15,6 +15,7 @@ import {
   BarChart2,
   Table as TableIcon,
   Globe,
+  Share2,
 } from "lucide-react";
 import {
   useDiscoveryStore,
@@ -33,6 +34,7 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
   const { seeds, setUniverseModalOpen, setUniverseFocusedRegionId } = useDiscoveryStore();
   const [showTableAlternative, setShowTableAlternative] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [isExportingImage, setIsExportingImage] = useState(false);
 
   // ListenBrainz import form state
   const [lbUsername, setLbUsername] = useState("");
@@ -112,6 +114,224 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
     );
   }
 
+  const handleShareAsImage = () => {
+    if (!profileData) return;
+    setIsExportingImage(true);
+
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 630;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      // 1. Background gradient
+      const bgGradient = ctx.createLinearGradient(0, 0, 1200, 630);
+      bgGradient.addColorStop(0, "#090b10");
+      bgGradient.addColorStop(0.5, "#11141d");
+      bgGradient.addColorStop(1, "#0d1017");
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, 1200, 630);
+
+      // Decorative ambient glow
+      const glow1 = ctx.createRadialGradient(150, 150, 10, 150, 150, 300);
+      glow1.addColorStop(0, "rgba(212, 175, 55, 0.15)");
+      glow1.addColorStop(1, "rgba(212, 175, 55, 0)");
+      ctx.fillStyle = glow1;
+      ctx.fillRect(0, 0, 600, 630);
+
+      const glow2 = ctx.createRadialGradient(1050, 480, 10, 1050, 480, 300);
+      glow2.addColorStop(0, "rgba(56, 189, 248, 0.12)");
+      glow2.addColorStop(1, "rgba(56, 189, 248, 0)");
+      ctx.fillStyle = glow2;
+      ctx.fillRect(600, 0, 600, 630);
+
+      // 2. Border
+      ctx.strokeStyle = "#273042";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(30, 30, 1140, 570);
+
+      // 3. Header: Brand & Non-evaluative badge
+      ctx.fillStyle = "#d4af37";
+      ctx.font = "bold 24px system-ui, sans-serif";
+      ctx.fillText("MELOVIA", 60, 80);
+
+      ctx.fillStyle = "#8c96a8";
+      ctx.font = "14px system-ui, sans-serif";
+      ctx.fillText("EXPLAINABLE MUSIC DISCOVERY • TASTE PROFILE", 190, 80);
+
+      // "Describes, Never Ranks" badge
+      ctx.fillStyle = "rgba(56, 189, 248, 0.15)";
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(880, 56, 260, 32, 8);
+      } else {
+        ctx.rect(880, 56, 260, 32);
+      }
+      ctx.fill();
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 12px system-ui, sans-serif";
+      ctx.fillText("DESCRIBES, NEVER RANKS", 915, 77);
+
+      // 4. Archetype Card (Left side)
+      ctx.fillStyle = "#141923";
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(60, 120, 480, 440, 16);
+      } else {
+        ctx.rect(60, 120, 480, 440);
+      }
+      ctx.fill();
+      ctx.strokeStyle = "#232a3b";
+      ctx.stroke();
+
+      ctx.fillStyle = "#8c96a8";
+      ctx.font = "bold 12px system-ui, sans-serif";
+      ctx.fillText("MUSICAL ARCHETYPE", 90, 160);
+
+      ctx.fillStyle = "#f1f3f7";
+      ctx.font = "bold 28px Georgia, serif";
+      const archName = profileData.archetype?.name || "The Balanced Explorer";
+      ctx.fillText(archName, 90, 205);
+
+      ctx.fillStyle = "#d4af37";
+      ctx.font = "italic 15px Georgia, serif";
+      const tagline = `"${profileData.archetype?.tagline || "Navigating between resonance and discovery"}"`;
+      ctx.fillText(tagline, 90, 235);
+
+      ctx.fillStyle = "#8c96a8";
+      ctx.font = "14px system-ui, sans-serif";
+      const desc = profileData.archetype?.description || "Curates soundscapes balancing familiarity with sonic novelty.";
+      const words = desc.split(" ");
+      let line = "";
+      let y = 280;
+      for (const w of words) {
+        const testLine = line + w + " ";
+        if (ctx.measureText(testLine).width > 420 && line !== "") {
+          ctx.fillText(line, 90, y);
+          line = w + " ";
+          y += 22;
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) ctx.fillText(line, 90, y);
+
+      // Dominant Tags
+      ctx.fillStyle = "#647187";
+      ctx.font = "bold 11px system-ui, sans-serif";
+      ctx.fillText("DOMINANT DNA TAGS", 90, 450);
+
+      const tags = profileData.music_dna?.dominant_tags?.slice(0, 4) || [];
+      let tagX = 90;
+      for (const t of tags) {
+        const label = `#${t.tag}`;
+        const width = ctx.measureText(label).width + 20;
+        ctx.fillStyle = "#1b2230";
+        ctx.beginPath();
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(tagX, 465, width, 26, 6);
+        } else {
+          ctx.rect(tagX, 465, width, 26);
+        }
+        ctx.fill();
+        ctx.strokeStyle = "#2b354a";
+        ctx.stroke();
+
+        ctx.fillStyle = "#d4af37";
+        ctx.font = "11px system-ui, sans-serif";
+        ctx.fillText(label, tagX + 10, 482);
+        tagX += width + 10;
+      }
+
+      ctx.fillStyle = "#647187";
+      ctx.font = "11px system-ui, sans-serif";
+      ctx.fillText(`Profile derived from ${profileData.known_track_count || 0} catalog tracks • Zero PII`, 90, 530);
+
+      // 5. Taste-o-meter Dimensions (Right side)
+      ctx.fillStyle = "#141923";
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(570, 120, 570, 440, 16);
+      } else {
+        ctx.rect(570, 120, 570, 440);
+      }
+      ctx.fill();
+      ctx.strokeStyle = "#232a3b";
+      ctx.stroke();
+
+      ctx.fillStyle = "#f1f3f7";
+      ctx.font = "bold 18px system-ui, sans-serif";
+      ctx.fillText("Taste-o-Meter Dimensions", 600, 160);
+
+      ctx.fillStyle = "#8c96a8";
+      ctx.font = "12px system-ui, sans-serif";
+      ctx.fillText("Objective coordinates relative to catalog distribution", 600, 182);
+
+      const dims = [
+        { label: "Genre Breadth", dim: profileData.dimensions?.breadth },
+        { label: "Acoustic Rarity", dim: profileData.dimensions?.rarity },
+        { label: "Release Era Range", dim: profileData.dimensions?.range },
+        { label: "Semantic Cohesion", dim: profileData.dimensions?.cohesion },
+        { label: "Adventurousness", dim: profileData.dimensions?.adventurousness },
+      ];
+
+      let dimY = 225;
+      for (const d of dims) {
+        ctx.fillStyle = "#c8d0de";
+        ctx.font = "13px system-ui, sans-serif";
+        ctx.fillText(d.label, 600, dimY);
+
+        const val = d.dim?.value || 0.5;
+        const pct = d.dim?.percentile ? `${d.dim.percentile.toFixed(0)}th percentile` : `${Math.round(val * 100)}%`;
+
+        ctx.fillStyle = "#d4af37";
+        ctx.font = "12px monospace";
+        ctx.fillText(pct, 1030, dimY);
+
+        // Track bar background
+        ctx.fillStyle = "#1e2535";
+        ctx.beginPath();
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(600, dimY + 8, 510, 8, 4);
+        } else {
+          ctx.rect(600, dimY + 8, 510, 8);
+        }
+        ctx.fill();
+
+        // Progress bar fill
+        const barGrad = ctx.createLinearGradient(600, 0, 1110, 0);
+        barGrad.addColorStop(0, "#d4af37");
+        barGrad.addColorStop(1, "#38bdf8");
+        ctx.fillStyle = barGrad;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(600, dimY + 8, Math.max(8, 510 * val), 8, 4);
+        } else {
+          ctx.rect(600, dimY + 8, Math.max(8, 510 * val), 8);
+        }
+        ctx.fill();
+
+        dimY += 56;
+      }
+
+      // 6. Programmatic Download
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.download = "melovia-taste-profile.png";
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to render share image:", err);
+    } finally {
+      setIsExportingImage(false);
+    }
+  };
+
   const isLowConfidence = profileData?.confidence === "low";
   const dimensions = profileData?.dimensions;
   const dna = profileData?.music_dna;
@@ -136,7 +356,7 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {/* Confidence Badge */}
             <div
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${
@@ -155,6 +375,19 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
                 ({profileData?.known_track_count || 0} tracks)
               </span>
             </div>
+
+            {/* Share as Image Button */}
+            <button
+              type="button"
+              onClick={handleShareAsImage}
+              disabled={isExportingImage || !profileData}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1b2230] hover:bg-[#252e42] border border-[#2a3449] hover:border-[#d4af37]/60 rounded-xl text-xs font-semibold text-[#f1f3f7] hover:text-[#d4af37] transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d4af37] disabled:opacity-50"
+              title="Export high-resolution PNG image of your profile (Zero server upload)"
+              aria-label="Share as Image"
+            >
+              <Share2 className="w-3.5 h-3.5 text-[#d4af37]" />
+              <span>{isExportingImage ? "Exporting..." : "Share as Image"}</span>
+            </button>
 
             {/* Refresh Button */}
             <button

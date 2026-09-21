@@ -135,6 +135,10 @@ class Settings(BaseSettings):
     CATALOG_VERSION: str = Field(default="v1", validation_alias="CATALOG_VERSION")
     CATALOG_EMBEDDING_DIM: int = Field(default=128, validation_alias="CATALOG_EMBEDDING_DIM")
     CATALOG_CHECKSUM: str = Field(default="", validation_alias="CATALOG_CHECKSUM")
+    # STUDY MODE
+    STUDY_ADMIN_TOKEN: str = Field(
+        default="melovia-study-secret-token", validation_alias="STUDY_ADMIN_TOKEN"
+    )
 
     @property
     def DATABASE(self) -> DatabaseSettings:

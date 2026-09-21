@@ -30,6 +30,7 @@ from app.routers.health import router as health_router
 from app.routers.playlist import router as playlist_router
 from app.routers.recommendations import router as recommendations_router
 from app.routers.refine import router as refine_router
+from app.routers.study import router as study_router
 from app.routers.taste import router as taste_router
 from app.routers.tracks import router as tracks_router
 from app.routers.universe import router as universe_router
@@ -162,6 +163,7 @@ def create_app() -> FastAPI:
     app.include_router(taste_router)
     app.include_router(universe_router)
     app.include_router(export_router)
+    app.include_router(study_router)
 
     return app
 
