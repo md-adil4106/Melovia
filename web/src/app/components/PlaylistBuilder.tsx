@@ -495,8 +495,18 @@ export function PlaylistBuilder({
                           <span className="w-6 text-center font-mono text-[10px] font-bold text-[#5a667d]">
                             {idx + 1}
                           </span>
-                          <div className="w-7 h-7 rounded bg-[#1c2230] border border-[#2a3449] flex items-center justify-center text-[#d4af37] flex-shrink-0">
-                            <Volume2 className="w-3.5 h-3.5" />
+                          <div className="relative w-7 h-7 rounded bg-[#1c2230] border border-[#2a3449] flex items-center justify-center text-[#d4af37] flex-shrink-0 overflow-hidden shadow-sm">
+                            <Music className="w-3.5 h-3.5 text-[#d4af37]/70" />
+                            {item.track.artwork_url ? (
+                              <img
+                                src={item.track.artwork_url}
+                                alt=""
+                                className="absolute inset-0 w-full h-full object-cover rounded"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
+                              />
+                            ) : null}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="text-xs font-semibold text-[#f1f3f7] truncate">

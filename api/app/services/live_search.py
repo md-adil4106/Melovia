@@ -153,6 +153,16 @@ class LiveSearchService:
         if not track_id or not title or not artist:
             return None
 
+        artist_str = str(artist)
+        title_str = str(title)
+        artist_lower = artist_str.lower()
+        title_lower = title_str.lower()
+        if any(
+            bad in artist_lower or bad in title_lower
+            for bad in ("karaoke", "tribute", "backing track", "royalty free")
+        ):
+            return None
+
         # Determine release year
         year: int | None = None
         release_date = item.get("releaseDate")
@@ -165,14 +175,19 @@ class LiveSearchService:
         primary_genre = (item.get("primaryGenreName") or "Music").strip()
         genre_key = primary_genre.lower().replace(" ", "-")
 
-        # Tags extraction
+        # Tags extraction (using recognized vocabulary terms)
         tags = [primary_genre.lower()]
         if "/" in primary_genre:
             for part in primary_genre.split("/"):
                 tags.append(part.strip().lower())
         if "hip-hop" in genre_key or "rap" in genre_key:
-            tags.extend(["hip-hop", "rap", "urban"])
+            tags.extend(["hip-hop", "trap", "cloud-rap", "bass"])
         elif "rock" in genre_key:
+            tags.extend(["guitar", "raw", "psychedelic"])
+        elif "pop" in genre_key:
+            tags.extend(["dance", "electronic", "groove"])
+        elif "r&b" in genre_key or "soul" in genre_key:
+            tags.extend(["soul", "neo-soul", "groove", "smooth"])
             tags.extend(["rock", "guitar"])
         elif "pop" in genre_key:
             tags.extend(["pop", "vocal"])
@@ -297,8 +312,104 @@ class LiveSearchService:
                     return parsed
         except Exception as exc:
             logger.warning("Failed to lookup track %s: %s", ext_id, exc)
-
+            return None
         return None
+
+    async def fetch_candidates_for_seeds(
+        self,
+        seed_tracks: list[dict[str, Any]],
+        limit_per_query: int = 15,
+    ) -> list[dict[str, Any]]:
+        """Retrieve real-world candidate tracks matching seed artists and genre vibes."""
+        candidates: list[dict[str, Any]] = []
+        seen_ids = {str(s.get("id")) for s in seed_tracks}
+        seen_keys = {
+            (
+                str(s.get("title", "")).lower().strip(),
+                str(s.get("artist_name", "")).lower().strip(),
+            )
+            for s in seed_tracks
+        }
+
+        # 1. Gather distinct artists and genres from seeds
+        seed_artists: list[str] = []
+        seed_genres: set[str] = set()
+        for s in seed_tracks:
+            art = s.get("artist_name")
+            if art and str(art) not in seed_artists:
+                seed_artists.append(str(art))
+            for tag in s.get("tags", []):
+                tag_lower = str(tag).lower().strip()
+                if any(
+                    g in tag_lower
+                    for g in (
+                        "hip-hop",
+                        "rap",
+                        "trap",
+                        "pop",
+                        "rock",
+                        "r&b",
+                        "electronic",
+                        "indie",
+                    )
+                ):
+                    seed_genres.add(tag_lower)
+
+        # 2. Formulate search queries based on seed artists
+        search_queries = list(seed_artists)
+
+        # 3. Add genre-specific candidate query terms
+        if any("hip-hop" in g or "rap" in g or "trap" in g for g in seed_genres):
+            search_queries.extend(
+                [
+                    "Travis Scott",
+                    "Metro Boomin",
+                    "Future",
+                    "21 Savage",
+                    "Gunna",
+                    "Lil Baby",
+                    "Playboi Carti",
+                    "Drake",
+                    "Kendrick Lamar",
+                ]
+            )
+        elif any("rock" in g for g in seed_genres):
+            search_queries.extend(
+                ["Arctic Monkeys", "The Strokes", "Tame Impala", "Nirvana", "Radiohead"]
+            )
+        elif any("pop" in g for g in seed_genres):
+            search_queries.extend(
+                ["The Weeknd", "Dua Lipa", "Billie Eilish", "Olivia Rodrigo", "Post Malone"]
+            )
+        elif any("r&b" in g or "soul" in g for g in seed_genres):
+            search_queries.extend(
+                ["SZA", "Frank Ocean", "Brent Faiyaz", "Daniel Caesar", "Giveon"]
+            )
+
+        # Deduplicate search queries while preserving order
+        unique_queries: list[str] = []
+        seen_q: set[str] = set()
+        for q in search_queries:
+            q_clean = q.strip().lower()
+            if q_clean not in seen_q:
+                seen_q.add(q_clean)
+                unique_queries.append(q)
+
+        # Query iTunes in parallel / batch for top queries
+        for q in unique_queries[:8]:
+            results = await self.search_tracks(q, limit=limit_per_query)
+            for r in results:
+                rid = str(r.get("id"))
+                r_key = (
+                    str(r.get("title", "")).lower().strip(),
+                    str(r.get("artist_name", "")).lower().strip(),
+                )
+                if rid not in seen_ids and r_key not in seen_keys:
+                    seen_ids.add(rid)
+                    seen_keys.add(r_key)
+                    candidates.append(r)
+
+        return candidates
 
 
 # Global singleton service

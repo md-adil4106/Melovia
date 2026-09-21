@@ -1,8 +1,10 @@
 """Recommendations API router for generating and reranking recommendations."""
 
+import logging
 import uuid
 from typing import Any
 
+import numpy as np
 from fastapi import APIRouter, Request, Response, status
 
 from app.config import get_settings
@@ -21,6 +23,7 @@ from app.recsys import (
     rerank_candidates,
     score_candidates,
 )
+from app.recsys.candidates import CandidatePool
 from app.routers.cookies import get_or_create_device_id, get_or_create_session_id
 from app.schemas.recommendations import (
     RecommendationRequest,
@@ -32,6 +35,8 @@ from app.schemas.recommendations import (
 )
 from app.schemas.signals import RecSignals
 from app.schemas.tracks import AudioScalars, TrackDetailResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
@@ -65,6 +70,9 @@ def _build_response_items(
             region_id=t_dict.get("region_id"),
             scalars=scalars_obj,
             tags=t_dict.get("tags") or [],
+            artwork_url=t_dict.get("artwork_url"),
+            preview_url=t_dict.get("preview_url"),
+            album_name=t_dict.get("album_name"),
         )
 
         discovery_val = 0.0
@@ -154,6 +162,16 @@ async def create_recommendations(
                 message="At least 1 seed track ID must be provided when use_saved_taste is false.",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
+
+        # Automatically lookup missing external seeds if needed
+        from app.services.live_search import live_search_service
+
+        for sid in payload.seed_track_ids:
+            if not catalog_store.contains_id(sid) and sid.startswith("ext:itunes:"):
+                live_track = await live_search_service.get_track_by_id(sid)
+                if live_track:
+                    catalog_store.register_dynamic_track(live_track)
+
         try:
             modes = build_modes(payload.seed_track_ids, catalog_store, config=config)
         except SeedNotFoundError as e:
@@ -175,6 +193,23 @@ async def create_recommendations(
     _, session_data = global_session_store.get_or_create(session_id)
     session_data.live_modes = modes
 
+    # Enrich catalog with real-world candidate tracks matching seeds
+    if payload.seed_track_ids:
+        seed_dicts = [
+            catalog_store.get_track_dict(sid)
+            for sid in payload.seed_track_ids
+            if catalog_store.contains_id(sid)
+        ]
+        if seed_dicts:
+            from app.services.live_search import live_search_service
+
+            try:
+                live_cands = await live_search_service.fetch_candidates_for_seeds(seed_dicts)
+                for cand in live_cands:
+                    catalog_store.register_dynamic_track(cand)
+            except Exception as exc:
+                logger.warning("Failed to fetch live candidates for seeds: %s", exc)
+
     # 2. Retrieve candidates
     filters = CandidateFilters(
         excluded_artist_ids=set(payload.excluded_artist_ids),
@@ -186,6 +221,25 @@ async def create_recommendations(
         filters=filters,
         k_per_mode=config.k_candidates,
     )
+
+    # When live external seeds are present, prioritize real candidate tracks
+    has_live_seeds = any(sid.startswith("ext:itunes:") for sid in payload.seed_track_ids or [])
+    if has_live_seeds:
+        live_indices = [
+            idx
+            for idx in pool.track_indices
+            if catalog_store.track_ids[idx].startswith("ext:itunes:")
+        ]
+        if len(live_indices) >= payload.n:
+            sub_indices = np.array(live_indices, dtype=np.int64)
+            idx_map = {idx: i for i, idx in enumerate(pool.track_indices)}
+            row_sel = [idx_map[idx] for idx in live_indices]
+            pool = CandidatePool(
+                track_indices=sub_indices,
+                raw_sims_t=pool.raw_sims_t[row_sel],
+                raw_sims_a=pool.raw_sims_a[row_sel],
+                modes=modes,
+            )
 
     if pool.size == 0:
         raise AppException(

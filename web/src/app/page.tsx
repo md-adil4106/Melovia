@@ -14,6 +14,8 @@ import {
   ListMusic,
   MessageSquare,
   Music,
+  Pause,
+  Play,
   Plus,
   RefreshCw,
   Search,
@@ -199,6 +201,44 @@ export default function DiscoveryHome() {
   const [isWhyDrawerOpen, setIsWhyDrawerOpen] = useState(false);
   const [isMainExportOpen, setIsMainExportOpen] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(true);
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleTogglePlay = (track: Track) => {
+    if (!track.preview_url) return;
+
+    if (playingTrackId === track.id) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setPlayingTrackId(null);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      const audio = new Audio(track.preview_url);
+      audioRef.current = audio;
+      audio.play().catch(() => {
+        setPlayingTrackId(null);
+      });
+      audio.onended = () => {
+        setPlayingTrackId(null);
+      };
+      audio.onerror = () => {
+        setPlayingTrackId(null);
+      };
+      setPlayingTrackId(track.id);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -832,17 +872,19 @@ export default function DiscoveryHome() {
                           } ${isAlreadySeed ? "opacity-40 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center gap-3 min-w-0 pr-2">
-                            {t.artwork_url ? (
-                              <img
-                                src={t.artwork_url}
-                                alt=""
-                                className="w-10 h-10 rounded-md object-cover bg-[#262e40] flex-shrink-0 shadow-sm"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-md bg-[#1c2333] border border-[#263147] flex items-center justify-center flex-shrink-0 text-[#d4af37]">
-                                <Music className="w-4 h-4" />
-                              </div>
-                            )}
+                            <div className="relative w-10 h-10 rounded-md bg-[#1c2333] border border-[#263147] flex items-center justify-center flex-shrink-0 text-[#d4af37] overflow-hidden shadow-sm">
+                              <Music className="w-4 h-4 text-[#d4af37]/70" />
+                              {t.artwork_url ? (
+                                <img
+                                  src={t.artwork_url}
+                                  alt=""
+                                  className="absolute inset-0 w-full h-full object-cover rounded-md"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = "none";
+                                  }}
+                                />
+                              ) : null}
+                            </div>
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-[#f1f3f7] truncate">{t.title}</p>
                               <div className="flex items-center gap-1.5 text-xs text-[#8c96a8] truncate">
@@ -891,11 +933,19 @@ export default function DiscoveryHome() {
                     key={s.id}
                     className="inline-flex items-center gap-2 bg-[#1b2230] border border-[#2b354a] rounded-lg px-2.5 py-1.5 text-xs text-[#f1f3f7] shadow-sm animate-in fade-in duration-200"
                   >
-                    {s.artwork_url ? (
-                      <img src={s.artwork_url} alt="" className="w-4 h-4 rounded object-cover flex-shrink-0" />
-                    ) : (
-                      <Music className="w-3.5 h-3.5 text-[#d4af37] flex-shrink-0" />
-                    )}
+                    <div className="relative w-4 h-4 rounded bg-[#1c2333] flex items-center justify-center flex-shrink-0 text-[#d4af37] overflow-hidden">
+                      <Music className="w-3 h-3 text-[#d4af37]/70" />
+                      {s.artwork_url ? (
+                        <img
+                          src={s.artwork_url}
+                          alt=""
+                          className="absolute inset-0 w-full h-full object-cover rounded"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : null}
+                    </div>
                     <span className="font-medium max-w-[160px] truncate">{s.title}</span>
                     <span className="text-[#8c96a8] max-w-[100px] truncate">({s.artist_name})</span>
                     <button
@@ -1210,17 +1260,48 @@ export default function DiscoveryHome() {
                       <span className="w-7 text-center font-mono text-xs font-semibold text-[#5a667d]">
                         #{idx + 1}
                       </span>
-                      {item.track.artwork_url ? (
-                        <img
-                          src={item.track.artwork_url}
-                          alt=""
-                          className="w-9 h-9 rounded-lg object-cover border border-[#2a3449] flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-9 h-9 rounded-lg bg-[#1c2230] border border-[#2a3449] flex items-center justify-center text-[#d4af37] flex-shrink-0">
-                          <Volume2 className="w-4 h-4" />
-                        </div>
-                      )}
+                      <div className="relative w-11 h-11 rounded-lg bg-[#1c2230] border border-[#2a3449] flex items-center justify-center text-[#d4af37] flex-shrink-0 overflow-hidden group/art shadow-sm">
+                        <Music className="w-5 h-5 text-[#d4af37]/70" />
+                        {item.track.artwork_url ? (
+                          <img
+                            src={item.track.artwork_url}
+                            alt=""
+                            className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : null}
+                        {item.track.preview_url ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTogglePlay(item.track);
+                            }}
+                            aria-label={
+                              playingTrackId === item.track.id
+                                ? `Pause preview for ${item.track.title}`
+                                : `Play 30s preview for ${item.track.title}`
+                            }
+                            className={`absolute inset-0 flex items-center justify-center bg-black/60 transition-all focus:outline-none focus:ring-2 focus:ring-[#d4af37] ${
+                              playingTrackId === item.track.id
+                                ? "opacity-100 text-[#d4af37]"
+                                : "opacity-0 group-hover/art:opacity-100 text-white hover:text-[#d4af37]"
+                            }`}
+                          >
+                            {playingTrackId === item.track.id ? (
+                              <div className="flex items-center gap-0.5">
+                                <span className="w-1 h-3.5 bg-[#d4af37] rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                <span className="w-1 h-4 bg-[#d4af37] rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                <span className="w-1 h-3.5 bg-[#d4af37] rounded-full animate-bounce" />
+                              </div>
+                            ) : (
+                              <Play className="w-4 h-4 fill-current translate-x-0.5" />
+                            )}
+                          </button>
+                        ) : null}
+                      </div>
                       <div className="min-w-0">
                         <h4 className="text-sm font-semibold text-[#f1f3f7] truncate group-hover:text-[#d4af37] transition-colors">
                           {item.track.title}
@@ -1272,6 +1353,36 @@ export default function DiscoveryHome() {
                         </span>
                         <span className="text-[10px] text-[#8c96a8]">match</span>
                       </div>
+
+                      {/* Preview Button */}
+                      {item.track.preview_url ? (
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePlay(item.track)}
+                          aria-label={
+                            playingTrackId === item.track.id
+                              ? `Pause 30s preview for ${item.track.title}`
+                              : `Play 30s preview for ${item.track.title}`
+                          }
+                          className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37] ${
+                            playingTrackId === item.track.id
+                              ? "bg-[#d4af37]/20 border-[#d4af37] text-[#d4af37] font-medium"
+                              : "bg-[#1b2230] border-[#2b354a] hover:border-[#d4af37]/60 text-[#c8d0de] hover:text-[#d4af37]"
+                          }`}
+                        >
+                          {playingTrackId === item.track.id ? (
+                            <>
+                              <Pause className="w-3.5 h-3.5 fill-current" />
+                              <span>Pause</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                              <span>Preview</span>
+                            </>
+                          )}
+                        </button>
+                      ) : null}
 
                       {/* Interactive Feedback Controls (Phase 9) */}
                       <div className="flex items-center gap-1 bg-[#10141d] border border-[#1f2637] rounded-lg p-0.5">

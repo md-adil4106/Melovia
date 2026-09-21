@@ -145,9 +145,7 @@ def score_candidates(
 
     # 4. Compute nearest seed and context for explainability signals
     all_seed_ids: list[str] = [sid for m_seeds in modes.member_seed_ids for sid in m_seeds]
-    seed_vecs_list = [
-        catalog.get_vector_t(sid) for sid in all_seed_ids if catalog.contains_id(sid)
-    ]
+    seed_vecs_list = [catalog.get_vector_t(sid) for sid in all_seed_ids if catalog.contains_id(sid)]
     seed_vecs_t = (
         np.array(seed_vecs_list, dtype=np.float32)
         if seed_vecs_list

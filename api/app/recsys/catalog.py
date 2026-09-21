@@ -73,22 +73,26 @@ class CatalogStore:
     ) -> None:
         self.bundle_path = bundle_path
         self.manifest = manifest
-        self.track_ids = track_ids
-        self._tracks_metadata = tracks_metadata
-        self.vectors_t = vectors_t
-        self.vectors_a = vectors_a
-        self.mask_t = mask_t
-        self.mask_a = mask_a
-        self.scalars = scalars or {}
+        self.track_ids = list(track_ids)
+        self._tracks_metadata = {k: list(v) for k, v in tracks_metadata.items()}
+        self.vectors_t = np.array(vectors_t, dtype=np.float32, copy=True)
+        self.vectors_a = np.array(vectors_a, dtype=np.float32, copy=True)
+        self.mask_t = np.array(mask_t, dtype=bool, copy=True)
+        self.mask_a = np.array(mask_a, dtype=bool, copy=True)
+        self.scalars = {k: list(v) for k, v in (scalars or {}).items()}
         self.tag_vocab = tag_vocab or {}
         self.regions = regions or []
         self.layout3d = layout3d
         self.layout2d = layout2d
         self.render_sample = render_sample
 
+        for opt_col in ("artwork_url", "preview_url", "album_name"):
+            if opt_col not in self._tracks_metadata:
+                self._tracks_metadata[opt_col] = [None] * len(self.track_ids)
+
         # Bidirectional index mappings
-        self._id_to_idx: dict[str, int] = {tid: idx for idx, tid in enumerate(track_ids)}
-        self._idx_to_id: dict[int, str] = dict(enumerate(track_ids))
+        self._id_to_idx: dict[str, int] = {tid: idx for idx, tid in enumerate(self.track_ids)}
+        self._idx_to_id: dict[int, str] = dict(enumerate(self.track_ids))
 
         # Dynamic external tracks registry
         self._dynamic_tracks: dict[str, dict[str, Any]] = {}
@@ -300,34 +304,114 @@ class CatalogStore:
         """Register a dynamic external track into the in-memory catalog index."""
         track_id = str(raw_track["id"])
         if track_id in self._id_to_idx:
+            idx = self._id_to_idx[track_id]
+            existing_dict = self._dynamic_tracks.get(track_id)
+            if existing_dict is not None:
+                for k in ("artwork_url", "preview_url", "album_name"):
+                    if not existing_dict.get(k) and raw_track.get(k):
+                        existing_dict[k] = raw_track[k]
+                        if k in self._tracks_metadata and idx < len(self._tracks_metadata[k]):
+                            self._tracks_metadata[k][idx] = raw_track[k]
             return track_id
 
         if vector_t is None:
             # Generate a semantic vector using tag facets or title/artist hash projection
-            tags = raw_track.get("tags") or []
+            tags = list(raw_track.get("tags") or [])
             tag_vectors: list[npt.NDArray[np.float32]] = []
             for t in tags:
-                fv = self.get_tag_facet_vector(str(t))
+                tag_str = str(t).lower().strip()
+                fv = self.get_tag_facet_vector(tag_str)
+                # Map rap/urban/hip-hop/rap to hip-hop if 0 norm
+                if np.linalg.norm(fv) <= 1e-6 and any(
+                    sub in tag_str for sub in ("rap", "urban", "hip-hop", "hip hop")
+                ):
+                    fv = self.get_tag_facet_vector("hip-hop")
                 if np.linalg.norm(fv) > 1e-6:
                     tag_vectors.append(fv)
+
+            title_str = str(raw_track.get("title", ""))
+            artist_str = str(raw_track.get("artist_name", ""))
+            track_seed_str = f"{track_id} {title_str} {artist_str}"
+            h_int = int(hashlib.md5(track_seed_str.lower().encode("utf-8")).hexdigest()[:8], 16)
+            rng = np.random.default_rng(h_int % (2**31))
+            track_jitter = rng.normal(0.0, 1.0, size=self.dim_t).astype(np.float32)
+            track_jitter_norm = track_jitter / (float(np.linalg.norm(track_jitter)) + 1e-12)
 
             if tag_vectors:
                 mean_v = np.mean(tag_vectors, axis=0)
                 norm = float(np.linalg.norm(mean_v))
-                vector_t = mean_v / norm if norm > 1e-6 else np.zeros(self.dim_t, dtype=np.float32)
+                genre_v = (
+                    np.asarray(mean_v / norm, dtype=np.float32)
+                    if norm > 1e-6
+                    else np.zeros(self.dim_t, dtype=np.float32)
+                )
+                combined = 0.83 * genre_v + 0.55 * track_jitter_norm
+                norm_comb = float(np.linalg.norm(combined))
+                vector_t = (
+                    np.asarray(combined / norm_comb, dtype=np.float32)
+                    if norm_comb > 1e-6
+                    else genre_v
+                )
             else:
-                title_str = raw_track.get('title', '')
-                artist_str = raw_track.get('artist_name', '')
-                tags_str = ' '.join(str(t) for t in tags)
-                text = f"{title_str} {artist_str} {tags_str}"
-                h_int = int(hashlib.md5(text.lower().encode("utf-8")).hexdigest()[:8], 16)
-                rng = np.random.default_rng(h_int % (2**31))
-                rnd_v = rng.normal(0.0, 1.0, size=self.dim_t).astype(np.float32)
-                norm = float(np.linalg.norm(rnd_v))
-                vector_t = rnd_v / (norm + 1e-12)
+                vector_t = np.asarray(track_jitter_norm, dtype=np.float32)
 
-        self._dynamic_tracks[track_id] = dict(raw_track)
-        self._dynamic_vectors_t[track_id] = np.asarray(vector_t, dtype=np.float32)
+        vec_t = np.asarray(vector_t, dtype=np.float32)
+
+        # 1. Append to index arrays
+        new_idx = len(self.track_ids)
+        self.track_ids.append(track_id)
+        self._id_to_idx[track_id] = new_idx
+        self._idx_to_id[new_idx] = track_id
+
+        # 2. Append to vector matrices
+        self.vectors_t = np.vstack([self.vectors_t, vec_t.reshape(1, self.dim_t)])
+        self.vectors_a = np.vstack([self.vectors_a, np.zeros((1, self.dim_a), dtype=np.float32)])
+        self.mask_t = np.append(self.mask_t, True)
+        self.mask_a = np.append(self.mask_a, False)
+
+        # 3. Append to metadata columns
+        meta = self._tracks_metadata
+        for col_name in meta:
+            if col_name == "id":
+                meta[col_name].append(track_id)
+            elif col_name == "track_idx":
+                meta[col_name].append(new_idx)
+            elif col_name == "title":
+                meta[col_name].append(str(raw_track.get("title", "")))
+            elif col_name == "artist_name":
+                meta[col_name].append(str(raw_track.get("artist_name", "")))
+            elif col_name == "artist_id":
+                meta[col_name].append(str(raw_track.get("artist_id", "")))
+            elif col_name == "year":
+                meta[col_name].append(raw_track.get("year"))
+            elif col_name == "popularity_pct":
+                meta[col_name].append(float(raw_track.get("popularity_pct", 75.0)))
+            elif col_name == "has_a":
+                meta[col_name].append(False)
+            elif col_name == "has_t":
+                meta[col_name].append(True)
+            elif col_name == "tags":
+                meta[col_name].append(list(raw_track.get("tags") or []))
+            elif col_name == "artwork_url":
+                meta[col_name].append(raw_track.get("artwork_url"))
+            elif col_name == "preview_url":
+                meta[col_name].append(raw_track.get("preview_url"))
+            elif col_name == "album_name":
+                meta[col_name].append(raw_track.get("album_name"))
+            else:
+                meta[col_name].append(raw_track.get(col_name))
+
+        # 4. Append to scalar columns
+        raw_scalars = raw_track.get("scalars") or {}
+        for s_key in self.scalars:
+            v = raw_scalars.get(s_key, 0.5)
+            self.scalars[s_key].append(float(v) if v is not None else 0.5)
+
+        # 5. Store in dynamic registry with assigned track_idx
+        track_dict = dict(raw_track)
+        track_dict["track_idx"] = new_idx
+        self._dynamic_tracks[track_id] = track_dict
+        self._dynamic_vectors_t[track_id] = vec_t
         return track_id
 
     def get_dynamic_vector_t(self, track_id: str) -> npt.NDArray[np.float32] | None:
@@ -342,13 +426,25 @@ class CatalogStore:
         idx = track_idx_or_id if isinstance(track_idx_or_id, int) else self.get_idx(track_idx_or_id)
         record: dict[str, Any] = {}
         for col_name, col_values in self._tracks_metadata.items():
-            record[col_name] = col_values[idx]
+            if idx < len(col_values):
+                record[col_name] = col_values[idx]
+            else:
+                record[col_name] = None
+        record["track_idx"] = idx
 
         # Attach scalar attributes if available
         if self.scalars:
             record["scalars"] = {
-                col_name: col_values[idx] for col_name, col_values in self.scalars.items()
+                col_name: col_values[idx]
+                for col_name, col_values in self.scalars.items()
+                if idx < len(col_values)
             }
+
+        # If dynamic track has extra fields (artwork_url, preview_url), merge them
+        tid = self.get_id(idx)
+        if tid in self._dynamic_tracks:
+            record.update(self._dynamic_tracks[tid])
+
         return record
 
     def search_tracks(self, query: str, limit: int = 20) -> list[dict[str, Any]]:

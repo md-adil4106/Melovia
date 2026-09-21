@@ -8,6 +8,7 @@ import {
   Compass,
   Disc,
   Info,
+  Music,
   Radio,
   Sparkles,
   Tag,
@@ -117,20 +118,35 @@ export function WhyDrawer({
         {/* Drawer Header */}
         <div className="p-6 border-b border-[#1f2637] bg-[#121622] sticky top-0 z-10">
           <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-[#d4af37] font-semibold flex items-center gap-1.5 mb-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                Recommendation Signals
-              </span>
-              <h3
-                id="why-drawer-title"
-                className="text-lg font-bold text-[#f1f3f7] truncate font-serif-display"
-              >
-                Why &quot;{track.title}&quot;?
-              </h3>
-              <p className="text-xs text-[#8c96a8] truncate">
-                by {track.artist_name} {track.year ? `• ${track.year}` : ""}
-              </p>
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="relative w-12 h-12 rounded-lg bg-[#1c2230] border border-[#2a3449] flex items-center justify-center text-[#d4af37] flex-shrink-0 overflow-hidden shadow-sm">
+                <Music className="w-5 h-5 text-[#d4af37]/70" />
+                {track.artwork_url ? (
+                  <img
+                    src={track.artwork_url}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : null}
+              </div>
+              <div className="min-w-0">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#d4af37] font-semibold flex items-center gap-1.5 mb-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Recommendation Signals
+                </span>
+                <h3
+                  id="why-drawer-title"
+                  className="text-lg font-bold text-[#f1f3f7] truncate font-serif-display"
+                >
+                  Why &quot;{track.title}&quot;?
+                </h3>
+                <p className="text-xs text-[#8c96a8] truncate">
+                  by {track.artist_name} {track.year ? `• ${track.year}` : ""}
+                </p>
+              </div>
             </div>
             <button
               ref={closeButtonRef}
