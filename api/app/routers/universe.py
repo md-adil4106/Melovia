@@ -74,11 +74,14 @@ async def get_universe(
     known_ids.update(session_data.liked_track_ids)
     known_ids.update(session_data.known_track_ids)
 
-    stmt = select(Profile).where(Profile.device_id == device_id)
-    res = await db.execute(stmt)
-    profile = res.scalar_one_or_none()
-    if profile and profile.known_track_ids:
-        known_ids.update(profile.known_track_ids)
+    try:
+        stmt = select(Profile).where(Profile.device_id == device_id)
+        res = await db.execute(stmt)
+        profile = res.scalar_one_or_none()
+        if profile and profile.known_track_ids:
+            known_ids.update(profile.known_track_ids)
+    except Exception:
+        profile = None
 
     user_exposures: dict[int, float] = {}
     if known_ids:

@@ -28,7 +28,8 @@ class RecommendationRequest(BaseModel):
     )
     excluded_artist_ids: list[str] = Field(
         default_factory=list,
-        description="Optional list of artist UUIDs to exclude from recommendations",
+        max_length=50,
+        description="Optional list of up to 50 artist UUIDs to exclude from recommendations",
     )
     include_signals: bool = Field(
         default=True,
@@ -59,6 +60,8 @@ class RerankRequest(BaseModel):
 
     candidate_set_id: str = Field(
         ...,
+        min_length=1,
+        max_length=64,
         description="UUID of cached candidate pool to rerank",
     )
     discovery: float = Field(

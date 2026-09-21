@@ -190,6 +190,10 @@ class Settings(BaseSettings):
             cors_origins=self.API_CORS_ORIGINS,
         )
 
+    @property
+    def is_production(self) -> bool:
+        return self.ENV.lower() == "production"
+
 
 @lru_cache
 def get_settings() -> Settings:

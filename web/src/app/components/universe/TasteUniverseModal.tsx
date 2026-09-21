@@ -21,6 +21,7 @@ import { UniverseData, QualityTier, UniversePlacement, REGION_PALETTE_HEX } from
 import { UniverseCanvas3D } from "./UniverseCanvas3D";
 import { UniverseFallback2D } from "./UniverseFallback2D";
 import { UniverseSidePanel } from "./UniverseSidePanel";
+import { UniverseErrorBoundary } from "./UniverseErrorBoundary";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -325,17 +326,29 @@ export default function TasteUniverseModal() {
           {universeData && (
             <>
               {renderMode === "3d" && hasWebGL ? (
-                <UniverseCanvas3D
-                  data={universeData}
-                  tier={tier}
-                  focusedRegionId={universeFocusedRegionId}
-                  focusedTrackId={universeFocusedTrackId}
-                  blindspotRegionId={exploringRegion?.id ?? null}
-                  recommendationCoords={recommendationCoords}
-                  onSelectTrack={(trkId) => setUniverseFocusedTrackId(trkId)}
-                  onFpsReport={(measuredFps) => setFps(measuredFps)}
-                  onTierChange={(newTier) => setTier(newTier)}
-                />
+                <UniverseErrorBoundary
+                  onFallback={() => setRenderMode("2d")}
+                  fallback={
+                    <UniverseFallback2D
+                      data={universeData}
+                      focusedRegionId={universeFocusedRegionId}
+                      onSelectRegion={(regId) => setUniverseFocusedRegionId(regId)}
+                      onSelectTrack={(trkId) => setUniverseFocusedTrackId(trkId)}
+                    />
+                  }
+                >
+                  <UniverseCanvas3D
+                    data={universeData}
+                    tier={tier}
+                    focusedRegionId={universeFocusedRegionId}
+                    focusedTrackId={universeFocusedTrackId}
+                    blindspotRegionId={exploringRegion?.id ?? null}
+                    recommendationCoords={recommendationCoords}
+                    onSelectTrack={(trkId) => setUniverseFocusedTrackId(trkId)}
+                    onFpsReport={(measuredFps) => setFps(measuredFps)}
+                    onTierChange={(newTier) => setTier(newTier)}
+                  />
+                </UniverseErrorBoundary>
               ) : (
                 <UniverseFallback2D
                   data={universeData}

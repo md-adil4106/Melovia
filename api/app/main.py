@@ -5,12 +5,16 @@ import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+from starlette.responses import Response as StarletteResponse
 
 from app.config import get_settings
 from app.db.base import Base
@@ -39,9 +43,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_logging(debug=settings.DEBUG)
     logger.info("Starting Melovia API backend", extra={"env": settings.ENV, "version": "0.1.0"})
 
-    # Ensure database schema is initialized
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Ensure database schema is initialized (graceful degradation if DB is down/unavailable)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as exc:
+        logger.warning(
+            "Database unreachable at startup (%s). Running in memory-only degraded mode.",
+            exc,
+        )
 
     app.state.settings = settings
     app.state.llm_polish_service = LLMPolishService(enabled=settings.EXPLAIN_LLM_POLISH)
@@ -87,6 +97,29 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Shutting down Melovia API backend")
 
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Enforces standard security headers on all responses."""
+
+    async def dispatch(self, request: StarletteRequest, call_next: Any) -> StarletteResponse:
+        response: StarletteResponse = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-eval' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: blob:; "
+            "connect-src 'self' http://localhost:8000 http://127.0.0.1:8000; "
+            "font-src 'self' data:; "
+            "worker-src 'self' blob:; "
+            "object-src 'none'; "
+            "base-uri 'self';"
+        )
+        return response
+
+
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application instance."""
     settings = get_settings()
@@ -110,7 +143,10 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # 2. Structured request logging and latency tracking
+    # 2. Security Headers
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # 3. Structured request logging and latency tracking
     app.add_middleware(RequestLoggingMiddleware)
 
     # Centralized exception handlers

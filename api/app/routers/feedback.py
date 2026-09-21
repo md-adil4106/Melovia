@@ -134,17 +134,32 @@ async def submit_feedback(
     session_data.liked_track_ids = fb_res.liked_track_ids
     session_data.feedback_events_count += 1
 
-    # 2. Persist anonymous feedback event to DB
-    fb_event = FeedbackEvent(
-        id=str(uuid.uuid4()),
-        device_id=device_id,
-        session_id=session_id,
-        track_id=payload.track_id,
-        event=payload.event.strip().lower(),
-        created_at=datetime.now(UTC),
-    )
-    db.add(fb_event)
-    await db.commit()
+    # 2. Persist anonymous feedback event to DB (with graceful memory-only fallback on DB failure)
+    try:
+        fb_event = FeedbackEvent(
+            id=str(uuid.uuid4()),
+            device_id=device_id,
+            session_id=session_id,
+            track_id=payload.track_id,
+            event=payload.event.strip().lower(),
+            created_at=datetime.now(UTC),
+        )
+        db.add(fb_event)
+        await db.commit()
+    except Exception as e:
+        logger.warning(
+            "Failed to persist feedback to database (degraded to memory-only): %s",
+            e,
+            extra={
+                "request_id": getattr(request.state, "request_id", "-"),
+                "event": payload.event,
+                "track_id": payload.track_id,
+            },
+        )
+        try:
+            await db.rollback()
+        except Exception:
+            pass
 
     logger.info(
         "Applied feedback event: type=%s, track_id=%s, mode_idx=%d, device_hash=%s",

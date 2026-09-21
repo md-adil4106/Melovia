@@ -93,12 +93,26 @@ async def _gather_known_track_indices(
     known_ids.update(session_data.liked_track_ids)
     known_ids.update(session_data.known_track_ids)
 
-    # 3. From persistent profile in DB
-    stmt = select(Profile).where(Profile.device_id == device_id)
-    res = await db.execute(stmt)
-    profile = res.scalar_one_or_none()
-    if profile and profile.known_track_ids:
-        known_ids.update(profile.known_track_ids)
+    # 3. From persistent profile in DB (graceful fallback if degraded)
+    feedback_events: list[dict[str, Any]] = []
+    try:
+        stmt = select(Profile).where(Profile.device_id == device_id)
+        res = await db.execute(stmt)
+        profile = res.scalar_one_or_none()
+        if profile and profile.known_track_ids:
+            known_ids.update(profile.known_track_ids)
+
+        events_stmt = (
+            select(FeedbackEvent)
+            .where(FeedbackEvent.device_id == device_id)
+            .order_by(FeedbackEvent.created_at.asc())
+        )
+        events_res = await db.execute(events_stmt)
+        feedback_events = [
+            {"event": ev.event, "track_id": ev.track_id} for ev in events_res.scalars()
+        ]
+    except Exception:
+        pass
 
     # 4. Convert track UUIDs to catalog indices
     track_indices: list[int] = []
@@ -108,15 +122,6 @@ async def _gather_known_track_indices(
 
     # Sort indices for determinism
     track_indices.sort()
-
-    # 5. Fetch feedback events for adventurousness
-    events_stmt = (
-        select(FeedbackEvent)
-        .where(FeedbackEvent.device_id == device_id)
-        .order_by(FeedbackEvent.created_at.asc())
-    )
-    events_res = await db.execute(events_stmt)
-    feedback_events = [{"event": ev.event, "track_id": ev.track_id} for ev in events_res.scalars()]
 
     return track_indices, feedback_events, session_data.live_modes
 

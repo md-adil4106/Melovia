@@ -3,7 +3,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,8 +12,10 @@ from app.db.session import get_db_session
 from app.errors import AppException, NotFoundError
 from app.recsys.catalog import CatalogStore
 from app.schemas.tracks import AudioScalars, TrackDetailResponse, TrackSearchResponse
+from app.session.store import TokenBucketRateLimiter
 
 router = APIRouter(prefix="/tracks", tags=["Tracks"])
+search_rate_limiter = TokenBucketRateLimiter(rate=2.0, capacity=20.0)
 
 
 def get_catalog_store(request: Request) -> CatalogStore:
@@ -141,11 +143,23 @@ def _build_staging_track_detail(st: StagingTrack) -> TrackDetailResponse:
     ),
 )
 async def search_tracks(
-    q: str = Query(..., min_length=1, description="Search query string"),
+    request: Request,
+    q: str = Query(..., min_length=1, max_length=100, description="Search query string"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results to return"),
     store: CatalogStore = Depends(get_catalog_store),
     session: AsyncSession = Depends(get_db_session),
 ) -> TrackSearchResponse:
+    # Rate limiting: token bucket per client IP and device
+    client_ip = request.client.host if request.client else "unknown"
+    device_id = request.cookies.get("melovia_device_id", "anon")
+    rate_key = f"search:{client_ip}:{device_id}"
+    if not search_rate_limiter.consume(rate_key):
+        raise AppException(
+            code="RATE_LIMIT_EXCEEDED",
+            message="Too many search requests. Please slow down.",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+
     # 1. Search in-memory store
     bundle_results = store.search_tracks(q, limit=limit)
     items: list[TrackDetailResponse] = [_build_track_detail(item, store) for item in bundle_results]

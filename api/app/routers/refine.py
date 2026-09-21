@@ -14,6 +14,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 
+from app.config import get_settings
 from app.llm.client import LLMClientError, LLMTimeoutError
 from app.llm.rule_parser import RuleBasedRefinementParser
 from app.recsys.cache import global_candidate_cache
@@ -219,6 +220,7 @@ async def refine_recommendations(
         max_age=7200,
         httponly=True,
         samesite="lax",
+        secure=get_settings().is_production,
     )
 
     return RefineResponse(

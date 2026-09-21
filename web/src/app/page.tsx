@@ -412,9 +412,12 @@ export default function DiscoveryHome() {
           </div>
 
           {/* Navigation Tabs (Discover vs Taste Profile) */}
-          <nav className="flex items-center bg-[#0d1017] p-1 rounded-xl border border-[#202736]">
+          <nav className="flex items-center bg-[#0d1017] p-1 rounded-xl border border-[#202736]" role="tablist">
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === "discover"}
+              aria-label="Discover"
               onClick={() => setActiveTab("discover")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "discover"
@@ -426,6 +429,9 @@ export default function DiscoveryHome() {
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === "profile"}
+              aria-label="Taste DNA"
               onClick={() => setActiveTab("profile")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 activeTab === "profile"
@@ -440,6 +446,28 @@ export default function DiscoveryHome() {
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-3 text-xs">
+            {/* Conversational Steering Chat Button */}
+            <button
+              type="button"
+              onClick={() => setChatDrawerOpen(true)}
+              aria-label="Open Conversational Refinement"
+              className="flex items-center gap-1.5 text-xs text-[#c8d0de] hover:text-[#d4af37] bg-[#141923] hover:bg-[#1b2230] border border-[#232a3b] px-3 py-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-[#d4af37]" />
+              <span className="hidden sm:inline">Chat Refine</span>
+            </button>
+
+            {/* Playlist Builder Button */}
+            <button
+              type="button"
+              onClick={() => setPlaylistBuilderOpen(true)}
+              aria-label="Open Playlist Sequencing"
+              className="flex items-center gap-1.5 text-xs text-[#c8d0de] hover:text-[#d4af37] bg-[#141923] hover:bg-[#1b2230] border border-[#232a3b] px-3 py-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+            >
+              <ListMusic className="w-3.5 h-3.5 text-[#d4af37]" />
+              <span className="hidden sm:inline">Playlist Arcs</span>
+            </button>
+
             {/* 3D Taste Universe Map Button (Phase 12) */}
             <button
               type="button"
@@ -448,18 +476,18 @@ export default function DiscoveryHome() {
               className="flex items-center gap-1.5 text-xs text-[#d4af37] hover:text-[#f5ecd5] bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/40 px-3 py-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
             >
               <Globe className="w-3.5 h-3.5 text-[#d4af37]" />
-              <span className="font-semibold">3D Universe</span>
+              <span className="font-semibold hidden sm:inline">3D Universe</span>
             </button>
 
             {/* Anonymous Taste Profile & Settings Button */}
             <button
               type="button"
               onClick={() => setSettingsDrawerOpen(true)}
-              aria-label="Open anonymous taste profile and privacy settings"
+              aria-label="Open anonymous taste profile and device settings"
               className="flex items-center gap-1.5 text-xs text-[#c8d0de] hover:text-[#d4af37] bg-[#141923] hover:bg-[#1b2230] border border-[#232a3b] px-3 py-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
             >
               <Shield className="w-3.5 h-3.5 text-[#d4af37]" />
-              <span>Privacy & Sync</span>
+              <span className="hidden md:inline">Privacy & Sync</span>
               {hasPersistentProfile && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Profile saved" />
               )}

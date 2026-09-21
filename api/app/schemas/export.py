@@ -19,10 +19,14 @@ class FileExportRequest(BaseModel):
         default="Melovia Playlist", max_length=100, description="Display name for playlist"
     )
     track_ids: list[str] | None = Field(
-        default=None, description="List of catalog track UUIDs to export"
+        default=None,
+        max_length=500,
+        description="List of up to 500 catalog track UUIDs to export",
     )
     tracks: list[dict[str, Any]] | None = Field(
-        default=None, description="Explicit list of track objects with title, artist, isrc, etc."
+        default=None,
+        max_length=500,
+        description="Explicit list of up to 500 track objects with title, artist, isrc, etc.",
     )
 
     @model_validator(mode="after")
@@ -49,10 +53,14 @@ class PlatformExportRequest(BaseModel):
         description="Playlist description text",
     )
     track_ids: list[str] | None = Field(
-        default=None, description="List of catalog track UUIDs to export"
+        default=None,
+        max_length=500,
+        description="List of up to 500 catalog track UUIDs to export",
     )
     tracks: list[dict[str, Any]] | None = Field(
-        default=None, description="Explicit list of track objects with title, artist, isrc, etc."
+        default=None,
+        max_length=500,
+        description="Explicit list of up to 500 track objects with title, artist, isrc, etc.",
     )
 
     @model_validator(mode="after")

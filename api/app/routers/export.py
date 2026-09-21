@@ -37,10 +37,12 @@ from app.schemas.export import (
     SpotifyStatusResponse,
     TrackExportItem,
 )
+from app.session.store import TokenBucketRateLimiter
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/export", tags=["Export"])
+export_rate_limiter = TokenBucketRateLimiter(rate=0.5, capacity=10.0)
 
 # In-memory storage for Spotify sessions and async jobs (ephemeral, not written to disk)
 SPOTIFY_SESSIONS: dict[str, dict[str, Any]] = {}
@@ -109,6 +111,14 @@ async def export_file(
     request: Request,
 ) -> Response:
     """Generate and download a playlist file in CSV, JSON (JSPF), M3U, or TXT format."""
+    client_ip = request.client.host if request.client else "unknown"
+    session_id = request.cookies.get("melovia_session_id", "anon")
+    if not export_rate_limiter.consume(f"export:{client_ip}:{session_id}"):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many export requests. Please wait a moment.",
+        )
+
     tracks = _resolve_tracks(request, payload.track_ids, payload.tracks)
     if not tracks:
         raise HTTPException(status_code=400, detail="No tracks provided for file export.")
@@ -203,6 +213,10 @@ async def spotify_oauth_callback(
 
     if not session_data or session_data.get("state") != state:
         raise HTTPException(status_code=400, detail="Invalid or expired OAuth state parameter.")
+
+    # Enforce single-use state parameter (prevent replay attacks)
+    STATE_TO_SESSION.pop(state, None)
+    session_data["state"] = None
 
     code_verifier = session_data.get("code_verifier", "")
     adapter = SpotifyAdapter()
@@ -322,6 +336,13 @@ async def export_playlist(
 ) -> ExportJobResponse:
     """Export tracks to Spotify with matching and status tracking."""
     session_id = get_or_create_session_id(request, response)
+    client_ip = request.client.host if request.client else "unknown"
+    if not export_rate_limiter.consume(f"export:{client_ip}:{session_id}"):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many export requests. Please wait a moment.",
+        )
+
     session_data = SPOTIFY_SESSIONS.get(session_id)
 
     if not session_data or not session_data.get("access_token"):

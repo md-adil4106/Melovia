@@ -5,9 +5,13 @@ import uuid
 
 from fastapi import Request, Response
 
+from app.config import get_settings
+
 
 def get_or_create_device_id(request: Request, response: Response) -> tuple[str, str]:
     """Extract or create anonymous device UUID with httpOnly, SameSite=Lax cookie."""
+    settings = get_settings()
+    is_secure = settings.is_production
     raw_id = request.cookies.get("melovia_device_id")
     if not raw_id or len(raw_id) > 64:
         raw_id = str(uuid.uuid4())
@@ -17,7 +21,7 @@ def get_or_create_device_id(request: Request, response: Response) -> tuple[str, 
             httponly=True,
             samesite="lax",
             max_age=365 * 24 * 3600,
-            secure=False,
+            secure=is_secure,
         )
 
     # Invariant: device_id is never logged in plain text
@@ -27,6 +31,8 @@ def get_or_create_device_id(request: Request, response: Response) -> tuple[str, 
 
 def get_or_create_session_id(request: Request, response: Response) -> str:
     """Extract or create session UUID with cookie."""
+    settings = get_settings()
+    is_secure = settings.is_production
     sess_id = request.cookies.get("melovia_session_id")
     if not sess_id or len(sess_id) > 64:
         sess_id = f"sess_{uuid.uuid4().hex[:12]}"
@@ -36,6 +42,6 @@ def get_or_create_session_id(request: Request, response: Response) -> str:
             httponly=True,
             samesite="lax",
             max_age=2 * 3600,
-            secure=False,
+            secure=is_secure,
         )
     return sess_id

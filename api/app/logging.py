@@ -3,6 +3,7 @@
 import json
 import logging
 import sys
+import threading
 import time
 import uuid
 from collections.abc import Callable
@@ -71,6 +72,56 @@ def setup_logging(debug: bool = False) -> None:
 logger = logging.getLogger("melovia.api")
 
 
+class MetricsTracker:
+    """Thread-safe in-memory metrics collector for request counts, status codes, and latencies."""
+
+    def __init__(self) -> None:
+        self.start_time = time.time()
+        self._lock = threading.Lock()
+        self.request_count = 0
+        self.status_counts: dict[int, int] = {}
+        self.endpoint_latencies: dict[str, list[float]] = {}
+
+    def record_request(self, path: str, status_code: int, duration_ms: float) -> None:
+        with self._lock:
+            self.request_count += 1
+            self.status_counts[status_code] = self.status_counts.get(status_code, 0) + 1
+            parts = [p for p in path.split("/") if p]
+            prefix = f"/{parts[0]}" if parts else "/"
+            if prefix not in self.endpoint_latencies:
+                self.endpoint_latencies[prefix] = []
+            samples = self.endpoint_latencies[prefix]
+            if len(samples) >= 500:
+                samples.pop(0)
+            samples.append(duration_ms)
+
+    def get_summary(self) -> dict[str, Any]:
+        with self._lock:
+            uptime = round(time.time() - self.start_time, 2)
+            endpoint_stats: dict[str, Any] = {}
+            for ep, samples in self.endpoint_latencies.items():
+                if samples:
+                    sorted_s = sorted(samples)
+                    p50 = round(sorted_s[len(sorted_s) // 2], 2)
+                    p95_idx = min(len(sorted_s) - 1, int(len(sorted_s) * 0.95))
+                    p95 = round(sorted_s[p95_idx], 2)
+                    endpoint_stats[ep] = {
+                        "count": len(samples),
+                        "p50_ms": p50,
+                        "p95_ms": p95,
+                        "mean_ms": round(sum(samples) / len(samples), 2),
+                    }
+            return {
+                "uptime_seconds": uptime,
+                "total_requests": self.request_count,
+                "status_codes": dict(self.status_counts),
+                "endpoints": endpoint_stats,
+            }
+
+
+global_metrics_tracker = MetricsTracker()
+
+
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware that injects request_id and logs request duration and status."""
 
@@ -110,6 +161,9 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         finally:
             duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
             client_host = request.client.host if request.client else "unknown"
+
+            # Record in global metrics
+            global_metrics_tracker.record_request(request.url.path, status_code, duration_ms)
 
             logger.info(
                 f"{request.method} {request.url.path} {status_code} ({duration_ms}ms)",

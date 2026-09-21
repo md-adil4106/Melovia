@@ -168,11 +168,11 @@ export function WhyDrawer({
             <>
               <div className="space-y-3">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-[#9aa4b8]">
-                  Key Ranking Factors ({data.reasons.length})
+                  Key Ranking Factors ({data.reasons?.length || 0})
                 </h4>
 
                 <div className="space-y-2.5">
-                  {data.reasons.map((reason, idx) => (
+                  {(data.reasons || []).map((reason, idx) => (
                     <div
                       key={reason.id || idx}
                       className="bg-[#141924] border border-[#222a3a] rounded-xl p-3.5 flex items-start gap-3 hover:border-[#344057] transition-colors"

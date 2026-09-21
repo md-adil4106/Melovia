@@ -122,10 +122,20 @@ async def create_recommendations(
         from app.db.session import async_session_factory
         from app.recsys.feedback import modes_from_dict
 
-        async with async_session_factory() as db:
-            stmt = select(Profile).where(Profile.device_id == device_id)
-            res = await db.execute(stmt)
-            profile = res.scalar_one_or_none()
+        try:
+            async with async_session_factory() as db:
+                stmt = select(Profile).where(Profile.device_id == device_id)
+                res = await db.execute(stmt)
+                profile = res.scalar_one_or_none()
+        except Exception as e:
+            raise AppException(
+                code="DATABASE_UNAVAILABLE",
+                message=(
+                    "Unable to retrieve saved taste profile due to a temporary database issue. "
+                    "Try using seed tracks instead."
+                ),
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            ) from e
 
         if not profile:
             raise AppException(
