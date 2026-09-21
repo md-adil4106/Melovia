@@ -1,0 +1,98 @@
+# Production Docker Compose for Melovia Self-Hosting
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+# Requirements:
+#   Pre-populate .env with production secrets (see .env.example)
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: melovia-prod-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-melovia_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-melovia_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password required}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-melovia_admin} -d ${POSTGRES_DB:-melovia_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: melovia-prod-api
+    restart: unless-stopped
+    environment:
+      - ENV=production
+      - DEBUG=false
+      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-melovia_admin}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-melovia_prod}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - CATALOG_BUNDLE_DIR=/app/data/bundles/v1
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      - STUDY_ADMIN_TOKEN=${STUDY_ADMIN_TOKEN:?Study admin token required}
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID:-}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      # Mount immutable vector bundle read-only into container
+      - ./data/bundles/v1:/app/data/bundles/v1:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: melovia-prod-web
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+volumes:
+  postgres_prod_data:
+    driver: local

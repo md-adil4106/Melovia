@@ -127,35 +127,58 @@ To measure proxy relevance on human-curated music, Melovia includes `eval/playli
 
 ## 7. CI Regression Guard (`make eval-ci`)
 
-In continuous integration (`.github/workflows/ci.yml`), `make eval-ci` runs a deterministic evaluation pass against the mock catalog and verifies four hard regression gates:
+In continuous integration (`.github/workflows/ci.yml`), `make eval-ci` runs a deterministic evaluation pass against the mock catalog and verifies six hard regression gates:
 
 1. **Gate 1 — Discovery Monotonicity**:
    Mean novelty at $d = 0.75$ must be strictly greater than or equal to mean novelty at $d = 0.0$ ($\text{Nov}_{0.75} \ge \text{Nov}_{0.0} - 0.05$).
 2. **Gate 2 — Diversity Guard**:
    The full hybrid recommender ($d = 0.35$) must maintain intra-list diversity comparable to or exceeding pure cosine-t ($\text{ILD}_{\text{hybrid}} \ge \text{ILD}_{\text{cosine}} - 0.05$).
 3. **Gate 3 — Acoustic Ablation Efficacy**:
-   Disabling the acoustic channel (`-audio`) must measurably alter recommendations and diversity.
+   Disabling the acoustic channel (`-audio`) must measurably alter recommendations and diversity ($\text{ILD}_{\text{with\_audio}} \ge \text{ILD}_{\text{no\_audio}} - 0.02$).
 4. **Gate 4 — MMR Ablation Efficacy**:
    Disabling MMR re-ranking (`-MMR`) must measurably drop intra-list diversity ($\text{ILD}_{\text{with\_mmr}} > \text{ILD}_{\text{no\_mmr}}$).
+5. **Gate 5 — Feedback Adaptation Guard**:
+   In-session likes must increase hit-rate to the target preference region by at least $+0.15$.
+6. **Gate 6 — Sequencing Flow Guard**:
+   TSP 2-opt playlist sequencing must reduce pairwise acoustic jump costs by $\ge 15\%$ compared to random ordering, maintain energy arc correlation $\ge 0.70$, and enforce artist adjacency $= 0.00$.
 
 ---
 
-## 8. User-Study Protocol Outline (Phase 15 Roadmap Placeholder)
+## 8. Empirical Benchmark Results (Real Numbers)
 
-Because offline metrics cannot substitute for human experience, Phase 15 will implement a formal user evaluation protocol:
+Evaluation run across $N=36$ standardized seed sets (3–4 anchor tracks each) on the 3,000-track catalog bundle:
 
-1. **Participants**: $N = 30$ active music discovery listeners.
-2. **Design**: Within-subjects, double-blinded comparison between:
-   - System A: Melovia Hybrid with Steerable Discovery Slider.
-   - System B: Static Single-Channel Cosine Baseline.
-   - System C: Popularity-Weighted Genre Baseline.
-3. **Tasks**:
-   - *Target Aesthetic Discovery*: Find 5 unfamiliar tracks that evoke a specific mood/era.
-   - *Dynamic Steering*: Adjust the discovery slider from 0.0 to 1.0 and evaluate perceptual responsiveness.
-4. **Quantitative Measures (5-point Likert)**:
-   - *Perceived Relevance*: "The recommendations matched my aesthetic intent."
-   - *Perceived Discovery / Serendipity*: "I discovered tracks I would not have encountered otherwise."
-   - *Perceived Transparency*: "I understood why these tracks were recommended."
-   - *Perceived Control*: "Adjusting the discovery control gave me meaningful steering over the results."
-5. **Behavioral Logging**:
-   - Session duration, slider interaction frequency, preview play rates, and playlist export completion.
+| System / Config | ILD | $\Delta$ vs Hybrid (95% CI) | Novelty | Entropy | Hit-Rate | Artist Cov | Catalog Cov | Gini |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `random` | 0.985 ± 0.000 | [-0.791, -0.756] | 12.37 | 3.95 | 0.05 | 7.5% | 1.0% | 0.990 |
+| `genre_only` | 0.204 ± 0.088 | [-0.018, +0.028] | 11.40 | 0.18 | 0.92 | 59.2% | 20.8% | 0.829 |
+| `cosine_t` | 0.155 ± 0.036 | [+0.043, +0.067] | 11.90 | 0.12 | 0.93 | 67.9% | 26.1% | 0.788 |
+| `cosine_a` | 0.180 ± 0.047 | [+0.009, +0.048] | 11.91 | 0.13 | 0.94 | 68.5% | 26.0% | 0.788 |
+| `hybrid_d00` | 0.158 ± 0.033 | [+0.040, +0.064] | 11.88 | 0.13 | 0.94 | 69.1% | 26.6% | 0.783 |
+| `hybrid_d35` | 0.210 ± 0.057 | Ref (0.00) | 12.41 | 0.30 | 0.92 | 75.1% | 26.4% | 0.786 |
+| `hybrid_d75` | 0.831 ± 0.060 | [-0.644, -0.597] | 12.50 | 3.41 | 0.36 | 69.4% | 25.6% | 0.801 |
+| `hybrid_no_audio` | 0.168 ± 0.061 | [+0.029, +0.054] | 12.15 | 0.14 | 0.93 | 73.6% | 26.3% | 0.785 |
+| `hybrid_no_mmr` | 0.166 ± 0.047 | [+0.032, +0.055] | 12.40 | 0.13 | 0.94 | 70.9% | 26.3% | 0.785 |
+| `hybrid_no_pop_corr` | 0.194 ± 0.055 | [+0.008, +0.023] | 11.90 | 0.23 | 0.92 | 76.6% | 27.8% | 0.769 |
+
+---
+
+## 9. Double-Blind A/B User-Study Framework (Phase 15 Implementation)
+
+Because offline representation metrics cannot replace human subjective perception, Melovia implements an interactive, double-blind evaluation module (`/study`) and analysis script (`eval/study_analysis.py`):
+
+1. **Experimental Design**:
+   - Within-subjects, counterbalanced double-blind trial comparing **System Hybrid** (Melovia multi-modal engine) against **Baseline Control** (popularity-weighted genre/tag matcher).
+   - Arm identities (`Playlist A` vs `Playlist B`) are cryptographically randomized on the server; all algorithm scores, explanation tags, and track ranking signals are completely stripped from client payloads.
+2. **Evaluation Instruments (1–5 Likert Scales)**:
+   - **Perceived Relevance**: Harmonic and aesthetic alignment with anchor seeds.
+   - **Perceived Discovery / Serendipity**: Exposure to novel tracks the listener would not have found independently.
+   - **Acoustic Flow**: Cohesion and smoothness of transitions between adjacent tracks.
+   - **Overall Satisfaction**: Holistic listener preference.
+   - **Forced-Choice Preference**: Direct choice between Playlist A, Playlist B, or Equal.
+3. **Statistical Analysis Protocol (`eval/study_analysis.py`)**:
+   - Computes paired parametric differences ($t$-test via `scipy.stats.ttest_rel`) and non-parametric rank differences (Wilcoxon signed-rank test via `scipy.stats.wilcoxon`).
+   - Reports 95% bootstrap confidence intervals ($B=1,000$) for each perceptual dimension.
+   - Exports zero PII; token-authenticated admin export (`GET /study/export`).
+   - Full protocol specification: [`docs/STUDY_PROTOCOL.md`](STUDY_PROTOCOL.md).
+

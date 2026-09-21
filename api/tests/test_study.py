@@ -118,6 +118,7 @@ async def test_study_export_security_and_format():
 
         # 4. Correct token via query param -> 200
         from app.config import get_settings
+
         admin_token = get_settings().STUDY_ADMIN_TOKEN
         auth_resp = await client.get(f"/study/export?token={admin_token}")
         assert auth_resp.status_code == 200

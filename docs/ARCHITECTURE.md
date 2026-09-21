@@ -4,6 +4,68 @@
 
 Melovia is an explainable, user-steerable music-discovery engine designed with strict modular separation, deterministic recommendation pipelines, and security-first boundaries.
 
+
+---
+
+## System Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph Browser["Client Layer (Next.js 14 App Router)"]
+        UI["Landing & Discovery UI"]
+        Slider["Steerable Slider (WOW #1)"]
+        Universe3D["3D Taste Universe (Three.js / R3F)"]
+        WhyDrawer["'Why This Track?' Drawer (WOW #3)"]
+        RefineChat["Conversational Refine (WOW #4)"]
+        Blindspots["Blindspot Explorer (WOW #5)"]
+        ExportModal["Export Modal (WOW #6)"]
+        StudyUI["Blind A/B Study Mode (/study)"]
+    end
+
+    subgraph API["Backend API (FastAPI / Python 3.12)"]
+        MW["Security & Logging Middleware"]
+        Routers["Endpoint Routers (/recommendations, /study, etc.)"]
+        Cache["In-Memory Candidate Pool TTL Cache"]
+    end
+
+    subgraph Boundaries["Isolated Architecture Subsystems"]
+        direction TB
+        subgraph PureRecsys["Pure Python Recsys Core (api/app/recsys/*)"]
+            Taste["Taste Profiling (K-Means)"]
+            Candidates["Candidate Retrieval"]
+            Scoring["Multi-Modal Scoring (Smooth-Max)"]
+            Rerank["Gaussian Novelty & Dynamic Floor"]
+            MMR["MMR Diversity & Artist Cap"]
+            Sequencing["2-Opt TSP & Energy Arc"]
+            Explain["Signal-True Explainability"]
+        end
+
+        subgraph LLMBoundary["LLM Guard Boundary (api/app/llm/*)"]
+            PromptParser["Prompt & Intent Extractor"]
+            VerifierGuard["Schema & Controlled Vocab Verifier"]
+        end
+
+        subgraph PlatformBoundary["Platform Adapters (api/app/platforms/*)"]
+            FileExport["Offline File Export (M3U, CSV, JSPF)"]
+            SpotifyAdapt["Spotify OAuth PKCE & Matcher"]
+        end
+    end
+
+    subgraph Data["Storage & Assets"]
+        CatalogBundle["Immutable Vector Bundle (data/bundles/v1)\n(tracks, scalars, vectors_t, vectors_a, layout3d)"]
+        Postgres["PostgreSQL 16 (User Profiles & Study Ratings)"]
+    end
+
+    Browser <-->|HTTPS / JSON API| MW
+    MW --> Routers
+    Routers --> Cache
+    Routers --> PureRecsys
+    Routers --> LLMBoundary
+    Routers --> PlatformBoundary
+    PureRecsys -->|Read-Only High-Dim Vectors| CatalogBundle
+    Routers <--> Postgres
+```
+
 ---
 
 ## Architectural Boundaries

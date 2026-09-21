@@ -356,9 +356,7 @@ async def submit_study_rating(
 @router.get(
     "/export",
     summary="Export all unblinded study ratings as CSV for statistical analysis",
-    description=(
-        "Protected by STUDY_ADMIN_TOKEN. Returns zero PII, only unblinded evaluations."
-    ),
+    description=("Protected by STUDY_ADMIN_TOKEN. Returns zero PII, only unblinded evaluations."),
 )
 async def export_study_ratings(
     token: str | None = Query(None, description="Admin secret token"),
@@ -473,11 +471,7 @@ async def export_study_ratings(
             pref_arm = (
                 "hybrid"
                 if r["preferred_overall"] == "playlist_a"
-                else (
-                    "baseline"
-                    if r["preferred_overall"] == "playlist_b"
-                    else "tie"
-                )
+                else ("baseline" if r["preferred_overall"] == "playlist_b" else "tie")
             )
         else:
             rel_h, disc_h, flow_h, sat_h = (
@@ -495,11 +489,7 @@ async def export_study_ratings(
             pref_arm = (
                 "baseline"
                 if r["preferred_overall"] == "playlist_a"
-                else (
-                    "hybrid"
-                    if r["preferred_overall"] == "playlist_b"
-                    else "tie"
-                )
+                else ("hybrid" if r["preferred_overall"] == "playlist_b" else "tie")
             )
 
         clean_feedback = (r.get("feedback_text") or "").replace("\n", " ").strip()

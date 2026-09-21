@@ -8,970 +8,970 @@ seed_sets:
   name: Region 0 Cluster 1
   track_count: 3
   seed_track_ids:
-  - 464f0c16-e535-52d6-94a4-c74959971245
-  - ca700618-33fe-5a24-a583-64b2fd9b3bf2
-  - 35482b17-1c49-523e-be74-4b39b4043c66
+  - 3579657f-f2db-55d5-b0ac-a5cfd65e6091
+  - 6e871d75-43ab-55b4-82b6-a90b46287fb6
+  - 04951369-5376-5326-ad7a-c633e2b60700
   seed_tracks:
-  - id: 464f0c16-e535-52d6-94a4-c74959971245
-    track_idx: 1970
-    title: Indie Rock Movement 1761
-    artist_name: Indie Rock Project 561
-    year: 1970
-  - id: ca700618-33fe-5a24-a583-64b2fd9b3bf2
-    track_idx: 2283
-    title: Indie Rock Movement 4017
-    artist_name: Indie Rock Project 417
-    year: 1971
-  - id: 35482b17-1c49-523e-be74-4b39b4043c66
-    track_idx: 2414
-    title: Indie Rock Movement 4961
-    artist_name: Indie Rock Project 161
-    year: 1980
+  - id: 3579657f-f2db-55d5-b0ac-a5cfd65e6091
+    track_idx: 1831
+    title: First Descent
+    artist_name: Mirage Chamber
+    year: 2011
+  - id: 6e871d75-43ab-55b4-82b6-a90b46287fb6
+    track_idx: 31
+    title: First Glitch
+    artist_name: Cosmic Pulse
+    year: 1976
+  - id: 04951369-5376-5326-ad7a-c633e2b60700
+    track_idx: 2007
+    title: Distant Resonance
+    artist_name: Azure Pulse
+    year: 2001
 - id: seedset_02
   region_id: 0
   name: Region 0 Cluster 2
   track_count: 4
   seed_track_ids:
-  - f0b58c59-0932-5146-998e-15631191fcd2
-  - e51627e0-3f08-59e3-8c07-14846697918e
-  - 305a21b4-d16a-5e7a-8726-efc7509c51fe
-  - 85d6ebf9-e338-5651-8008-6846bb7cd05b
+  - 88286815-5282-5179-853a-47eb673ac07e
+  - 6762151c-4f42-5836-9d4b-118db458b7b5
+  - d9f83473-c46d-5291-b5bc-a3f45825eb29
+  - cf17f5bc-538a-51bb-bea0-1d16456dc6ba
   seed_tracks:
-  - id: f0b58c59-0932-5146-998e-15631191fcd2
-    track_idx: 2132
-    title: Indie Rock Movement 2929
-    artist_name: Indie Rock Project 529
-    year: 1983
-  - id: e51627e0-3f08-59e3-8c07-14846697918e
-    track_idx: 2125
-    title: Indie Rock Movement 2881
-    artist_name: Indie Rock Project 481
+  - id: 88286815-5282-5179-853a-47eb673ac07e
+    track_idx: 1951
+    title: First Descent
+    artist_name: Cosmic Chamber
+    year: 2014
+  - id: 6762151c-4f42-5836-9d4b-118db458b7b5
+    track_idx: 35
+    title: Quiet Glitch, Pt. 3
+    artist_name: Mirage Frequency
+    year: 1997
+  - id: d9f83473-c46d-5291-b5bc-a3f45825eb29
+    track_idx: 34
+    title: Final Glitch
+    artist_name: Prism Currents
     year: 1990
-  - id: 305a21b4-d16a-5e7a-8726-efc7509c51fe
-    track_idx: 1986
-    title: Indie Rock Movement 1873
-    artist_name: Indie Rock Project 73
-    year: 1972
-  - id: 85d6ebf9-e338-5651-8008-6846bb7cd05b
-    track_idx: 1966
-    title: Indie Rock Movement 1729
-    artist_name: Indie Rock Project 529
-    year: 1993
+  - id: cf17f5bc-538a-51bb-bea0-1d16456dc6ba
+    track_idx: 2070
+    title: Distant Tides
+    artist_name: Neon Visions
+    year: 2020
 - id: seedset_03
-  region_id: 0
-  name: Region 0 Cluster 3
-  track_count: 3
-  seed_track_ids:
-  - 305a21b4-d16a-5e7a-8726-efc7509c51fe
-  - 85d6ebf9-e338-5651-8008-6846bb7cd05b
-  - f796461e-3f68-544d-a910-cbbf2eb43154
-  seed_tracks:
-  - id: 305a21b4-d16a-5e7a-8726-efc7509c51fe
-    track_idx: 1986
-    title: Indie Rock Movement 1873
-    artist_name: Indie Rock Project 73
-    year: 1972
-  - id: 85d6ebf9-e338-5651-8008-6846bb7cd05b
-    track_idx: 1966
-    title: Indie Rock Movement 1729
-    artist_name: Indie Rock Project 529
-    year: 1993
-  - id: f796461e-3f68-544d-a910-cbbf2eb43154
-    track_idx: 2003
-    title: Indie Rock Movement 2001
-    artist_name: Indie Rock Project 201
-    year: 1990
-- id: seedset_04
   region_id: 1
   name: Region 1 Cluster 1
-  track_count: 4
-  seed_track_ids:
-  - bd8347af-e284-512e-870e-95f7fbf3b2c0
-  - 98fba5ab-9e19-5a50-99ed-5808f3af5645
-  - ba8edd77-8490-55df-a52b-62b7f9f715f9
-  - 77aed91f-dccc-5091-84fb-6b571fdc70e9
-  seed_tracks:
-  - id: bd8347af-e284-512e-870e-95f7fbf3b2c0
-    track_idx: 3787
-    title: Post-Rock Movement 1422
-    artist_name: Post-Rock Project 222
-    year: 2016
-  - id: 98fba5ab-9e19-5a50-99ed-5808f3af5645
-    track_idx: 2084
-    title: Indie Rock Movement 2577
-    artist_name: Indie Rock Project 177
-    year: 2016
-  - id: ba8edd77-8490-55df-a52b-62b7f9f715f9
-    track_idx: 6
-    title: Dream Pop Movement 1044
-    artist_name: Dream Pop Project 444
-    year: 2023
-  - id: 77aed91f-dccc-5091-84fb-6b571fdc70e9
-    track_idx: 3602
-    title: Neo-Classical Movement 4565
-    artist_name: Neo-Classical Project 365
-    year: 2024
-- id: seedset_05
-  region_id: 1
-  name: Region 1 Cluster 2
   track_count: 3
   seed_track_ids:
-  - 77aed91f-dccc-5091-84fb-6b571fdc70e9
-  - 9dd4b825-6a0a-5501-90d8-f7db1353ac55
-  - 31287430-0e65-58d4-a6c7-f236990a174f
+  - 8d727c8c-c0d9-532e-aaea-1573df2722ad
+  - e2f94e32-d08f-50d4-a219-40dc8e7a3c3e
+  - d6056f06-f964-56f6-9b8d-ef4bf0e0448a
   seed_tracks:
-  - id: 77aed91f-dccc-5091-84fb-6b571fdc70e9
-    track_idx: 3602
-    title: Neo-Classical Movement 4565
-    artist_name: Neo-Classical Project 365
-    year: 2024
-  - id: 9dd4b825-6a0a-5501-90d8-f7db1353ac55
-    track_idx: 2659
-    title: Lo-Fi Chill Movement 2248
-    artist_name: Lo-Fi Chill Project 448
-    year: 2017
-  - id: 31287430-0e65-58d4-a6c7-f236990a174f
-    track_idx: 1552
-    title: Hip Hop Movement 323
-    artist_name: Hip Hop Project 323
-    year: 2017
-- id: seedset_06
+  - id: 8d727c8c-c0d9-532e-aaea-1573df2722ad
+    track_idx: 1066
+    title: Lost Solitude
+    artist_name: Neon Pulse
+    year: 2006
+  - id: e2f94e32-d08f-50d4-a219-40dc8e7a3c3e
+    track_idx: 2200
+    title: Deep Starlight
+    artist_name: Echo Signals
+    year: 2021
+  - id: d6056f06-f964-56f6-9b8d-ef4bf0e0448a
+    track_idx: 1485
+    title: Lost Orbit
+    artist_name: Azure Chamber
+    year: 1975
+- id: seedset_04
   region_id: 1
-  name: Region 1 Cluster 3
+  name: Region 1 Cluster 2
   track_count: 4
   seed_track_ids:
-  - 75013378-8889-5fc7-94a3-aa54d81b2531
-  - d6f0e22b-97dc-5d21-8c0f-b6651c4bb3f0
-  - abeac49b-8eb3-5fad-b411-e09bd4cc0987
-  - fa99d21c-c54c-5cd2-9d68-0d680c76568f
+  - 49ebf766-e173-5e87-8b26-ff20accbc2b0
+  - b6da2eca-8de4-5937-b42f-1a859c5d8cb0
+  - 7a7c2ce2-f8b1-5348-a604-d8f7633d80aa
+  - d0602f75-8fdf-5a32-ab1d-51cd9a0ba589
   seed_tracks:
-  - id: 75013378-8889-5fc7-94a3-aa54d81b2531
-    track_idx: 2683
-    title: Lo-Fi Chill Movement 2416
-    artist_name: Lo-Fi Chill Project 16
-    year: 2020
-  - id: d6f0e22b-97dc-5d21-8c0f-b6651c4bb3f0
-    track_idx: 2666
-    title: Lo-Fi Chill Movement 2304
-    artist_name: Lo-Fi Chill Project 504
-    year: 2018
-  - id: abeac49b-8eb3-5fad-b411-e09bd4cc0987
-    track_idx: 4253
-    title: Post-Rock Movement 4782
-    artist_name: Post-Rock Project 582
-    year: 2021
-  - id: fa99d21c-c54c-5cd2-9d68-0d680c76568f
-    track_idx: 3586
-    title: Neo-Classical Movement 4453
-    artist_name: Neo-Classical Project 253
-    year: 2022
-- id: seedset_07
+  - id: 49ebf766-e173-5e87-8b26-ff20accbc2b0
+    track_idx: 2480
+    title: Final Orbit
+    artist_name: Subtle Chamber
+    year: 1989
+  - id: b6da2eca-8de4-5937-b42f-1a859c5d8cb0
+    track_idx: 964
+    title: Deep Ascent
+    artist_name: Prism Waves
+    year: 1984
+  - id: 7a7c2ce2-f8b1-5348-a604-d8f7633d80aa
+    track_idx: 1884
+    title: Inner Glitch
+    artist_name: Silent Horizon
+    year: 1991
+  - id: d0602f75-8fdf-5a32-ab1d-51cd9a0ba589
+    track_idx: 1272
+    title: Endless Reflection
+    artist_name: Silent Orchestra
+    year: 2009
+- id: seedset_05
   region_id: 2
   name: Region 2 Cluster 1
   track_count: 3
   seed_track_ids:
-  - 851ad872-dafe-522e-8318-bc4f37c3bfcb
-  - ad560fc8-199d-54d2-aba6-1239f7c5f873
-  - 51b6df11-db8e-52f7-830b-616494b79720
+  - 93b851bc-2858-5235-b9a2-ba3a60ebd6b3
+  - 8e758edb-55e3-5b27-9988-8d5cd05bb482
+  - 302e0c1b-5303-5c80-82f1-913b924c99aa
   seed_tracks:
-  - id: 851ad872-dafe-522e-8318-bc4f37c3bfcb
-    track_idx: 4095
-    title: Post-Rock Movement 3654
-    artist_name: Post-Rock Project 54
-    year: 1993
-  - id: ad560fc8-199d-54d2-aba6-1239f7c5f873
-    track_idx: 3890
-    title: Post-Rock Movement 2174
-    artist_name: Post-Rock Project 374
-    year: 1998
-  - id: 51b6df11-db8e-52f7-830b-616494b79720
-    track_idx: 4309
-    title: Post-Rock Movement 710
-    artist_name: Post-Rock Project 110
+  - id: 93b851bc-2858-5235-b9a2-ba3a60ebd6b3
+    track_idx: 2566
+    title: Ancient Echo
+    artist_name: Solar Monolith
+    year: 2006
+  - id: 8e758edb-55e3-5b27-9988-8d5cd05bb482
+    track_idx: 1817
+    title: Endless Vapor
+    artist_name: Echo Collective
     year: 2019
-- id: seedset_08
+  - id: 302e0c1b-5303-5c80-82f1-913b924c99aa
+    track_idx: 944
+    title: Lost Echo
+    artist_name: Cosmic Pulse
+    year: 1993
+- id: seedset_06
   region_id: 2
   name: Region 2 Cluster 2
   track_count: 4
   seed_track_ids:
-  - 10e7ddbf-6c2a-5f8c-81d8-f741df326259
-  - 588217c4-8993-55b2-bc15-3df4e6534cf2
-  - 24da2774-b7aa-567d-8200-df070529be96
-  - aa8928f1-7b26-5890-afef-2eea0256f0b6
+  - e7d1f507-4079-522a-86f8-bda2e748cfac
+  - 0cface80-fb0a-5c60-830b-9bf275630512
+  - 157631d1-27f9-5eb1-8206-945e45841462
+  - 7df42e44-e774-50a0-b2c4-7b7a57974bb6
   seed_tracks:
-  - id: 10e7ddbf-6c2a-5f8c-81d8-f741df326259
-    track_idx: 4030
-    title: Post-Rock Movement 318
-    artist_name: Post-Rock Project 318
-    year: 2012
-  - id: 588217c4-8993-55b2-bc15-3df4e6534cf2
-    track_idx: 3975
-    title: Post-Rock Movement 2782
-    artist_name: Post-Rock Project 382
-    year: 2001
-  - id: 24da2774-b7aa-567d-8200-df070529be96
-    track_idx: 3789
-    title: Post-Rock Movement 1438
-    artist_name: Post-Rock Project 238
-    year: 1977
-  - id: aa8928f1-7b26-5890-afef-2eea0256f0b6
-    track_idx: 4273
-    title: Post-Rock Movement 4934
-    artist_name: Post-Rock Project 134
-    year: 2008
-- id: seedset_09
-  region_id: 2
-  name: Region 2 Cluster 3
-  track_count: 3
-  seed_track_ids:
-  - 24da2774-b7aa-567d-8200-df070529be96
-  - aa8928f1-7b26-5890-afef-2eea0256f0b6
-  - bfad0bc1-3aaa-5405-ae96-3e180d91e894
-  seed_tracks:
-  - id: 24da2774-b7aa-567d-8200-df070529be96
-    track_idx: 3789
-    title: Post-Rock Movement 1438
-    artist_name: Post-Rock Project 238
-    year: 1977
-  - id: aa8928f1-7b26-5890-afef-2eea0256f0b6
-    track_idx: 4273
-    title: Post-Rock Movement 4934
-    artist_name: Post-Rock Project 134
-    year: 2008
-  - id: bfad0bc1-3aaa-5405-ae96-3e180d91e894
-    track_idx: 3768
-    title: Post-Rock Movement 1294
-    artist_name: Post-Rock Project 94
-    year: 1998
-- id: seedset_10
+  - id: e7d1f507-4079-522a-86f8-bda2e748cfac
+    track_idx: 2942
+    title: Submerged Reflection
+    artist_name: Quantum Drift
+    year: 1992
+  - id: 0cface80-fb0a-5c60-830b-9bf275630512
+    track_idx: 1184
+    title: Deep Tides
+    artist_name: Silent Fables
+    year: 1991
+  - id: 157631d1-27f9-5eb1-8206-945e45841462
+    track_idx: 1809
+    title: Electric Echo
+    artist_name: Silver Chamber
+    year: 2017
+  - id: 7df42e44-e774-50a0-b2c4-7b7a57974bb6
+    track_idx: 2814
+    title: Ancient Tides, Pt. 1
+    artist_name: Silver Horizon
+    year: 1995
+- id: seedset_07
   region_id: 3
   name: Region 3 Cluster 1
-  track_count: 4
-  seed_track_ids:
-  - 0cdee242-fd43-5578-b933-5dbb174d6e74
-  - 2bfad66c-c8fb-5869-b1c3-471e6252489d
-  - 1c1b5122-902d-5892-8580-b295ddde61dc
-  - cff6bcb3-7589-5cb5-8cf0-0e9058f51cd6
-  seed_tracks:
-  - id: 0cdee242-fd43-5578-b933-5dbb174d6e74
-    track_idx: 3036
-    title: Lo-Fi Chill Movement 4960
-    artist_name: Lo-Fi Chill Project 160
-    year: 1979
-  - id: 2bfad66c-c8fb-5869-b1c3-471e6252489d
-    track_idx: 2556
-    title: Lo-Fi Chill Movement 1512
-    artist_name: Lo-Fi Chill Project 312
-    year: 1996
-  - id: 1c1b5122-902d-5892-8580-b295ddde61dc
-    track_idx: 2852
-    title: Lo-Fi Chill Movement 3640
-    artist_name: Lo-Fi Chill Project 40
-    year: 1979
-  - id: cff6bcb3-7589-5cb5-8cf0-0e9058f51cd6
-    track_idx: 3088
-    title: Lo-Fi Chill Movement 864
-    artist_name: Lo-Fi Chill Project 264
-    year: 2008
-- id: seedset_11
-  region_id: 3
-  name: Region 3 Cluster 2
   track_count: 3
   seed_track_ids:
-  - cff6bcb3-7589-5cb5-8cf0-0e9058f51cd6
-  - 87917f94-7ebf-5f01-8681-9186ebe05374
-  - 3f5df2bf-acfb-5a83-aecd-1f85663c6c7c
+  - 90716cc9-a9ea-5c67-92dd-783e9da5addb
+  - bae575da-f4b2-5290-839e-82162421ead6
+  - 55c55008-29d8-59bf-88c6-8de665fe078b
   seed_tracks:
-  - id: cff6bcb3-7589-5cb5-8cf0-0e9058f51cd6
-    track_idx: 3088
-    title: Lo-Fi Chill Movement 864
-    artist_name: Lo-Fi Chill Project 264
-    year: 2008
-  - id: 87917f94-7ebf-5f01-8681-9186ebe05374
-    track_idx: 2642
-    title: Lo-Fi Chill Movement 2128
-    artist_name: Lo-Fi Chill Project 328
-    year: 2007
-  - id: 3f5df2bf-acfb-5a83-aecd-1f85663c6c7c
-    track_idx: 3064
-    title: Lo-Fi Chill Movement 688
-    artist_name: Lo-Fi Chill Project 88
-    year: 1997
-- id: seedset_12
+  - id: 90716cc9-a9ea-5c67-92dd-783e9da5addb
+    track_idx: 322
+    title: Final Silence, Pt. 2
+    artist_name: Amber Monolith
+    year: 2002
+  - id: bae575da-f4b2-5290-839e-82162421ead6
+    track_idx: 2844
+    title: Floating Vapor
+    artist_name: Subtle Signals
+    year: 1998
+  - id: 55c55008-29d8-59bf-88c6-8de665fe078b
+    track_idx: 1323
+    title: Quiet Tides, Pt. 1
+    artist_name: Cosmic Pulse
+    year: 1987
+- id: seedset_08
   region_id: 3
-  name: Region 3 Cluster 3
+  name: Region 3 Cluster 2
   track_count: 4
   seed_track_ids:
-  - fc671a57-066b-5d9a-a149-764af633d327
-  - ede32e8a-c67b-56f9-8838-e99fddb8b00d
-  - 079d168b-0c7b-5b05-ad0a-cb434b40747f
-  - fb70e6f7-e000-5d16-a6ac-4edcd3a7701e
+  - 8bb43fd5-8565-576f-b053-6546277119e0
+  - 2b4c1ade-f807-5e06-82f9-5e6470830479
+  - f3e0b3e1-21c9-56b6-9512-b673d675cdc4
+  - f58caf60-8d74-55f6-8728-c6ce89afa2c1
   seed_tracks:
-  - id: fc671a57-066b-5d9a-a149-764af633d327
-    track_idx: 2509
-    title: Lo-Fi Chill Movement 1168
-    artist_name: Lo-Fi Chill Project 568
-    year: 1982
-  - id: ede32e8a-c67b-56f9-8838-e99fddb8b00d
-    track_idx: 2801
-    title: Lo-Fi Chill Movement 3272
-    artist_name: Lo-Fi Chill Project 272
-    year: 1996
-  - id: 079d168b-0c7b-5b05-ad0a-cb434b40747f
-    track_idx: 2514
-    title: Lo-Fi Chill Movement 1200
-    artist_name: Lo-Fi Chill Project 600
-    year: 2014
-  - id: fb70e6f7-e000-5d16-a6ac-4edcd3a7701e
-    track_idx: 2584
-    title: Lo-Fi Chill Movement 1704
-    artist_name: Lo-Fi Chill Project 504
-    year: 2023
-- id: seedset_13
+  - id: 8bb43fd5-8565-576f-b053-6546277119e0
+    track_idx: 559
+    title: Deep Echo
+    artist_name: Mirage Chamber
+    year: 1988
+  - id: 2b4c1ade-f807-5e06-82f9-5e6470830479
+    track_idx: 13
+    title: Deep Reflection
+    artist_name: Cosmic Drift
+    year: 2016
+  - id: f3e0b3e1-21c9-56b6-9512-b673d675cdc4
+    track_idx: 2403
+    title: Hidden Silence
+    artist_name: Amber Monolith
+    year: 2000
+  - id: f58caf60-8d74-55f6-8728-c6ce89afa2c1
+    track_idx: 97
+    title: Fractured Mirage
+    artist_name: Velvet Tides
+    year: 2012
+- id: seedset_09
   region_id: 4
   name: Region 4 Cluster 1
   track_count: 3
   seed_track_ids:
-  - 74872df3-e8d7-5f55-8e8d-bd72626b180d
-  - 0c892f2b-3f82-5cb4-bb9a-6ae9c5bee539
-  - 38a50349-a0d9-542d-927c-ba1bb91ac7b3
+  - be4345f8-a97a-5326-a14f-9cd587232bd8
+  - b4d096bd-815c-543d-83e0-af9ff147a500
+  - fea11554-2816-5613-9d0f-2873b0b13d46
   seed_tracks:
-  - id: 74872df3-e8d7-5f55-8e8d-bd72626b180d
-    track_idx: 3661
-    title: Neo-Classical Movement 517
-    artist_name: Neo-Classical Project 517
-    year: 1991
-  - id: 0c892f2b-3f82-5cb4-bb9a-6ae9c5bee539
-    track_idx: 3475
-    title: Neo-Classical Movement 3653
-    artist_name: Neo-Classical Project 53
-    year: 1992
-  - id: 38a50349-a0d9-542d-927c-ba1bb91ac7b3
-    track_idx: 3437
-    title: Neo-Classical Movement 3381
-    artist_name: Neo-Classical Project 381
-    year: 1995
-- id: seedset_14
+  - id: be4345f8-a97a-5326-a14f-9cd587232bd8
+    track_idx: 2895
+    title: Ancient Tides
+    artist_name: Hollow Frequency
+    year: 1980
+  - id: b4d096bd-815c-543d-83e0-af9ff147a500
+    track_idx: 1999
+    title: Ancient Reflection
+    artist_name: Mirage Chamber
+    year: 1987
+  - id: fea11554-2816-5613-9d0f-2873b0b13d46
+    track_idx: 2075
+    title: Quiet Pulse
+    artist_name: Shadow Fables
+    year: 1988
+- id: seedset_10
   region_id: 4
   name: Region 4 Cluster 2
   track_count: 4
   seed_track_ids:
-  - fbc21a26-f560-54ff-a2ad-0635d8526180
-  - 1c1df778-64db-55eb-9470-d9a370993e79
-  - eb4267af-e345-5acb-a85e-ae2413b010c5
-  - a1ddef8b-4a86-547c-b515-3497b5a9f200
+  - bedf7c65-388a-5015-b80b-09289076e2d9
+  - 06fd3f88-d463-5d7f-bd6d-3ddb32bbc35b
+  - 77a9fe99-dea3-59dc-b94a-0dab0ea0e04c
+  - 1d68afc7-d075-5c6c-9624-06a1bc1ec4b9
   seed_tracks:
-  - id: fbc21a26-f560-54ff-a2ad-0635d8526180
-    track_idx: 3288
-    title: Neo-Classical Movement 2301
-    artist_name: Neo-Classical Project 501
-    year: 2015
-  - id: 1c1df778-64db-55eb-9470-d9a370993e79
-    track_idx: 3175
-    title: Neo-Classical Movement 149
-    artist_name: Neo-Classical Project 149
-    year: 2008
-  - id: eb4267af-e345-5acb-a85e-ae2413b010c5
-    track_idx: 3621
-    title: Neo-Classical Movement 4701
-    artist_name: Neo-Classical Project 501
-    year: 1995
-  - id: a1ddef8b-4a86-547c-b515-3497b5a9f200
-    track_idx: 3665
-    title: Neo-Classical Movement 541
-    artist_name: Neo-Classical Project 541
-    year: 2015
-- id: seedset_15
-  region_id: 4
-  name: Region 4 Cluster 3
-  track_count: 3
-  seed_track_ids:
-  - eb4267af-e345-5acb-a85e-ae2413b010c5
-  - a1ddef8b-4a86-547c-b515-3497b5a9f200
-  - 9753ce23-b566-5f7d-a155-14da8232c2a3
-  seed_tracks:
-  - id: eb4267af-e345-5acb-a85e-ae2413b010c5
-    track_idx: 3621
-    title: Neo-Classical Movement 4701
-    artist_name: Neo-Classical Project 501
-    year: 1995
-  - id: a1ddef8b-4a86-547c-b515-3497b5a9f200
-    track_idx: 3665
-    title: Neo-Classical Movement 541
-    artist_name: Neo-Classical Project 541
-    year: 2015
-  - id: 9753ce23-b566-5f7d-a155-14da8232c2a3
-    track_idx: 3380
-    title: Neo-Classical Movement 2965
-    artist_name: Neo-Classical Project 565
-    year: 2019
-- id: seedset_16
+  - id: bedf7c65-388a-5015-b80b-09289076e2d9
+    track_idx: 2456
+    title: Endless Vapor
+    artist_name: Neon Orchestra
+    year: 2011
+  - id: 06fd3f88-d463-5d7f-bd6d-3ddb32bbc35b
+    track_idx: 2428
+    title: Inner Gravity
+    artist_name: Velvet Pulse
+    year: 1987
+  - id: 77a9fe99-dea3-59dc-b94a-0dab0ea0e04c
+    track_idx: 1565
+    title: Fractured Memory
+    artist_name: Ghost Currents
+    year: 2018
+  - id: 1d68afc7-d075-5c6c-9624-06a1bc1ec4b9
+    track_idx: 292
+    title: Deep Passage
+    artist_name: Amber Signals
+    year: 1983
+- id: seedset_11
   region_id: 5
   name: Region 5 Cluster 1
-  track_count: 4
-  seed_track_ids:
-  - bd547685-8f67-537a-92cd-3d039305f05c
-  - 85ff07c5-626c-562c-ab78-45bb2a8bbeb6
-  - 6a95dec9-5214-5f54-8c0f-0a9fc57e9b55
-  - bd3edfaa-f189-51b8-956d-ff64c3b571c0
-  seed_tracks:
-  - id: bd547685-8f67-537a-92cd-3d039305f05c
-    track_idx: 4216
-    title: Post-Rock Movement 4526
-    artist_name: Post-Rock Project 326
-    year: 1985
-  - id: 85ff07c5-626c-562c-ab78-45bb2a8bbeb6
-    track_idx: 4002
-    title: Post-Rock Movement 2982
-    artist_name: Post-Rock Project 582
-    year: 1981
-  - id: 6a95dec9-5214-5f54-8c0f-0a9fc57e9b55
-    track_idx: 3919
-    title: Post-Rock Movement 238
-    artist_name: Post-Rock Project 238
-    year: 1987
-  - id: bd3edfaa-f189-51b8-956d-ff64c3b571c0
-    track_idx: 4233
-    title: Post-Rock Movement 4638
-    artist_name: Post-Rock Project 438
-    year: 1987
-- id: seedset_17
-  region_id: 5
-  name: Region 5 Cluster 2
   track_count: 3
   seed_track_ids:
-  - bd3edfaa-f189-51b8-956d-ff64c3b571c0
-  - 82bf72e2-b3d6-501c-a1b9-276fd918a62f
-  - 44273da4-99d2-5454-b0ba-539d182fbeba
+  - 1d2ec947-9715-5935-9ffb-cbed6c893d6f
+  - 07a65a22-cf7a-57fe-92eb-892a9b453030
+  - 2b2b8db9-a6f4-5fac-b2ce-c0971da27504
   seed_tracks:
-  - id: bd3edfaa-f189-51b8-956d-ff64c3b571c0
-    track_idx: 4233
-    title: Post-Rock Movement 4638
-    artist_name: Post-Rock Project 438
-    year: 1987
-  - id: 82bf72e2-b3d6-501c-a1b9-276fd918a62f
-    track_idx: 3943
-    title: Post-Rock Movement 2550
-    artist_name: Post-Rock Project 150
-    year: 1989
-  - id: 44273da4-99d2-5454-b0ba-539d182fbeba
-    track_idx: 3759
-    title: Post-Rock Movement 1230
-    artist_name: Post-Rock Project 30
-    year: 1989
-- id: seedset_18
+  - id: 1d2ec947-9715-5935-9ffb-cbed6c893d6f
+    track_idx: 1564
+    title: Distant Silence
+    artist_name: Amber Monolith
+    year: 2011
+  - id: 07a65a22-cf7a-57fe-92eb-892a9b453030
+    track_idx: 1227
+    title: Endless Glitch
+    artist_name: Cosmic Pulse
+    year: 1997
+  - id: 2b2b8db9-a6f4-5fac-b2ce-c0971da27504
+    track_idx: 859
+    title: Fading Echo
+    artist_name: Silent Waves
+    year: 2008
+- id: seedset_12
   region_id: 5
-  name: Region 5 Cluster 3
+  name: Region 5 Cluster 2
   track_count: 4
   seed_track_ids:
-  - 46502145-e2ea-5145-8a4f-748c7f3836e2
-  - 7059d3fd-28e6-53d2-b5ba-205d5c0d0a83
-  - dbbe3d5a-68d9-58d9-82b1-077bae565128
-  - 8a1f468a-00dc-5453-8c1f-23d311bbd023
+  - 6491540b-e450-5394-a816-66e10385e8b3
+  - e1e01508-6f2e-5444-ad9e-ee16a0f17af2
+  - 51d353b8-caee-52a0-b79d-e5e3a8ca67f6
+  - e09a0ed9-e98e-5a22-8db6-e95b67c55e17
   seed_tracks:
-  - id: 46502145-e2ea-5145-8a4f-748c7f3836e2
-    track_idx: 3735
-    title: Post-Rock Movement 1054
-    artist_name: Post-Rock Project 454
-    year: 1978
-  - id: 7059d3fd-28e6-53d2-b5ba-205d5c0d0a83
-    track_idx: 3821
-    title: Post-Rock Movement 1670
-    artist_name: Post-Rock Project 470
-    year: 1989
-  - id: dbbe3d5a-68d9-58d9-82b1-077bae565128
-    track_idx: 4140
-    title: Post-Rock Movement 3974
-    artist_name: Post-Rock Project 374
-    year: 1983
-  - id: 8a1f468a-00dc-5453-8c1f-23d311bbd023
-    track_idx: 4171
-    title: Post-Rock Movement 4198
-    artist_name: Post-Rock Project 598
-    year: 1987
-- id: seedset_19
+  - id: 6491540b-e450-5394-a816-66e10385e8b3
+    track_idx: 2818
+    title: Floating Echo
+    artist_name: Amber Monolith
+    year: 2001
+  - id: e1e01508-6f2e-5444-ad9e-ee16a0f17af2
+    track_idx: 2475
+    title: Ancient Echo
+    artist_name: Echo Orchestra
+    year: 1992
+  - id: 51d353b8-caee-52a0-b79d-e5e3a8ca67f6
+    track_idx: 2614
+    title: Endless Paradox
+    artist_name: Prism Signals
+    year: 1993
+  - id: e09a0ed9-e98e-5a22-8db6-e95b67c55e17
+    track_idx: 496
+    title: Endless Paradox
+    artist_name: Amber Echo
+    year: 2002
+- id: seedset_13
   region_id: 6
   name: Region 6 Cluster 1
   track_count: 3
   seed_track_ids:
-  - 990aa82c-4f83-5038-be6e-f32f5a0afda5
-  - a3bff5d9-77b1-5271-bb37-e168305f4cf5
-  - 7454f7c6-fc85-5b3f-b8d8-917a7714f011
+  - 997e6ae5-c91d-5418-a0a7-267dee8ec534
+  - 7ffa4892-5c6a-555a-90e3-7661754c03c9
+  - 5abe17aa-25d1-5374-a571-b4ad0e474735
   seed_tracks:
-  - id: 990aa82c-4f83-5038-be6e-f32f5a0afda5
-    track_idx: 198
-    title: Dream Pop Movement 2428
-    artist_name: Dream Pop Project 28
-    year: 1977
-  - id: a3bff5d9-77b1-5271-bb37-e168305f4cf5
-    track_idx: 91
-    title: Dream Pop Movement 1652
-    artist_name: Dream Pop Project 452
-    year: 1971
-  - id: 7454f7c6-fc85-5b3f-b8d8-917a7714f011
-    track_idx: 178
-    title: Dream Pop Movement 228
-    artist_name: Dream Pop Project 228
-    year: 1977
-- id: seedset_20
+  - id: 997e6ae5-c91d-5418-a0a7-267dee8ec534
+    track_idx: 1265
+    title: Deep Echo
+    artist_name: Cosmic Pulse
+    year: 2011
+  - id: 7ffa4892-5c6a-555a-90e3-7661754c03c9
+    track_idx: 783
+    title: Final Echo
+    artist_name: Silver Currents
+    year: 2000
+  - id: 5abe17aa-25d1-5374-a571-b4ad0e474735
+    track_idx: 1365
+    title: Quiet Horizon, Pt. 1
+    artist_name: Solar Drift
+    year: 1988
+- id: seedset_14
   region_id: 6
   name: Region 6 Cluster 2
   track_count: 4
   seed_track_ids:
-  - 85f21324-dc25-5531-8eb5-46974bb5300b
-  - 75164e56-edd4-5f1a-af5a-68cfa34d7a36
-  - 421b2983-a35e-5f3e-aa56-084a2469f410
-  - cbb4e9ba-d905-57ed-b192-3c74cfe04a1b
+  - 6057c99c-0bd0-5b4a-bbc4-5e7daba5ffb7
+  - 2b88941d-25ad-5ecd-8773-e03dfda48939
+  - 3f4846fa-976e-5032-b727-b63843d2631f
+  - 1b3131f5-72cd-5461-aaec-89230ddd0c60
   seed_tracks:
-  - id: 85f21324-dc25-5531-8eb5-46974bb5300b
-    track_idx: 396
-    title: Dream Pop Movement 3852
-    artist_name: Dream Pop Project 252
-    year: 1971
-  - id: 75164e56-edd4-5f1a-af5a-68cfa34d7a36
-    track_idx: 442
-    title: Dream Pop Movement 4188
-    artist_name: Dream Pop Project 588
-    year: 1977
-  - id: 421b2983-a35e-5f3e-aa56-084a2469f410
-    track_idx: 419
-    title: Dream Pop Movement 4020
-    artist_name: Dream Pop Project 420
-    year: 1974
-  - id: cbb4e9ba-d905-57ed-b192-3c74cfe04a1b
-    track_idx: 137
-    title: Dream Pop Movement 1988
-    artist_name: Dream Pop Project 188
-    year: 1977
-- id: seedset_21
-  region_id: 6
-  name: Region 6 Cluster 3
-  track_count: 3
-  seed_track_ids:
-  - 421b2983-a35e-5f3e-aa56-084a2469f410
-  - cbb4e9ba-d905-57ed-b192-3c74cfe04a1b
-  - fffdf279-82a2-5e84-8a94-ec195300c41c
-  seed_tracks:
-  - id: 421b2983-a35e-5f3e-aa56-084a2469f410
-    track_idx: 419
-    title: Dream Pop Movement 4020
-    artist_name: Dream Pop Project 420
-    year: 1974
-  - id: cbb4e9ba-d905-57ed-b192-3c74cfe04a1b
-    track_idx: 137
-    title: Dream Pop Movement 1988
-    artist_name: Dream Pop Project 188
-    year: 1977
-  - id: fffdf279-82a2-5e84-8a94-ec195300c41c
-    track_idx: 541
-    title: Dream Pop Movement 4900
-    artist_name: Dream Pop Project 100
-    year: 1974
-- id: seedset_22
+  - id: 6057c99c-0bd0-5b4a-bbc4-5e7daba5ffb7
+    track_idx: 505
+    title: Hidden Cascade
+    artist_name: Echo Orchestra
+    year: 2003
+  - id: 2b88941d-25ad-5ecd-8773-e03dfda48939
+    track_idx: 1049
+    title: Lost Gravity
+    artist_name: Echo Visions
+    year: 1983
+  - id: 3f4846fa-976e-5032-b727-b63843d2631f
+    track_idx: 2832
+    title: Final Frequency
+    artist_name: Neon Frequency
+    year: 2013
+  - id: 1b3131f5-72cd-5461-aaec-89230ddd0c60
+    track_idx: 427
+    title: Ancient Descent, Pt. 2
+    artist_name: Mirage Chamber
+    year: 2008
+- id: seedset_15
   region_id: 7
   name: Region 7 Cluster 1
-  track_count: 4
-  seed_track_ids:
-  - 91daec6f-5ccc-5167-a5ce-19a381b15e2c
-  - 0aa0d515-5b52-5c67-bb78-e0e32e8487b6
-  - 42ba1bab-4849-5e2d-9f73-175865107ce9
-  - 4af1c070-d036-5bd3-af77-811c96806f82
-  seed_tracks:
-  - id: 91daec6f-5ccc-5167-a5ce-19a381b15e2c
-    track_idx: 1922
-    title: Indie Rock Movement 1417
-    artist_name: Indie Rock Project 217
-    year: 2011
-  - id: 0aa0d515-5b52-5c67-bb78-e0e32e8487b6
-    track_idx: 2037
-    title: Indie Rock Movement 2249
-    artist_name: Indie Rock Project 449
-    year: 2018
-  - id: 42ba1bab-4849-5e2d-9f73-175865107ce9
-    track_idx: 2312
-    title: Indie Rock Movement 4225
-    artist_name: Indie Rock Project 25
-    year: 2014
-  - id: 4af1c070-d036-5bd3-af77-811c96806f82
-    track_idx: 2196
-    title: Indie Rock Movement 3385
-    artist_name: Indie Rock Project 385
-    year: 1999
-- id: seedset_23
-  region_id: 7
-  name: Region 7 Cluster 2
   track_count: 3
   seed_track_ids:
-  - 4af1c070-d036-5bd3-af77-811c96806f82
-  - eaf4578d-9396-5ba6-acb0-218c08f7a57e
-  - 9bfa42e9-45a0-521b-a042-d45a7e62e149
+  - 4c6845ff-4932-5bf0-916d-190a45467c8a
+  - 253b75d5-1eef-5069-aa49-968a1207671e
+  - d475dc9a-2559-50ad-a5f6-1ceb2dd05c48
   seed_tracks:
-  - id: 4af1c070-d036-5bd3-af77-811c96806f82
-    track_idx: 2196
-    title: Indie Rock Movement 3385
-    artist_name: Indie Rock Project 385
-    year: 1999
-  - id: eaf4578d-9396-5ba6-acb0-218c08f7a57e
-    track_idx: 2366
-    title: Indie Rock Movement 4617
-    artist_name: Indie Rock Project 417
-    year: 2021
-  - id: 9bfa42e9-45a0-521b-a042-d45a7e62e149
-    track_idx: 2166
-    title: Indie Rock Movement 3177
-    artist_name: Indie Rock Project 177
+  - id: 4c6845ff-4932-5bf0-916d-190a45467c8a
+    track_idx: 118
+    title: Hidden Frequency
+    artist_name: Vivid Orchestra
     year: 2011
-- id: seedset_24
+  - id: 253b75d5-1eef-5069-aa49-968a1207671e
+    track_idx: 2805
+    title: Electric Passage
+    artist_name: Quantum Orchestra
+    year: 1985
+  - id: d475dc9a-2559-50ad-a5f6-1ceb2dd05c48
+    track_idx: 988
+    title: First Mirage
+    artist_name: Echo Tides
+    year: 1985
+- id: seedset_16
   region_id: 7
-  name: Region 7 Cluster 3
+  name: Region 7 Cluster 2
   track_count: 4
   seed_track_ids:
-  - ebe96c31-53db-504b-bb22-99dbde69c8e8
-  - 04b2fe33-8bbb-5227-9d5e-8efb638db8e0
-  - dc3c32a0-a65b-5ead-9701-a6de070ab301
-  - 9323145b-d5b5-5d54-8bdc-d1a2970fff63
+  - 19d44dbc-902a-5314-b7b3-e948dee5089d
+  - 587f6340-de28-5fac-865b-3c8db579f060
+  - 7c7c8b58-863c-54fa-97f1-7ae1377b0e4a
+  - d13e8545-c9a0-54c4-a3db-a2f0fbfe24bd
   seed_tracks:
-  - id: ebe96c31-53db-504b-bb22-99dbde69c8e8
-    track_idx: 2229
-    title: Indie Rock Movement 3625
-    artist_name: Indie Rock Project 25
-    year: 2019
-  - id: 04b2fe33-8bbb-5227-9d5e-8efb638db8e0
-    track_idx: 1969
-    title: Indie Rock Movement 1753
-    artist_name: Indie Rock Project 553
-    year: 2017
-  - id: dc3c32a0-a65b-5ead-9701-a6de070ab301
-    track_idx: 2318
-    title: Indie Rock Movement 4265
-    artist_name: Indie Rock Project 65
-    year: 1999
-  - id: 9323145b-d5b5-5d54-8bdc-d1a2970fff63
-    track_idx: 1961
-    title: Indie Rock Movement 1697
-    artist_name: Indie Rock Project 497
-    year: 2016
-- id: seedset_25
+  - id: 19d44dbc-902a-5314-b7b3-e948dee5089d
+    track_idx: 776
+    title: Deep Solitude
+    artist_name: Amber Signals
+    year: 1990
+  - id: 587f6340-de28-5fac-865b-3c8db579f060
+    track_idx: 1290
+    title: Quiet Vapor
+    artist_name: Static Fables
+    year: 2008
+  - id: 7c7c8b58-863c-54fa-97f1-7ae1377b0e4a
+    track_idx: 1794
+    title: Hidden Echo
+    artist_name: Subtle Horizon
+    year: 2015
+  - id: d13e8545-c9a0-54c4-a3db-a2f0fbfe24bd
+    track_idx: 1028
+    title: Deep Orbit
+    artist_name: Ghost Waves
+    year: 1980
+- id: seedset_17
   region_id: 8
   name: Region 8 Cluster 1
   track_count: 3
   seed_track_ids:
-  - fd1b8f82-48c4-52bd-8ee0-1f9ed40f4b40
-  - cd8651bc-0bef-5163-a995-ea40a0163108
-  - aa235721-9f0c-5b74-bb35-cbd5f9285c85
+  - 282ef56c-da8a-5eb0-a1fc-cb1dd9582004
+  - 97f43e69-b054-5922-a3d6-644e08979b3f
+  - 01883b98-41ed-566e-855f-d37445de3d29
   seed_tracks:
-  - id: fd1b8f82-48c4-52bd-8ee0-1f9ed40f4b40
-    track_idx: 234
-    title: Dream Pop Movement 2684
-    artist_name: Dream Pop Project 284
-    year: 2013
-  - id: cd8651bc-0bef-5163-a995-ea40a0163108
-    track_idx: 80
-    title: Dream Pop Movement 1572
-    artist_name: Dream Pop Project 372
-    year: 2001
-  - id: aa235721-9f0c-5b74-bb35-cbd5f9285c85
-    track_idx: 196
-    title: Dream Pop Movement 2412
-    artist_name: Dream Pop Project 12
-    year: 2016
-- id: seedset_26
+  - id: 282ef56c-da8a-5eb0-a1fc-cb1dd9582004
+    track_idx: 1032
+    title: Hidden Echo
+    artist_name: Amber Monolith
+    year: 2004
+  - id: 97f43e69-b054-5922-a3d6-644e08979b3f
+    track_idx: 1970
+    title: Fractured Glitch
+    artist_name: Velvet Shade
+    year: 2005
+  - id: 01883b98-41ed-566e-855f-d37445de3d29
+    track_idx: 2779
+    title: Electric Vapor, Pt. 2
+    artist_name: Ghost Waves
+    year: 1984
+- id: seedset_18
   region_id: 8
   name: Region 8 Cluster 2
   track_count: 4
   seed_track_ids:
-  - 1363b589-aa2f-58fc-9117-b11357fef920
-  - 8bce1ec0-7b17-5f91-92a4-c4e2da289e72
-  - cdfb6fbb-85c3-5432-aab8-3c1683247a9c
-  - 86e4a865-b3f7-5292-9b39-bab2c261fcee
+  - 8f6e8c44-c594-5a68-968d-bf3ff71e9fcd
+  - 98905562-f00b-5848-8279-75ec24f6e7b8
+  - f2087d8a-74d0-59fb-bbc2-c6ce191b17b5
+  - f9d80742-ea2d-551c-a68b-25a97a05e403
   seed_tracks:
-  - id: 1363b589-aa2f-58fc-9117-b11357fef920
-    track_idx: 584
-    title: Dream Pop Movement 732
-    artist_name: Dream Pop Project 132
-    year: 1986
-  - id: 8bce1ec0-7b17-5f91-92a4-c4e2da289e72
-    track_idx: 480
-    title: Dream Pop Movement 4452
-    artist_name: Dream Pop Project 252
-    year: 2021
-  - id: cdfb6fbb-85c3-5432-aab8-3c1683247a9c
-    track_idx: 447
-    title: Dream Pop Movement 4220
-    artist_name: Dream Pop Project 20
+  - id: 8f6e8c44-c594-5a68-968d-bf3ff71e9fcd
+    track_idx: 468
+    title: Submerged Frequency
+    artist_name: Solar Circuit
+    year: 2025
+  - id: 98905562-f00b-5848-8279-75ec24f6e7b8
+    track_idx: 2737
+    title: Hidden Paradox, Pt. 2
+    artist_name: Velvet Pulse
+    year: 2020
+  - id: f2087d8a-74d0-59fb-bbc2-c6ce191b17b5
+    track_idx: 2896
+    title: Fractured Mirage
+    artist_name: Amber Monolith
     year: 2009
-  - id: 86e4a865-b3f7-5292-9b39-bab2c261fcee
-    track_idx: 567
-    title: Dream Pop Movement 604
-    artist_name: Dream Pop Project 4
-    year: 2023
-- id: seedset_27
-  region_id: 8
-  name: Region 8 Cluster 3
-  track_count: 3
-  seed_track_ids:
-  - cdfb6fbb-85c3-5432-aab8-3c1683247a9c
-  - 86e4a865-b3f7-5292-9b39-bab2c261fcee
-  - 7e4e8b61-b311-5652-861c-7ab3deb1b8b5
-  seed_tracks:
-  - id: cdfb6fbb-85c3-5432-aab8-3c1683247a9c
-    track_idx: 447
-    title: Dream Pop Movement 4220
-    artist_name: Dream Pop Project 20
-    year: 2009
-  - id: 86e4a865-b3f7-5292-9b39-bab2c261fcee
-    track_idx: 567
-    title: Dream Pop Movement 604
-    artist_name: Dream Pop Project 4
-    year: 2023
-  - id: 7e4e8b61-b311-5652-861c-7ab3deb1b8b5
-    track_idx: 315
-    title: Dream Pop Movement 3268
-    artist_name: Dream Pop Project 268
-    year: 1992
-- id: seedset_28
+  - id: f9d80742-ea2d-551c-a68b-25a97a05e403
+    track_idx: 1146
+    title: Final Mirage
+    artist_name: Amber Monolith
+    year: 2020
+- id: seedset_19
   region_id: 9
   name: Region 9 Cluster 1
-  track_count: 4
-  seed_track_ids:
-  - b68714d9-11cc-5369-864f-294481023329
-  - c3e800b8-79f9-5953-9bd3-20db7429790f
-  - b9a8f43a-bafe-543f-98fb-3e6495fab492
-  - 61a5dcf4-bbde-546e-85e9-0a76db567acc
-  seed_tracks:
-  - id: b68714d9-11cc-5369-864f-294481023329
-    track_idx: 3229
-    title: Neo-Classical Movement 1885
-    artist_name: Neo-Classical Project 85
-    year: 1984
-  - id: c3e800b8-79f9-5953-9bd3-20db7429790f
-    track_idx: 3275
-    title: Neo-Classical Movement 221
-    artist_name: Neo-Classical Project 221
-    year: 1970
-  - id: b9a8f43a-bafe-543f-98fb-3e6495fab492
-    track_idx: 3571
-    title: Neo-Classical Movement 4349
-    artist_name: Neo-Classical Project 149
-    year: 1973
-  - id: 61a5dcf4-bbde-546e-85e9-0a76db567acc
-    track_idx: 3480
-    title: Neo-Classical Movement 3693
-    artist_name: Neo-Classical Project 93
-    year: 1977
-- id: seedset_29
-  region_id: 9
-  name: Region 9 Cluster 2
   track_count: 3
   seed_track_ids:
-  - 61a5dcf4-bbde-546e-85e9-0a76db567acc
-  - 48c938b8-654f-5edb-a084-cc513d8df551
-  - 21fa1136-f333-599b-b72e-810268ebd1a8
+  - f8c2fba9-377a-56c9-8703-248b65edca76
+  - 65015a19-8b9e-52fd-80ad-f5ca34fbf297
+  - f194d2dd-ba98-5699-a26c-619a96f83d7d
   seed_tracks:
-  - id: 61a5dcf4-bbde-546e-85e9-0a76db567acc
-    track_idx: 3480
-    title: Neo-Classical Movement 3693
-    artist_name: Neo-Classical Project 93
-    year: 1977
-  - id: 48c938b8-654f-5edb-a084-cc513d8df551
-    track_idx: 3503
-    title: Neo-Classical Movement 3853
-    artist_name: Neo-Classical Project 253
-    year: 1972
-  - id: 21fa1136-f333-599b-b72e-810268ebd1a8
-    track_idx: 3458
-    title: Neo-Classical Movement 3533
-    artist_name: Neo-Classical Project 533
-    year: 1982
-- id: seedset_30
+  - id: f8c2fba9-377a-56c9-8703-248b65edca76
+    track_idx: 1771
+    title: Quiet Frequency, Pt. 2
+    artist_name: Cosmic Pulse
+    year: 1976
+  - id: 65015a19-8b9e-52fd-80ad-f5ca34fbf297
+    track_idx: 2622
+    title: First Memory
+    artist_name: Amber Chamber
+    year: 1979
+  - id: f194d2dd-ba98-5699-a26c-619a96f83d7d
+    track_idx: 721
+    title: Endless Frequency, Pt. 2
+    artist_name: Azure Monolith
+    year: 2016
+- id: seedset_20
   region_id: 9
-  name: Region 9 Cluster 3
+  name: Region 9 Cluster 2
   track_count: 4
   seed_track_ids:
-  - 039c3be4-6f13-518d-ac77-4ef65d993c6b
-  - 3f2aafea-3e6e-537c-8009-e6fc108aeea9
-  - 37f32ad9-a51d-5c5f-9a0c-f4da063deb21
-  - b701c291-7629-50dd-950c-4937bb9f29a5
+  - ea6975d7-fcab-5420-92e5-364f4f89b2e9
+  - c6ce232a-c285-538e-b97a-599dfc50fca9
+  - 28ba3d03-9f39-5326-9d77-9242a94a0c5e
+  - 4bae7ec5-52c9-582f-815a-302ee1b2fc1f
   seed_tracks:
-  - id: 039c3be4-6f13-518d-ac77-4ef65d993c6b
-    track_idx: 3604
-    title: Neo-Classical Movement 4581
-    artist_name: Neo-Classical Project 381
-    year: 1985
-  - id: 3f2aafea-3e6e-537c-8009-e6fc108aeea9
-    track_idx: 3489
-    title: Neo-Classical Movement 3749
-    artist_name: Neo-Classical Project 149
-    year: 1978
-  - id: 37f32ad9-a51d-5c5f-9a0c-f4da063deb21
-    track_idx: 3452
-    title: Neo-Classical Movement 349
-    artist_name: Neo-Classical Project 349
-    year: 1988
-  - id: b701c291-7629-50dd-950c-4937bb9f29a5
-    track_idx: 3451
-    title: Neo-Classical Movement 3485
-    artist_name: Neo-Classical Project 485
-    year: 1989
-- id: seedset_31
+  - id: ea6975d7-fcab-5420-92e5-364f4f89b2e9
+    track_idx: 1942
+    title: Ancient Passage
+    artist_name: Infinite Collective
+    year: 2019
+  - id: c6ce232a-c285-538e-b97a-599dfc50fca9
+    track_idx: 2454
+    title: Distant Resonance
+    artist_name: Stellar Waves
+    year: 1981
+  - id: 28ba3d03-9f39-5326-9d77-9242a94a0c5e
+    track_idx: 2243
+    title: Final Shadow
+    artist_name: Echo Echo
+    year: 2022
+  - id: 4bae7ec5-52c9-582f-815a-302ee1b2fc1f
+    track_idx: 1285
+    title: Fractured Cascade
+    artist_name: Mirage Chamber
+    year: 1994
+- id: seedset_21
   region_id: 10
   name: Region 10 Cluster 1
   track_count: 3
   seed_track_ids:
-  - 112c6b68-4fd4-54cc-b34d-9b3dc8f3130f
-  - 4fba4193-cfa7-510e-ba61-180b7677b5d6
-  - e880f5c7-21b9-5894-9307-1fd20c5e5e44
+  - a70a6584-a460-5481-bd30-cba504b783a0
+  - 7c708d10-e673-59b2-8ea5-7b7df782dc3d
+  - 3cd0fabc-a4e1-5734-b408-0a08edaf089f
   seed_tracks:
-  - id: 112c6b68-4fd4-54cc-b34d-9b3dc8f3130f
-    track_idx: 1912
-    title: Indie Rock Movement 1345
-    artist_name: Indie Rock Project 145
-    year: 1994
-  - id: 4fba4193-cfa7-510e-ba61-180b7677b5d6
-    track_idx: 4413
-    title: Techno Movement 1471
-    artist_name: Techno Project 271
-    year: 2010
-  - id: e880f5c7-21b9-5894-9307-1fd20c5e5e44
-    track_idx: 676
-    title: Electronic Movement 1394
-    artist_name: Electronic Project 194
-    year: 1988
-- id: seedset_32
+  - id: a70a6584-a460-5481-bd30-cba504b783a0
+    track_idx: 166
+    title: Inner Memory
+    artist_name: Prism Currents
+    year: 2000
+  - id: 7c708d10-e673-59b2-8ea5-7b7df782dc3d
+    track_idx: 1715
+    title: Floating Starlight, Pt. 3
+    artist_name: Cosmic Pulse
+    year: 1986
+  - id: 3cd0fabc-a4e1-5734-b408-0a08edaf089f
+    track_idx: 614
+    title: First Horizon
+    artist_name: Silver Currents
+    year: 2005
+- id: seedset_22
   region_id: 10
   name: Region 10 Cluster 2
   track_count: 4
   seed_track_ids:
-  - 0913e33d-d7f0-5b74-b107-dc6e3f92f716
-  - 8ca58a70-b03a-5878-b55f-8f06eb038be5
-  - 4a16787a-f554-5657-9a09-39d32df7242a
-  - e032c671-1a13-56ec-b292-a0ca1e465e0a
+  - f1ddb5a6-369d-553a-a987-9417df24c063
+  - 8e763b96-fe0b-52b6-aa6e-8ea6474463cc
+  - 109c080b-de37-5c85-a378-1377f1574e1a
+  - e6f19b7e-f23d-5482-9a5a-56d42db60f88
   seed_tracks:
-  - id: 0913e33d-d7f0-5b74-b107-dc6e3f92f716
-    track_idx: 3879
-    title: Post-Rock Movement 2094
-    artist_name: Post-Rock Project 294
-    year: 1973
-  - id: 8ca58a70-b03a-5878-b55f-8f06eb038be5
-    track_idx: 2947
-    title: Lo-Fi Chill Movement 4320
-    artist_name: Lo-Fi Chill Project 120
+  - id: f1ddb5a6-369d-553a-a987-9417df24c063
+    track_idx: 2537
+    title: Quiet Paradox
+    artist_name: Mirage Chamber
     year: 1999
-  - id: 4a16787a-f554-5657-9a09-39d32df7242a
-    track_idx: 222
-    title: Dream Pop Movement 260
-    artist_name: Dream Pop Project 260
-    year: 2009
-  - id: e032c671-1a13-56ec-b292-a0ca1e465e0a
-    track_idx: 1499
-    title: Hip Hop Movement 2843
-    artist_name: Hip Hop Project 443
-    year: 2007
-- id: seedset_33
-  region_id: 10
-  name: Region 10 Cluster 3
-  track_count: 3
-  seed_track_ids:
-  - 4a16787a-f554-5657-9a09-39d32df7242a
-  - e032c671-1a13-56ec-b292-a0ca1e465e0a
-  - 848a67f5-030a-548c-bbe9-d03c4f27a17f
-  seed_tracks:
-  - id: 4a16787a-f554-5657-9a09-39d32df7242a
-    track_idx: 222
-    title: Dream Pop Movement 260
-    artist_name: Dream Pop Project 260
-    year: 2009
-  - id: e032c671-1a13-56ec-b292-a0ca1e465e0a
-    track_idx: 1499
-    title: Hip Hop Movement 2843
-    artist_name: Hip Hop Project 443
-    year: 2007
-  - id: 848a67f5-030a-548c-bbe9-d03c4f27a17f
-    track_idx: 1747
-    title: Hip Hop Movement 4635
-    artist_name: Hip Hop Project 435
-    year: 1984
-- id: seedset_34
+  - id: 8e763b96-fe0b-52b6-aa6e-8ea6474463cc
+    track_idx: 256
+    title: Hidden Resonance
+    artist_name: Subtle Orchestra
+    year: 1982
+  - id: 109c080b-de37-5c85-a378-1377f1574e1a
+    track_idx: 1902
+    title: Hidden Cascade
+    artist_name: Shadow Shade
+    year: 1998
+  - id: e6f19b7e-f23d-5482-9a5a-56d42db60f88
+    track_idx: 1673
+    title: Deep Orbit, Pt. 3
+    artist_name: Crimson Chamber
+    year: 1986
+- id: seedset_23
   region_id: 11
   name: Region 11 Cluster 1
-  track_count: 4
-  seed_track_ids:
-  - 478c8abb-b0dc-53dc-9a5b-731770978c39
-  - e0a0eef6-454e-5eff-bcbe-b651ad28bd53
-  - 6d4c28d2-71a6-5e3a-abf6-85174fe37cda
-  - 662b3f56-8289-5cd5-978d-f1298eed4aa6
-  seed_tracks:
-  - id: 478c8abb-b0dc-53dc-9a5b-731770978c39
-    track_idx: 1584
-    title: Hip Hop Movement 3467
-    artist_name: Hip Hop Project 467
-    year: 1971
-  - id: e0a0eef6-454e-5eff-bcbe-b651ad28bd53
-    track_idx: 1068
-    title: Electronic Movement 4218
-    artist_name: Electronic Project 18
-    year: 2007
-  - id: 6d4c28d2-71a6-5e3a-abf6-85174fe37cda
-    track_idx: 1788
-    title: Hip Hop Movement 4931
-    artist_name: Hip Hop Project 131
-    year: 2005
-  - id: 662b3f56-8289-5cd5-978d-f1298eed4aa6
-    track_idx: 1208
-    title: Electronic Movement 746
-    artist_name: Electronic Project 146
-    year: 2000
-- id: seedset_35
-  region_id: 11
-  name: Region 11 Cluster 2
   track_count: 3
   seed_track_ids:
-  - 662b3f56-8289-5cd5-978d-f1298eed4aa6
-  - 91ba2108-47aa-5e55-9c19-a11c743b1e58
-  - 1842d9e0-fe5f-5a39-91e2-9c6504c45dc1
+  - e47fa406-e559-5bc5-bc79-e7e1061df4d6
+  - 45e89236-86ec-5bae-8161-d1bf06303bdd
+  - 4883bb92-2ce4-515d-b602-063570e63262
   seed_tracks:
-  - id: 662b3f56-8289-5cd5-978d-f1298eed4aa6
-    track_idx: 1208
-    title: Electronic Movement 746
-    artist_name: Electronic Project 146
-    year: 2000
-  - id: 91ba2108-47aa-5e55-9c19-a11c743b1e58
-    track_idx: 685
-    title: Electronic Movement 146
-    artist_name: Electronic Project 146
-    year: 2005
-  - id: 1842d9e0-fe5f-5a39-91e2-9c6504c45dc1
-    track_idx: 1030
-    title: Electronic Movement 3946
-    artist_name: Electronic Project 346
-    year: 2010
-- id: seedset_36
+  - id: e47fa406-e559-5bc5-bc79-e7e1061df4d6
+    track_idx: 794
+    title: Submerged Shadow
+    artist_name: Ghost Monolith
+    year: 2017
+  - id: 45e89236-86ec-5bae-8161-d1bf06303bdd
+    track_idx: 1350
+    title: First Resonance
+    artist_name: Shadow Shade
+    year: 1993
+  - id: 4883bb92-2ce4-515d-b602-063570e63262
+    track_idx: 1638
+    title: First Paradox, Pt. 1
+    artist_name: Azure Fables
+    year: 2014
+- id: seedset_24
   region_id: 11
-  name: Region 11 Cluster 3
+  name: Region 11 Cluster 2
   track_count: 4
   seed_track_ids:
-  - c816544f-4018-5348-bc54-8b986c987516
-  - 917515a7-0a3f-515c-ae5d-4076c037494a
-  - 674190d5-44c1-551c-b373-36a19fb0aa9c
-  - ca426ddc-2c60-50d9-9fea-8f3a15af2e5c
+  - d2e4f80c-0f17-5e91-b959-494e2ced2323
+  - 45ccd795-5963-54ad-8cef-ec807c693719
+  - 17ba97e7-0f99-554f-a212-5dcffacc2fa8
+  - 05386bad-1954-544e-b180-a4d40e2a34bf
   seed_tracks:
-  - id: c816544f-4018-5348-bc54-8b986c987516
-    track_idx: 908
-    title: Electronic Movement 3066
-    artist_name: Electronic Project 66
-    year: 2010
-  - id: 917515a7-0a3f-515c-ae5d-4076c037494a
-    track_idx: 632
-    title: Electronic Movement 1074
-    artist_name: Electronic Project 474
-    year: 1998
-  - id: 674190d5-44c1-551c-b373-36a19fb0aa9c
-    track_idx: 1543
-    title: Hip Hop Movement 3163
-    artist_name: Hip Hop Project 163
-    year: 1997
-  - id: ca426ddc-2c60-50d9-9fea-8f3a15af2e5c
-    track_idx: 1612
-    title: Hip Hop Movement 3659
-    artist_name: Hip Hop Project 59
-    year: 1998
+  - id: d2e4f80c-0f17-5e91-b959-494e2ced2323
+    track_idx: 960
+    title: First Horizon
+    artist_name: Shadow Signals
+    year: 2011
+  - id: 45ccd795-5963-54ad-8cef-ec807c693719
+    track_idx: 2672
+    title: Endless Passage
+    artist_name: Ghost Monolith
+    year: 1982
+  - id: 17ba97e7-0f99-554f-a212-5dcffacc2fa8
+    track_idx: 2494
+    title: Quiet Mirage
+    artist_name: Shadow Signals
+    year: 2008
+  - id: 05386bad-1954-544e-b180-a4d40e2a34bf
+    track_idx: 1415
+    title: Quiet Frequency
+    artist_name: Solar Pulse
+    year: 1988
+- id: seedset_25
+  region_id: 12
+  name: Region 12 Cluster 1
+  track_count: 3
+  seed_track_ids:
+  - e7196399-7d4a-53a0-96a1-f891af720611
+  - 3c86a81a-ad0e-5c57-8a83-bfbc710083a8
+  - 15647f0c-39c6-5017-8340-ecdb3de0d864
+  seed_tracks:
+  - id: e7196399-7d4a-53a0-96a1-f891af720611
+    track_idx: 502
+    title: Fractured Glitch
+    artist_name: Amber Monolith
+    year: 1987
+  - id: 3c86a81a-ad0e-5c57-8a83-bfbc710083a8
+    track_idx: 1363
+    title: Floating Passage
+    artist_name: Azure Currents
+    year: 2006
+  - id: 15647f0c-39c6-5017-8340-ecdb3de0d864
+    track_idx: 2168
+    title: Ancient Pulse
+    artist_name: Vivid Waves
+    year: 2007
+- id: seedset_26
+  region_id: 12
+  name: Region 12 Cluster 2
+  track_count: 4
+  seed_track_ids:
+  - 3d39131e-71ea-5ccc-8f9e-044d61210a48
+  - 508873dd-4794-51ba-b75a-32b7d8fd314d
+  - 5d26a5f6-68d9-5cb5-a14f-b8856e0453f9
+  - 9f9e83b7-1fe1-59e9-a00c-02c3464fa853
+  seed_tracks:
+  - id: 3d39131e-71ea-5ccc-8f9e-044d61210a48
+    track_idx: 2294
+    title: Final Reflection
+    artist_name: Shadow Tides
+    year: 1996
+  - id: 508873dd-4794-51ba-b75a-32b7d8fd314d
+    track_idx: 2601
+    title: Hidden Horizon
+    artist_name: Crimson Pulse
+    year: 2002
+  - id: 5d26a5f6-68d9-5cb5-a14f-b8856e0453f9
+    track_idx: 1475
+    title: Quiet Glitch
+    artist_name: Azure Frequency
+    year: 2015
+  - id: 9f9e83b7-1fe1-59e9-a00c-02c3464fa853
+    track_idx: 666
+    title: Quiet Tides
+    artist_name: Crimson Orchestra
+    year: 2019
+- id: seedset_27
+  region_id: 13
+  name: Region 13 Cluster 1
+  track_count: 3
+  seed_track_ids:
+  - 08158899-e16c-5a8b-a3af-07bbaaabb3a8
+  - a94651d2-1ef7-5f12-8e9d-3c4ed85f5450
+  - 0f5d5588-4f28-5fd7-bab9-f2887e1130ad
+  seed_tracks:
+  - id: 08158899-e16c-5a8b-a3af-07bbaaabb3a8
+    track_idx: 1780
+    title: Hidden Circuit
+    artist_name: Azure Echo
+    year: 1978
+  - id: a94651d2-1ef7-5f12-8e9d-3c4ed85f5450
+    track_idx: 1108
+    title: Distant Vapor
+    artist_name: Stellar Waves
+    year: 1981
+  - id: 0f5d5588-4f28-5fd7-bab9-f2887e1130ad
+    track_idx: 1646
+    title: Lost Circuit
+    artist_name: Echo Drift
+    year: 1993
+- id: seedset_28
+  region_id: 13
+  name: Region 13 Cluster 2
+  track_count: 4
+  seed_track_ids:
+  - b4e04605-a62e-538a-aa9c-2c2a6671cb63
+  - e9846920-ca5b-5421-9323-0248262557cf
+  - dddfa4f6-7354-5ba0-99f7-f29b16ed3ac0
+  - aad4e044-d639-5561-b434-074a78c8b92f
+  seed_tracks:
+  - id: b4e04605-a62e-538a-aa9c-2c2a6671cb63
+    track_idx: 1487
+    title: Ancient Reflection
+    artist_name: Subtle Echo
+    year: 1988
+  - id: e9846920-ca5b-5421-9323-0248262557cf
+    track_idx: 2029
+    title: Deep Horizon
+    artist_name: Crimson Tides
+    year: 1979
+  - id: dddfa4f6-7354-5ba0-99f7-f29b16ed3ac0
+    track_idx: 864
+    title: Ancient Glitch
+    artist_name: Lunar Chamber
+    year: 2006
+  - id: aad4e044-d639-5561-b434-074a78c8b92f
+    track_idx: 2087
+    title: Electric Descent
+    artist_name: Atlas Echo
+    year: 1993
+- id: seedset_29
+  region_id: 14
+  name: Region 14 Cluster 1
+  track_count: 3
+  seed_track_ids:
+  - a48ce871-13ac-5bda-ac36-fa97f5ffd2be
+  - d71292f0-6227-56ff-9edf-929d30752dc4
+  - a9dce589-ed6c-5b5a-9234-12714a825edf
+  seed_tracks:
+  - id: a48ce871-13ac-5bda-ac36-fa97f5ffd2be
+    track_idx: 537
+    title: Quiet Paradox
+    artist_name: Neon Visions
+    year: 1980
+  - id: d71292f0-6227-56ff-9edf-929d30752dc4
+    track_idx: 2002
+    title: First Resonance, Pt. 2
+    artist_name: Amber Monolith
+    year: 1982
+  - id: a9dce589-ed6c-5b5a-9234-12714a825edf
+    track_idx: 51
+    title: Floating Orbit
+    artist_name: Neon Visions
+    year: 1976
+- id: seedset_30
+  region_id: 14
+  name: Region 14 Cluster 2
+  track_count: 4
+  seed_track_ids:
+  - 99e05850-cd87-5dfe-b8cc-bbe489377a38
+  - 7b3fe365-173c-52fc-8e88-ac9a50f08a89
+  - 20f1b1a3-70e7-5598-ab73-fab54b5f7c3a
+  - 83cb2caf-4d48-573e-9096-9ce89094db6a
+  seed_tracks:
+  - id: 99e05850-cd87-5dfe-b8cc-bbe489377a38
+    track_idx: 368
+    title: Fading Passage
+    artist_name: Ghost Currents
+    year: 1996
+  - id: 7b3fe365-173c-52fc-8e88-ac9a50f08a89
+    track_idx: 438
+    title: Endless Memory
+    artist_name: Mirage Signals
+    year: 2018
+  - id: 20f1b1a3-70e7-5598-ab73-fab54b5f7c3a
+    track_idx: 1654
+    title: Distant Solitude
+    artist_name: Silver Echo
+    year: 1989
+  - id: 83cb2caf-4d48-573e-9096-9ce89094db6a
+    track_idx: 843
+    title: Lost Resonance
+    artist_name: Lunar Drift
+    year: 1994
+- id: seedset_31
+  region_id: 15
+  name: Region 15 Cluster 1
+  track_count: 3
+  seed_track_ids:
+  - 2a3b7758-7e3e-5dee-b32f-22e450ef9637
+  - c92cbb32-9a1f-5dc8-8fa6-3c2c8344af1d
+  - 5c758475-9533-5c2f-9499-102c7342a34f
+  seed_tracks:
+  - id: 2a3b7758-7e3e-5dee-b32f-22e450ef9637
+    track_idx: 2570
+    title: Deep Ascent
+    artist_name: Silent Pulse
+    year: 1979
+  - id: c92cbb32-9a1f-5dc8-8fa6-3c2c8344af1d
+    track_idx: 1320
+    title: Fractured Frequency
+    artist_name: Subtle Signals
+    year: 2006
+  - id: 5c758475-9533-5c2f-9499-102c7342a34f
+    track_idx: 1551
+    title: Deep Starlight
+    artist_name: Velvet Pulse
+    year: 2015
+- id: seedset_32
+  region_id: 15
+  name: Region 15 Cluster 2
+  track_count: 4
+  seed_track_ids:
+  - c550f865-c63b-546e-b0e0-b2d0072c6c52
+  - ba2d200a-75cf-5442-a452-c0638b76179c
+  - 1c54eabe-b3a9-526e-ac1a-89435e4970c6
+  - 452a1db5-d0fe-5c03-8965-e36efa352ccc
+  seed_tracks:
+  - id: c550f865-c63b-546e-b0e0-b2d0072c6c52
+    track_idx: 36
+    title: Endless Pulse
+    artist_name: Infinite Waves
+    year: 2011
+  - id: ba2d200a-75cf-5442-a452-c0638b76179c
+    track_idx: 48
+    title: Electric Shadow
+    artist_name: Crimson Orchestra
+    year: 1982
+  - id: 1c54eabe-b3a9-526e-ac1a-89435e4970c6
+    track_idx: 535
+    title: Endless Shadow
+    artist_name: Lunar Currents
+    year: 2021
+  - id: 452a1db5-d0fe-5c03-8965-e36efa352ccc
+    track_idx: 1939
+    title: Lost Echo, Pt. 2
+    artist_name: Shadow Tides
+    year: 2018
+- id: seedset_33
+  region_id: 16
+  name: Region 16 Cluster 1
+  track_count: 3
+  seed_track_ids:
+  - acc49af1-6f76-5d4b-993e-be7f1d17a23f
+  - 761de585-eb20-5527-9d04-6b85d11d3cb9
+  - 0d63e2fe-edc2-51c7-b318-c70c290cc703
+  seed_tracks:
+  - id: acc49af1-6f76-5d4b-993e-be7f1d17a23f
+    track_idx: 1412
+    title: Final Paradox
+    artist_name: Azure Frequency
+    year: 1990
+  - id: 761de585-eb20-5527-9d04-6b85d11d3cb9
+    track_idx: 540
+    title: Deep Reflection
+    artist_name: Shadow Currents
+    year: 1984
+  - id: 0d63e2fe-edc2-51c7-b318-c70c290cc703
+    track_idx: 1736
+    title: Fractured Orbit, Pt. 3
+    artist_name: Lunar Fables
+    year: 2007
+- id: seedset_34
+  region_id: 16
+  name: Region 16 Cluster 2
+  track_count: 4
+  seed_track_ids:
+  - 7736f967-420d-5138-b33c-06df7f6f6a95
+  - e2a7cd9b-e80e-5398-998a-feafa8096fe9
+  - bc42cf8f-80a9-58e6-b7f0-e74d13a39ff8
+  - b76070b2-2244-59c1-bcbe-86b51b705484
+  seed_tracks:
+  - id: 7736f967-420d-5138-b33c-06df7f6f6a95
+    track_idx: 360
+    title: Endless Vapor
+    artist_name: Subtle Currents
+    year: 2020
+  - id: e2a7cd9b-e80e-5398-998a-feafa8096fe9
+    track_idx: 1023
+    title: Submerged Gravity
+    artist_name: Shadow Fables
+    year: 2013
+  - id: bc42cf8f-80a9-58e6-b7f0-e74d13a39ff8
+    track_idx: 1588
+    title: Floating Echo
+    artist_name: Static Collective
+    year: 1995
+  - id: b76070b2-2244-59c1-bcbe-86b51b705484
+    track_idx: 1248
+    title: Deep Starlight
+    artist_name: Amber Signals
+    year: 2013
+- id: seedset_35
+  region_id: 17
+  name: Region 17 Cluster 1
+  track_count: 3
+  seed_track_ids:
+  - 1f4fb1ab-6b45-5ac0-bb4f-7cd9f11e37e7
+  - 90730304-a588-5084-b878-9471baaa58aa
+  - e10218bd-6419-5e48-8f0f-4eecfb9b7c77
+  seed_tracks:
+  - id: 1f4fb1ab-6b45-5ac0-bb4f-7cd9f11e37e7
+    track_idx: 1333
+    title: First Tides
+    artist_name: Silent Currents
+    year: 2001
+  - id: 90730304-a588-5084-b878-9471baaa58aa
+    track_idx: 738
+    title: Inner Reflection
+    artist_name: Infinite Drift
+    year: 1981
+  - id: e10218bd-6419-5e48-8f0f-4eecfb9b7c77
+    track_idx: 850
+    title: Lost Frequency
+    artist_name: Atlas Collective
+    year: 1987
+- id: seedset_36
+  region_id: 17
+  name: Region 17 Cluster 2
+  track_count: 4
+  seed_track_ids:
+  - e208dd6f-169f-5e09-8078-76dbc86b16c3
+  - a34011cf-b7f0-56b4-9eb1-c2931e031dce
+  - bd2bae83-68b1-55a2-b015-ecc3751a6515
+  - 9f084a9e-2b55-594b-ac23-1f265153b55d
+  seed_tracks:
+  - id: e208dd6f-169f-5e09-8078-76dbc86b16c3
+    track_idx: 963
+    title: Inner Starlight
+    artist_name: Neon Visions
+    year: 2020
+  - id: a34011cf-b7f0-56b4-9eb1-c2931e031dce
+    track_idx: 897
+    title: Distant Gravity
+    artist_name: Azure Chamber
+    year: 1979
+  - id: bd2bae83-68b1-55a2-b015-ecc3751a6515
+    track_idx: 1899
+    title: Endless Orbit
+    artist_name: Amber Monolith
+    year: 1989
+  - id: 9f084a9e-2b55-594b-ac23-1f265153b55d
+    track_idx: 2776
+    title: Lost Silence
+    artist_name: Mirage Chamber
+    year: 2023
