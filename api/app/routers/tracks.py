@@ -1,5 +1,6 @@
 """Track search and metadata retrieval endpoints."""
 
+import os
 import uuid
 from typing import Any
 
@@ -190,7 +191,7 @@ async def search_tracks(
 
     # 3. Search live public music releases (iTunes Search API)
     live_items: list[TrackDetailResponse] = []
-    if len(q.strip()) >= 2:
+    if len(q.strip()) >= 2 and os.getenv("TESTING") != "1":
         from app.services.live_search import live_search_service
 
         try:

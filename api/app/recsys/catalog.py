@@ -39,6 +39,22 @@ def compute_sha256(file_path: Path, chunk_size: int = 65536) -> str:
     return hasher.hexdigest()
 
 
+def get_culture_anchor_vector(culture_key: str, dim: int = 128) -> npt.NDArray[np.float32]:
+    """Generate a deterministic, unit-normalized anchor vector for a genre or cultural domain.
+
+    Ensures that tracks sharing the same cultural or genre affinity cluster tightly in
+    semantic embedding space, avoiding accidental cross-genre leakage (e.g. Bollywood vs Hip-hop).
+    """
+    salt = "melovia_culture_anchor_v1:"
+    seed_str = f"{salt}{culture_key.strip().lower()}"
+    digest = hashlib.sha256(seed_str.encode("utf-8")).digest()
+    seed_int = int.from_bytes(digest[:8], "big")
+    rng = np.random.default_rng(seed_int)
+    v = rng.normal(0.0, 1.0, size=dim).astype(np.float32)
+    norm = float(np.linalg.norm(v))
+    return (v / (norm + 1e-12)).astype(np.float32)
+
+
 @dataclass(frozen=True)
 class CatalogManifest:
     version: str
@@ -296,6 +312,100 @@ class CatalogStore:
             return self._id_to_idx[norm]
         raise KeyError(f"MBID '{mbid}' not found in catalog")
 
+    def _compute_dynamic_vector_t(
+        self,
+        raw_track: dict[str, Any],
+        track_id: str,
+    ) -> npt.NDArray[np.float32]:
+        """Compute a deterministic 128-d semantic vector t for an external track."""
+        tags = list(raw_track.get("tags") or [])
+        tag_vectors: list[npt.NDArray[np.float32]] = []
+        for t in tags:
+            tag_str = str(t).lower().strip()
+            fv = self.get_tag_facet_vector(tag_str)
+            # Map rap/urban/hip-hop/rap to hip-hop if 0 norm
+            if np.linalg.norm(fv) <= 1e-6 and any(
+                sub in tag_str for sub in ("rap", "urban", "hip-hop", "hip hop")
+            ):
+                fv = self.get_tag_facet_vector("hip-hop")
+            if np.linalg.norm(fv) > 1e-6:
+                tag_vectors.append(fv)
+
+        title_str = str(raw_track.get("title", ""))
+        artist_str = str(raw_track.get("artist_name", ""))
+        track_seed_str = f"{track_id} {title_str} {artist_str}"
+        h_int = int(hashlib.md5(track_seed_str.lower().encode("utf-8")).hexdigest()[:8], 16)
+        rng = np.random.default_rng(h_int % (2**31))
+        track_jitter = rng.normal(0.0, 1.0, size=self.dim_t).astype(np.float32)
+        track_jitter_norm = track_jitter / (float(np.linalg.norm(track_jitter)) + 1e-12)
+
+        # Culture / genre domain anchor
+        culture_key = raw_track.get("culture")
+        if not culture_key:
+            tag_text = " ".join(str(t).lower() for t in tags)
+            if any(
+                k in tag_text
+                for k in (
+                    "bollywood",
+                    "indian",
+                    "hindi",
+                    "punjabi",
+                    "sufi",
+                    "desi",
+                    "filmi",
+                    "ghazal",
+                    "qawwali",
+                )
+            ):
+                culture_key = "bollywood_desi"
+            elif any(k in tag_text for k in ("k-pop", "kpop", "korean")):
+                culture_key = "kpop"
+            elif any(k in tag_text for k in ("latin", "reggaeton", "urbano", "bachata", "salsa")):
+                culture_key = "latin"
+            elif any(k in tag_text for k in ("hip-hop", "rap", "trap", "drill")):
+                culture_key = "hiphop"
+            elif any(k in tag_text for k in ("rock", "metal", "indie rock")):
+                culture_key = "rock"
+            elif any(k in tag_text for k in ("r&b", "rnb", "soul")):
+                culture_key = "rnb"
+            elif any(k in tag_text for k in ("electronic", "dance", "house", "techno", "edm")):
+                culture_key = "electronic"
+            elif any(k in tag_text for k in ("pop", "dance pop")):
+                culture_key = "western_pop"
+
+        genre_v: npt.NDArray[np.float32] | None = None
+        if tag_vectors and culture_key:
+            mean_tag = np.mean(tag_vectors, axis=0)
+            tag_norm = float(np.linalg.norm(mean_tag))
+            tag_unit = mean_tag / (tag_norm + 1e-12)
+            anchor_v = get_culture_anchor_vector(culture_key, self.dim_t)
+            blended = 0.5 * tag_unit + 0.5 * anchor_v
+            blended_norm = float(np.linalg.norm(blended))
+            genre_v = np.asarray(blended / (blended_norm + 1e-12), dtype=np.float32)
+        elif tag_vectors:
+            mean_tag = np.mean(tag_vectors, axis=0)
+            tag_norm = float(np.linalg.norm(mean_tag))
+            genre_v = (
+                np.asarray(mean_tag / tag_norm, dtype=np.float32)
+                if tag_norm > 1e-6
+                else None
+            )
+        elif culture_key:
+            genre_v = get_culture_anchor_vector(culture_key, self.dim_t)
+
+        if genre_v is not None:
+            combined = 0.85 * genre_v + 0.53 * track_jitter_norm
+            norm_comb = float(np.linalg.norm(combined))
+            vector_t = (
+                np.asarray(combined / norm_comb, dtype=np.float32)
+                if norm_comb > 1e-6
+                else genre_v
+            )
+        else:
+            vector_t = np.asarray(track_jitter_norm, dtype=np.float32)
+
+        return np.asarray(vector_t, dtype=np.float32)
+
     def register_dynamic_track(
         self,
         raw_track: dict[str, Any],
@@ -307,53 +417,27 @@ class CatalogStore:
             idx = self._id_to_idx[track_id]
             existing_dict = self._dynamic_tracks.get(track_id)
             if existing_dict is not None:
-                for k in ("artwork_url", "preview_url", "album_name"):
-                    if not existing_dict.get(k) and raw_track.get(k):
+                for k in (
+                    "artwork_url",
+                    "preview_url",
+                    "album_name",
+                    "culture",
+                    "genre_category",
+                    "tags",
+                    "scalars",
+                ):
+                    if raw_track.get(k):
                         existing_dict[k] = raw_track[k]
                         if k in self._tracks_metadata and idx < len(self._tracks_metadata[k]):
                             self._tracks_metadata[k][idx] = raw_track[k]
+                if raw_track.get("culture") or raw_track.get("tags"):
+                    new_vec = self._compute_dynamic_vector_t(existing_dict, track_id)
+                    self._dynamic_vectors_t[track_id] = new_vec
+                    self.vectors_t[idx] = new_vec
             return track_id
 
         if vector_t is None:
-            # Generate a semantic vector using tag facets or title/artist hash projection
-            tags = list(raw_track.get("tags") or [])
-            tag_vectors: list[npt.NDArray[np.float32]] = []
-            for t in tags:
-                tag_str = str(t).lower().strip()
-                fv = self.get_tag_facet_vector(tag_str)
-                # Map rap/urban/hip-hop/rap to hip-hop if 0 norm
-                if np.linalg.norm(fv) <= 1e-6 and any(
-                    sub in tag_str for sub in ("rap", "urban", "hip-hop", "hip hop")
-                ):
-                    fv = self.get_tag_facet_vector("hip-hop")
-                if np.linalg.norm(fv) > 1e-6:
-                    tag_vectors.append(fv)
-
-            title_str = str(raw_track.get("title", ""))
-            artist_str = str(raw_track.get("artist_name", ""))
-            track_seed_str = f"{track_id} {title_str} {artist_str}"
-            h_int = int(hashlib.md5(track_seed_str.lower().encode("utf-8")).hexdigest()[:8], 16)
-            rng = np.random.default_rng(h_int % (2**31))
-            track_jitter = rng.normal(0.0, 1.0, size=self.dim_t).astype(np.float32)
-            track_jitter_norm = track_jitter / (float(np.linalg.norm(track_jitter)) + 1e-12)
-
-            if tag_vectors:
-                mean_v = np.mean(tag_vectors, axis=0)
-                norm = float(np.linalg.norm(mean_v))
-                genre_v = (
-                    np.asarray(mean_v / norm, dtype=np.float32)
-                    if norm > 1e-6
-                    else np.zeros(self.dim_t, dtype=np.float32)
-                )
-                combined = 0.83 * genre_v + 0.55 * track_jitter_norm
-                norm_comb = float(np.linalg.norm(combined))
-                vector_t = (
-                    np.asarray(combined / norm_comb, dtype=np.float32)
-                    if norm_comb > 1e-6
-                    else genre_v
-                )
-            else:
-                vector_t = np.asarray(track_jitter_norm, dtype=np.float32)
+            vector_t = self._compute_dynamic_vector_t(raw_track, track_id)
 
         vec_t = np.asarray(vector_t, dtype=np.float32)
 

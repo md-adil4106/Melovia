@@ -7,6 +7,7 @@ from pathlib import Path
 # Configure test database before any app module import
 test_db = Path(__file__).resolve().parent / "test_suite.db"
 os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{test_db.as_posix()}"
+os.environ["TESTING"] = "1"
 
 import pytest  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402

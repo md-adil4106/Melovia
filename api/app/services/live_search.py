@@ -120,7 +120,105 @@ GENRE_SCALARS: dict[str, dict[str, float]] = {
         "danceability": 0.85,
         "acousticness": 0.25,
     },
+    "bollywood": {
+        "bpm": 95.0,
+        "energy": 0.55,
+        "valence": 0.60,
+        "danceability": 0.60,
+        "acousticness": 0.45,
+    },
+    "indian-pop": {
+        "bpm": 100.0,
+        "energy": 0.60,
+        "valence": 0.65,
+        "danceability": 0.65,
+        "acousticness": 0.40,
+    },
+    "indian": {
+        "bpm": 95.0,
+        "energy": 0.55,
+        "valence": 0.60,
+        "danceability": 0.60,
+        "acousticness": 0.50,
+    },
+    "k-pop": {
+        "bpm": 125.0,
+        "energy": 0.85,
+        "valence": 0.70,
+        "danceability": 0.85,
+        "acousticness": 0.12,
+    },
 }
+
+
+def classify_genre_and_culture(primary_genre: str, tags: list[str] | None = None) -> str:
+    """Classify genre and cultural market into a coherent domain."""
+    text = (primary_genre or "").lower().replace("-", " ")
+    if tags:
+        text += " " + " ".join(str(t).lower().replace("-", " ") for t in tags)
+
+    # 1. Bollywood / Desi / Indian
+    if any(
+        term in text
+        for term in (
+            "bollywood",
+            "indian pop",
+            "indian",
+            "filmi",
+            "sufi",
+            "ghazal",
+            "punjabi",
+            "hindi",
+            "tamil",
+            "telugu",
+            "malayalam",
+            "bengali",
+            "desi",
+            "bhangra",
+            "qawwali",
+        )
+    ):
+        return "bollywood_desi"
+
+    # 2. K-Pop
+    if "k pop" in text or "kpop" in text or "korean" in text:
+        return "kpop"
+
+    # 3. Latin
+    if any(
+        term in text
+        for term in ("latin", "reggaeton", "urbano", "salsa", "bachata", "cumbia", "corridos")
+    ):
+        return "latin"
+
+    # 4. Hip-Hop / Rap
+    if any(term in text for term in ("hip hop", "rap", "trap", "drill", "cloud rap")):
+        return "hiphop"
+
+    # 5. R&B / Soul
+    if any(term in text for term in ("r&b", "soul", "neo soul", "funk")):
+        return "rnb"
+
+    # 6. Rock / Alternative
+    if any(
+        term in text for term in ("rock", "metal", "punk", "alternative", "grunge", "indie rock")
+    ):
+        return "rock"
+
+    # 7. Western Pop
+    if any(
+        term in text for term in ("pop", "dance", "synth pop", "disco", "electro pop", "teen pop")
+    ):
+        return "western_pop"
+
+    # 8. Electronic / Dance
+    if any(
+        term in text
+        for term in ("electronic", "edm", "house", "techno", "trance", "dnb", "dubstep")
+    ):
+        return "electronic"
+
+    return "general"
 
 
 class LiveSearchService:
@@ -180,17 +278,28 @@ class LiveSearchService:
         if "/" in primary_genre:
             for part in primary_genre.split("/"):
                 tags.append(part.strip().lower())
-        if "hip-hop" in genre_key or "rap" in genre_key:
+        culture = classify_genre_and_culture(primary_genre, tags)
+        if culture == "bollywood_desi":
+            tags.extend(["bollywood", "indian-pop", "acoustic", "melodic", "soul"])
+            genre_key = "bollywood"
+        elif culture == "hiphop":
             tags.extend(["hip-hop", "trap", "cloud-rap", "bass"])
-        elif "rock" in genre_key:
-            tags.extend(["guitar", "raw", "psychedelic"])
-        elif "pop" in genre_key:
-            tags.extend(["dance", "electronic", "groove"])
-        elif "r&b" in genre_key or "soul" in genre_key:
+            genre_key = "hip-hop"
+        elif culture == "kpop":
+            tags.extend(["k-pop", "dance", "electronic", "groove"])
+            genre_key = "k-pop"
+        elif culture == "latin":
+            tags.extend(["latin", "dance", "groove"])
+            genre_key = "latin"
+        elif culture == "western_pop":
+            tags.extend(["pop", "dance", "electronic", "groove"])
+            genre_key = "pop"
+        elif culture == "rock":
+            tags.extend(["rock", "guitar", "raw", "alternative"])
+            genre_key = "rock"
+        elif culture == "rnb":
             tags.extend(["soul", "neo-soul", "groove", "smooth"])
-            tags.extend(["rock", "guitar"])
-        elif "pop" in genre_key:
-            tags.extend(["pop", "vocal"])
+            genre_key = "r&b/soul"
 
         # Determine audio scalars proxy
         scalars_preset = GENRE_SCALARS.get(genre_key, GENRE_SCALARS.get("pop", {}))
@@ -225,18 +334,52 @@ class LiveSearchService:
             "region_id": None,
             "scalars": scalars,
             "tags": sorted(set(tags)),
+            "culture": culture,
             "artwork_url": item.get("artworkUrl100") or item.get("artworkUrl60"),
             "preview_url": item.get("previewUrl"),
             "source": "itunes_live",
         }
 
-    async def search_tracks(self, query: str, limit: int = 15) -> list[dict[str, Any]]:
-        """Search public tracks by query string."""
+    async def search_tracks(
+        self,
+        query: str,
+        limit: int = 15,
+        country: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Search public tracks by query string with storefront routing."""
         q_clean = query.strip()
         if len(q_clean) < 2:
             return []
 
-        cache_key = f"{q_clean.lower()}:{limit}"
+        # Determine target storefront country
+        target_country = country
+        if not target_country:
+            q_lower = q_clean.lower()
+            if any(
+                term in q_lower
+                for term in (
+                    "khat", "sajde", "guzarish", "arijit", "pritam", "rahman", "javed ali",
+                    "faheem", "atif", "mohit chauhan", "navjot", "bollywood", "hindi",
+                    "punjabi", "sonu nigam", "shreya ghoshal", "anuv jain", "prateek kuhad",
+                    "jasleen royal", "kk", "armaan malik", "darshan raval", "jubin nautiyal",
+                    "diljit", "sidhu", "ap dhillon", "badshah", "honey singh", "desi", "sufi"
+                )
+            ):
+                target_country = "IN"
+            elif any(
+                term in q_lower
+                for term in ("bts", "blackpink", "newjeans", "stray kids", "twice")
+            ):
+                target_country = "KR"
+            elif any(
+                term in q_lower
+                for term in ("bad bunny", "peso pluma", "karol g", "reggaeton")
+            ):
+                target_country = "MX"
+            else:
+                target_country = "US"
+
+        cache_key = f"{q_clean.lower()}:{limit}:{target_country}"
         now = datetime.now()
 
         # Check cache
@@ -252,21 +395,25 @@ class LiveSearchService:
             "entity": "song",
             "limit": limit,
             "media": "music",
+            "country": target_country,
         }
 
         try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
+            async with httpx.AsyncClient(timeout=3.5) as client:
                 response = await client.get(self.SEARCH_URL, params=params)
-                if response.status_code != 200:
-                    logger.warning(
-                        "iTunes search returned status %d for query %s",
-                        response.status_code,
-                        q_clean,
-                    )
-                    return []
+                if response.status_code == 200:
+                    data = response.json()
+                    raw_results = data.get("results", [])
+                else:
+                    raw_results = []
 
-                data = response.json()
-                raw_results = data.get("results", [])
+                # Fallback probe if 0 results on regional storefront
+                if not raw_results:
+                    alt_country = "IN" if target_country != "IN" else "US"
+                    params["country"] = alt_country
+                    alt_resp = await client.get(self.SEARCH_URL, params=params)
+                    if alt_resp.status_code == 200:
+                        raw_results = alt_resp.json().get("results", [])
 
                 normalized: list[dict[str, Any]] = []
                 for item in raw_results:
@@ -296,20 +443,18 @@ class LiveSearchService:
         track_id = ext_id.split("ext:itunes:")[-1]
         lookup_params: dict[str, str] = {"id": str(track_id)}
         try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
-                response = await client.get(self.LOOKUP_URL, params=lookup_params)
-                if response.status_code != 200:
-                    return None
-
-                data = response.json()
-                results = data.get("results", [])
-                if not results:
-                    return None
-
-                parsed = self._normalize_itunes_track(results[0])
-                if parsed:
-                    self._track_cache[ext_id] = (now, parsed)
-                    return parsed
+            async with httpx.AsyncClient(timeout=3.5) as client:
+                for country in ("IN", "US"):
+                    lookup_params["country"] = country
+                    response = await client.get(self.LOOKUP_URL, params=lookup_params)
+                    if response.status_code == 200:
+                        data = response.json()
+                        results = data.get("results", [])
+                        if results:
+                            parsed = self._normalize_itunes_track(results[0])
+                            if parsed:
+                                self._track_cache[ext_id] = (now, parsed)
+                                return parsed
         except Exception as exc:
             logger.warning("Failed to lookup track %s: %s", ext_id, exc)
             return None
@@ -331,60 +476,102 @@ class LiveSearchService:
             for s in seed_tracks
         }
 
-        # 1. Gather distinct artists and genres from seeds
+        # 1. Gather distinct artists, genres, and cultures from seeds
         seed_artists: list[str] = []
-        seed_genres: set[str] = set()
+        seed_cultures: set[str] = set()
+
         for s in seed_tracks:
             art = s.get("artist_name")
             if art and str(art) not in seed_artists:
                 seed_artists.append(str(art))
-            for tag in s.get("tags", []):
-                tag_lower = str(tag).lower().strip()
-                if any(
-                    g in tag_lower
-                    for g in (
-                        "hip-hop",
-                        "rap",
-                        "trap",
-                        "pop",
-                        "rock",
-                        "r&b",
-                        "electronic",
-                        "indie",
-                    )
-                ):
-                    seed_genres.add(tag_lower)
+
+            genre = str(s.get("genre") or s.get("primaryGenreName") or "")
+            tags = list(s.get("tags") or [])
+            culture = s.get("culture") or classify_genre_and_culture(genre, tags)
+            seed_cultures.add(culture)
+
+        # Determine primary market country based on seed cultures
+        primary_country = "IN" if "bollywood_desi" in seed_cultures else "US"
+        if "kpop" in seed_cultures:
+            primary_country = "KR"
+        elif "latin" in seed_cultures:
+            primary_country = "MX"
 
         # 2. Formulate search queries based on seed artists
         search_queries = list(seed_artists)
 
-        # 3. Add genre-specific candidate query terms
-        if any("hip-hop" in g or "rap" in g or "trap" in g for g in seed_genres):
-            search_queries.extend(
-                [
-                    "Travis Scott",
-                    "Metro Boomin",
-                    "Future",
-                    "21 Savage",
-                    "Gunna",
-                    "Lil Baby",
-                    "Playboi Carti",
-                    "Drake",
-                    "Kendrick Lamar",
-                ]
-            )
-        elif any("rock" in g for g in seed_genres):
-            search_queries.extend(
-                ["Arctic Monkeys", "The Strokes", "Tame Impala", "Nirvana", "Radiohead"]
-            )
-        elif any("pop" in g for g in seed_genres):
-            search_queries.extend(
-                ["The Weeknd", "Dua Lipa", "Billie Eilish", "Olivia Rodrigo", "Post Malone"]
-            )
-        elif any("r&b" in g or "soul" in g for g in seed_genres):
-            search_queries.extend(
-                ["SZA", "Frank Ocean", "Brent Faiyaz", "Daniel Caesar", "Giveon"]
-            )
+        # 3. Add genre- and culture-specific peer discovery query terms
+        if "bollywood_desi" in seed_cultures:
+            search_queries.extend([
+                "Arijit Singh romantic",
+                "Pritam romantic hits",
+                "Mohit Chauhan romantic",
+                "Atif Aslam romantic",
+                "Faheem Abdullah hits",
+                "Anuv Jain hits",
+                "bollywood romantic hits",
+                "hindi romcom songs",
+                "Jasleen Royal romantic",
+                "KK romantic hits",
+                "Javed Ali romantic hits",
+                "Sonu Nigam romantic hits",
+            ])
+        elif "hiphop" in seed_cultures:
+            search_queries.extend([
+                "Travis Scott",
+                "Metro Boomin",
+                "Future",
+                "21 Savage",
+                "Gunna",
+                "Lil Baby",
+                "Playboi Carti",
+                "Drake",
+                "Kendrick Lamar",
+            ])
+        elif "rock" in seed_cultures:
+            search_queries.extend([
+                "Arctic Monkeys",
+                "The Strokes",
+                "Tame Impala",
+                "Nirvana",
+                "Radiohead",
+            ])
+        elif "western_pop" in seed_cultures:
+            search_queries.extend([
+                "The Weeknd",
+                "Dua Lipa",
+                "Billie Eilish",
+                "Olivia Rodrigo",
+                "Taylor Swift",
+                "Post Malone",
+                "Ariana Grande",
+            ])
+        elif "rnb" in seed_cultures:
+            search_queries.extend([
+                "SZA",
+                "Frank Ocean",
+                "Brent Faiyaz",
+                "Daniel Caesar",
+                "Giveon",
+            ])
+        elif "kpop" in seed_cultures:
+            search_queries.extend([
+                "BTS",
+                "NewJeans",
+                "BLACKPINK",
+                "Stray Kids",
+                "LE SSERAFIM",
+                "TWICE",
+            ])
+        elif "latin" in seed_cultures:
+            search_queries.extend([
+                "Bad Bunny",
+                "J Balvin",
+                "Rauw Alejandro",
+                "Karol G",
+                "Feid",
+                "Peso Pluma",
+            ])
 
         # Deduplicate search queries while preserving order
         unique_queries: list[str] = []
@@ -395,10 +582,19 @@ class LiveSearchService:
                 seen_q.add(q_clean)
                 unique_queries.append(q)
 
-        # Query iTunes in parallel / batch for top queries
-        for q in unique_queries[:8]:
-            results = await self.search_tracks(q, limit=limit_per_query)
+        # Query iTunes for top queries using the targeted country storefront
+        for q in unique_queries[:10]:
+            results = await self.search_tracks(q, limit=limit_per_query, country=primary_country)
             for r in results:
+                # Culture boundary guard: if seeds are Bollywood, exclude Western pop/rap candidates
+                r_culture = r.get("culture") or classify_genre_and_culture(
+                    str(r.get("primaryGenreName") or ""), r.get("tags")
+                )
+                if "bollywood_desi" in seed_cultures and r_culture in ("western_pop", "hiphop"):
+                    continue
+                if "hiphop" in seed_cultures and r_culture in ("bollywood_desi", "kpop"):
+                    continue
+
                 rid = str(r.get("id"))
                 r_key = (
                     str(r.get("title", "")).lower().strip(),

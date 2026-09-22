@@ -167,10 +167,13 @@ async def create_recommendations(
         from app.services.live_search import live_search_service
 
         for sid in payload.seed_track_ids:
-            if not catalog_store.contains_id(sid) and sid.startswith("ext:itunes:"):
-                live_track = await live_search_service.get_track_by_id(sid)
-                if live_track:
-                    catalog_store.register_dynamic_track(live_track)
+            if sid.startswith("ext:itunes:"):
+                has_track = catalog_store.contains_id(sid)
+                track_data = catalog_store.get_track_dict(sid) if has_track else None
+                if not track_data or not track_data.get("culture"):
+                    live_track = await live_search_service.get_track_by_id(sid)
+                    if live_track:
+                        catalog_store.register_dynamic_track(live_track)
 
         try:
             modes = build_modes(payload.seed_track_ids, catalog_store, config=config)
@@ -194,6 +197,7 @@ async def create_recommendations(
     session_data.live_modes = modes
 
     # Enrich catalog with real-world candidate tracks matching seeds
+    current_live_candidate_ids: set[str] = set()
     if payload.seed_track_ids:
         seed_dicts = [
             catalog_store.get_track_dict(sid)
@@ -207,6 +211,7 @@ async def create_recommendations(
                 live_cands = await live_search_service.fetch_candidates_for_seeds(seed_dicts)
                 for cand in live_cands:
                     catalog_store.register_dynamic_track(cand)
+                    current_live_candidate_ids.add(str(cand["id"]))
             except Exception as exc:
                 logger.warning("Failed to fetch live candidates for seeds: %s", exc)
 
@@ -228,9 +233,18 @@ async def create_recommendations(
         live_indices = [
             idx
             for idx in pool.track_indices
-            if catalog_store.track_ids[idx].startswith("ext:itunes:")
+            if (
+                catalog_store.track_ids[idx] in current_live_candidate_ids
+                if current_live_candidate_ids
+                else catalog_store.track_ids[idx].startswith("ext:itunes:")
+            )
         ]
-        if len(live_indices) >= payload.n:
+        min_needed = (
+            min(len(current_live_candidate_ids), payload.n)
+            if current_live_candidate_ids
+            else 1
+        )
+        if len(live_indices) >= min_needed and len(live_indices) > 0:
             sub_indices = np.array(live_indices, dtype=np.int64)
             idx_map = {idx: i for i, idx in enumerate(pool.track_indices)}
             row_sel = [idx_map[idx] for idx in live_indices]
