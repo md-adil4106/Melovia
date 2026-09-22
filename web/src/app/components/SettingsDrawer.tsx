@@ -171,19 +171,19 @@ export function SettingsDrawer({ isOpen, onClose, apiBase }: SettingsDrawerProps
       {/* Drawer Body */}
       <div
         ref={drawerRef}
-        className="relative w-full max-w-md bg-[#12161f] border-l border-[#242b3b] shadow-2xl h-full flex flex-col z-10 animate-in slide-in-from-right duration-300 motion-reduce:transition-none"
+        className="relative w-full max-w-md bg-[#07080b]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl h-full flex flex-col z-10 animate-in slide-in-from-right duration-300 motion-reduce:transition-none"
       >
         {/* Header */}
-        <div className="p-5 border-b border-[#202738] flex items-center justify-between bg-[#141923]">
+        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#1b2230] border border-[#2b354a] flex items-center justify-center text-[#d4af37]">
-              <ShieldCheck className="w-5 h-5 text-[#d4af37]" />
+            <div className="w-9 h-9 rounded-xl bg-[#fa2d55]/15 border border-[#fa2d55]/30 flex items-center justify-center text-[#fa2d55]">
+              <ShieldCheck className="w-5 h-5 text-[#fa2d55]" />
             </div>
             <div>
-              <h2 id="settings-drawer-title" className="text-base font-bold text-[#f1f3f7] font-serif-display">
+              <h2 id="settings-drawer-title" className="text-base font-bold text-white font-sans tracking-tight">
                 Taste Profile & Privacy
               </h2>
-              <p className="text-xs text-[#8c96a8]">Anonymous Device Preferences</p>
+              <p className="text-xs text-white/50">Anonymous Device Preferences</p>
             </div>
           </div>
           <button
@@ -191,7 +191,7 @@ export function SettingsDrawer({ isOpen, onClose, apiBase }: SettingsDrawerProps
             type="button"
             onClick={onClose}
             aria-label="Close settings drawer"
-            className="p-1.5 rounded-lg text-[#8c96a8] hover:text-[#f1f3f7] hover:bg-[#1f2637] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+            className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -201,44 +201,44 @@ export function SettingsDrawer({ isOpen, onClose, apiBase }: SettingsDrawerProps
         <div className="flex-1 overflow-y-auto p-5 space-y-6 text-sm">
           {/* Status Alert Banner */}
           {statusMessage && (
-            <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 text-xs flex items-center gap-2.5 animate-in fade-in">
+            <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-xs flex items-center gap-2.5 animate-in fade-in">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
               <span>{statusMessage}</span>
             </div>
           )}
 
           {/* Anonymous Device Identity Card */}
-          <section className="bg-[#161c27] border border-[#262f42] rounded-xl p-4 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#c8d0de]">
-              <Fingerprint className="w-4 h-4 text-[#d4af37]" />
+          <section className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4 space-y-3 shadow-md">
+            <div className="flex items-center gap-2 text-xs font-semibold text-white/90">
+              <Fingerprint className="w-4 h-4 text-[#fa2d55]" />
               <span>Device Identity</span>
             </div>
-            <div className="flex items-center justify-between text-xs bg-[#10141d] px-3 py-2 rounded-lg border border-[#1f2637]">
-              <span className="text-[#8c96a8]">Hashed Device ID:</span>
-              <span className="font-mono text-[#d4af37] font-bold">
+            <div className="flex items-center justify-between text-xs bg-black/40 px-3.5 py-2.5 rounded-xl border border-white/10">
+              <span className="text-white/60">Hashed Device ID:</span>
+              <span className="font-mono text-[#fa2d55] font-bold">
                 {profile?.device_id_hash ? `#${profile.device_id_hash}` : "Detecting..."}
               </span>
             </div>
-            <p className="text-xs text-[#8c96a8] leading-relaxed">
+            <p className="text-xs text-white/60 leading-relaxed">
               Melovia requires <strong>no account, email, or passwords</strong>. Your musical profile is stored strictly as mathematical vectors associated with your anonymous local device cookie.
             </p>
           </section>
 
           {/* Profile Status Card */}
-          <section className="bg-[#161c27] border border-[#262f42] rounded-xl p-4 space-y-3">
+          <section className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4 space-y-3 shadow-md">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#c8d0de] flex items-center gap-2">
-                <Layers className="w-4 h-4 text-[#d4af37]" />
+              <span className="text-xs font-semibold text-white/90 flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#fb7185]" />
                 Persistent Profile Status
               </span>
               {isLoading ? (
-                <span className="text-xs text-[#8c96a8]">Loading...</span>
+                <span className="text-xs text-white/50">Loading...</span>
               ) : profile?.has_profile ? (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-800/50">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
                   Active
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-900 text-zinc-400 border border-zinc-800">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/[0.06] text-white/60 border border-white/10">
                   Not Saved
                 </span>
               )}
@@ -275,27 +275,27 @@ export function SettingsDrawer({ isOpen, onClose, apiBase }: SettingsDrawerProps
 
           {/* Export Action */}
           <section className="space-y-2">
-            <h3 className="text-xs font-semibold text-[#8c96a8] uppercase tracking-wider">
+            <h3 className="text-xs font-semibold text-white/60 uppercase tracking-wider">
               Data Portability
             </h3>
             <button
               type="button"
               onClick={() => exportMutation.mutate()}
               disabled={!profile?.has_profile || exportMutation.isPending}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#1a2130] border border-[#2b364d] text-[#f1f3f7] hover:bg-[#20293d] hover:border-[#d4af37]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold bg-white/[0.06] border border-white/10 text-white hover:bg-white/[0.12] hover:border-[#fa2d55]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
             >
-              <Download className="w-4 h-4 text-[#d4af37]" />
+              <Download className="w-4 h-4 text-[#fa2d55]" />
               <span>{exportMutation.isPending ? "Exporting..." : "Export Taste Profile (JSON)"}</span>
             </button>
-            <p className="text-[11px] text-[#6b778d]">
+            <p className="text-[11px] text-white/50">
               Exports your full multi-modal taste representations, weights, and known tracks in standardized JSON format.
             </p>
           </section>
 
           {/* Danger Zone: Delete Profile */}
-          <section className="space-y-2 pt-4 border-t border-[#202738]">
-            <h3 className="text-xs font-semibold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+          <section className="space-y-2 pt-4 border-t border-white/10">
+            <h3 className="text-xs font-semibold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
               Privacy & Erasure
             </h3>
 
@@ -304,9 +304,9 @@ export function SettingsDrawer({ isOpen, onClose, apiBase }: SettingsDrawerProps
                 type="button"
                 onClick={() => setConfirmDelete(true)}
                 disabled={deleteMutation.isPending}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-red-950/30 border border-red-800/40 text-red-300 hover:bg-red-900/40 hover:border-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold bg-rose-950/30 border border-rose-500/30 text-rose-300 hover:bg-rose-900/40 hover:border-rose-500/50 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-400"
               >
-                <Trash2 className="w-4 h-4 text-red-400" />
+                <Trash2 className="w-4 h-4 text-rose-400" />
                 <span>Delete Profile & Interaction History</span>
               </button>
             ) : (

@@ -341,16 +341,16 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
   return (
     <div className="space-y-8 animate-fadeIn pb-16">
       {/* Top Header & Confidence Banner */}
-      <div className="bg-[#141923] border border-[#232a3b] rounded-2xl p-6 shadow-xl relative overflow-hidden">
+      <div className="bg-white/[0.035] backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_16px_40px_rgba(0,0,0,0.5)] relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-5 h-5 text-[#d4af37]" />
-              <h2 className="text-2xl font-bold text-[#f1f3f7] font-serif-display">
+              <Sparkles className="w-5 h-5 text-[#fa2d55]" />
+              <h2 className="text-2xl font-bold text-white font-sans tracking-tight">
                 Music DNA & Taste Profile
               </h2>
             </div>
-            <p className="text-xs sm:text-sm text-[#8c96a8]">
+            <p className="text-xs sm:text-sm text-white/60">
               Grounded strictly in computed acoustic vectors, entropy, and release era data.
               Descriptive, non-evaluative analytics.
             </p>
@@ -359,10 +359,10 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {/* Confidence Badge */}
             <div
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${
                 isLowConfidence
-                  ? "bg-amber-950/40 border-amber-800/50 text-amber-300"
-                  : "bg-emerald-950/40 border-emerald-800/50 text-emerald-300"
+                  ? "bg-amber-500/15 border-amber-500/30 text-amber-200"
+                  : "bg-emerald-500/15 border-emerald-500/30 text-emerald-200"
               }`}
             >
               <span
@@ -381,11 +381,11 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
               type="button"
               onClick={handleShareAsImage}
               disabled={isExportingImage || !profileData}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1b2230] hover:bg-[#252e42] border border-[#2a3449] hover:border-[#d4af37]/60 rounded-xl text-xs font-semibold text-[#f1f3f7] hover:text-[#d4af37] transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d4af37] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 hover:border-[#fa2d55]/40 rounded-full text-xs font-semibold text-white transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#fa2d55] disabled:opacity-50"
               title="Export high-resolution PNG image of your profile (Zero server upload)"
               aria-label="Share as Image"
             >
-              <Share2 className="w-3.5 h-3.5 text-[#d4af37]" />
+              <Share2 className="w-3.5 h-3.5 text-[#fb7185]" />
               <span>{isExportingImage ? "Exporting..." : "Share as Image"}</span>
             </button>
 
@@ -393,7 +393,7 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
             <button
               type="button"
               onClick={() => refetchProfile()}
-              className="p-2 bg-[#1b2230] hover:bg-[#252e42] border border-[#2a3449] rounded-xl text-[#8c96a8] hover:text-[#f1f3f7] transition-colors"
+              className="p-2 bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 rounded-full text-white/60 hover:text-white transition-colors"
               title="Refresh Profile"
               aria-label="Refresh Profile"
             >
@@ -418,38 +418,38 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
       {/* Archetype & Music DNA Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Archetype Card */}
-        <div className="bg-[#141923] border border-[#232a3b] rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-6 shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] uppercase tracking-wider font-semibold text-[#8c96a8]">
+              <span className="text-[11px] uppercase tracking-wider font-semibold text-white/60">
                 Musical Archetype
               </span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#1b2230] border border-[#2a3449] text-[#d4af37]">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-[#fa2d55]">
                 Rule-Derived
               </span>
             </div>
 
-            <h3 className="text-2xl font-extrabold text-[#f1f3f7] tracking-tight mb-1">
+            <h3 className="text-2xl font-black text-white tracking-tight mb-1">
               {archetype?.name || "The Balanced Explorer"}
             </h3>
-            <p className="text-xs text-[#d4af37] italic mb-4 font-serif-display">
+            <p className="text-xs text-[#fa2d55] italic mb-4">
               &ldquo;{archetype?.tagline}&rdquo;
             </p>
 
-            <p className="text-xs sm:text-sm text-[#8c96a8] leading-relaxed mb-4">
+            <p className="text-xs sm:text-sm text-white/70 leading-relaxed mb-4">
               {archetype?.description}
             </p>
           </div>
 
-          <div className="pt-4 border-t border-[#1e2535]">
-            <p className="text-[11px] font-semibold text-[#647187] uppercase tracking-wider mb-2">
+          <div className="pt-4 border-t border-white/[0.08]">
+            <p className="text-[11px] font-semibold text-white/50 uppercase tracking-wider mb-2">
               Triggered By Signals
             </p>
             <div className="flex flex-wrap gap-1.5">
               {archetype?.matched_rules?.map((rule, idx) => (
                 <span
                   key={idx}
-                  className="text-xs bg-[#192130] text-[#c8d0de] border border-[#252f44] px-2.5 py-1 rounded-lg"
+                  className="text-xs bg-white/[0.04] text-white/80 border border-white/10 px-2.5 py-1 rounded-full"
                 >
                   {rule}
                 </span>
@@ -459,38 +459,38 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
         </div>
 
         {/* Music DNA Card */}
-        <div className="bg-[#141923] border border-[#232a3b] rounded-2xl p-6 shadow-xl">
+        <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-6 shadow-xl">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-[#8c96a8] flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-[#d4af37]" />
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-white/60 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-[#fa2d55]" />
               Music DNA
             </span>
-            <span className="text-xs text-[#647187]">Acoustic & Semantic Footprint</span>
+            <span className="text-xs text-white/50">Acoustic & Semantic Footprint</span>
           </div>
 
           {/* Dominant Tags */}
           <div className="mb-5">
-            <p className="text-xs font-semibold text-[#c8d0de] mb-2">Dominant Folksonomy Tags</p>
+            <p className="text-xs font-semibold text-white/90 mb-2">Dominant Folksonomy Tags</p>
             {dna?.dominant_tags && dna.dominant_tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {dna.dominant_tags.map((t, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-1.5 bg-[#1a2333] border border-[#27354d] text-xs px-2.5 py-1 rounded-lg text-[#f1f3f7]"
+                    className="inline-flex items-center gap-1.5 bg-white/[0.04] border border-white/10 text-xs px-2.5 py-1 rounded-full text-white"
                   >
-                    <span className="text-[#d4af37]">#{t.tag}</span>
-                    <span className="text-[10px] text-[#647187]">({t.count}x)</span>
+                    <span className="text-[#fa2d55]">#{t.tag}</span>
+                    <span className="text-[10px] text-white/40">({t.count}x)</span>
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-[#647187] italic">No tag footprint recorded yet.</p>
+              <p className="text-xs text-white/40 italic">No tag footprint recorded yet.</p>
             )}
           </div>
 
           {/* Mean Scalars with Ranges */}
           <div>
-            <p className="text-xs font-semibold text-[#c8d0de] mb-3">Acoustic Descriptors (Mean & Range)</p>
+            <p className="text-xs font-semibold text-white/90 mb-3">Acoustic Descriptors (Mean & Range)</p>
             <div className="space-y-3">
               {dna?.mean_scalars &&
                 Object.entries(dna.mean_scalars).map(([sname, svals]) => {
@@ -502,23 +502,23 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
                   return (
                     <div key={sname} className="space-y-1">
                       <div className="flex justify-between text-xs">
-                        <span className="text-[#8c96a8] capitalize">{label}</span>
-                        <span className="text-[#f1f3f7] font-mono text-[11px]">
+                        <span className="text-white/60 capitalize">{label}</span>
+                        <span className="text-white font-mono text-[11px]">
                           {sname === "tempo_bpm"
                             ? `${Math.round(svals.mean)} bpm [${Math.round(svals.min)}–${Math.round(svals.max)}]`
                             : `${(svals.mean).toFixed(2)} [${svals.min.toFixed(2)}–${svals.max.toFixed(2)}]`}
                         </span>
                       </div>
                       {sname !== "tempo_bpm" && (
-                        <div className="h-1.5 bg-[#1e2535] rounded-full overflow-hidden relative">
+                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden relative">
                           {/* Range background */}
                           <div
-                            className="absolute top-0 bottom-0 bg-[#d4af37]/20 rounded-full"
+                            className="absolute top-0 bottom-0 bg-[#fa2d55]/25 rounded-full"
                             style={{ left: `${minPct}%`, width: `${Math.max(4, maxPct - minPct)}%` }}
                           />
                           {/* Mean indicator */}
                           <div
-                            className="absolute top-0 bottom-0 w-2 bg-[#d4af37] rounded-full -ml-1"
+                            className="absolute top-0 bottom-0 w-2 bg-[#fa2d55] rounded-full -ml-1"
                             style={{ left: `${pct}%` }}
                           />
                         </div>
@@ -532,11 +532,11 @@ export function ProfileView({ onExploreRegion }: ProfileViewProps) {
       </div>
 
       {/* Taste-o-Meter Dimensions */}
-      <div className="bg-[#141923] border border-[#232a3b] rounded-2xl p-6 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-[#1e2535]">
+      <div className="bg-white/[0.035] backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-white/[0.08]">
           <div>
-            <h3 className="text-lg font-bold text-[#f1f3f7] flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-[#d4af37]" />
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-[#fa2d55]" />
               Taste-o-Meter Dimensions
             </h3>
             <p className="text-xs text-[#8c96a8]">

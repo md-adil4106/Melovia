@@ -45,8 +45,8 @@ export function HeroParticleField() {
     // Check prefers-reduced-motion
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Palette: Melovia warm gold (#d4af37) and cool cyan (#38bdf8)
-    const colors = ["#d4af37", "#38bdf8", "#e2bf48", "#7dd3fc"];
+    // Apple Music palette: electric ruby (#fa2d55), warm rose (#fb7185), electric violet (#818cf8), and sky cyan (#38bdf8)
+    const colors = ["#fa2d55", "#fb7185", "#818cf8", "#c084fc", "#38bdf8"];
     const particleCount = Math.min(45, Math.floor((width * height) / 10000));
     const particles: Particle[] = [];
 

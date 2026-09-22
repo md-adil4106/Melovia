@@ -9,11 +9,11 @@ export function Card({ className, variant = "default", children, ...props }: Car
   return (
     <div
       className={cn(
-        "rounded-2xl border border-ink-border p-6 transition-all duration-200",
-        variant === "default" && "bg-[#141923]",
-        variant === "elevated" && "bg-ink-elevated shadow-xl",
+        "rounded-2xl border border-white/[0.08] p-6 transition-all duration-250",
+        variant === "default" && "bg-white/[0.035] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+        variant === "elevated" && "bg-white/[0.06] backdrop-blur-2xl border-white/[0.14] shadow-2xl",
         variant === "interactive" &&
-          "bg-[#141923] hover:border-[#d4af37]/50 hover:bg-[#181f2c] cursor-pointer",
+          "bg-white/[0.035] backdrop-blur-xl hover:border-white/[0.18] hover:bg-white/[0.07] cursor-pointer hover:shadow-lg",
         className
       )}
       {...props}

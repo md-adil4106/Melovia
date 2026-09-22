@@ -58,13 +58,13 @@ export function Slider({
         aria-valuemax={max}
         onKeyDown={handleKeyDown}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-2 bg-[#1b2230] rounded-lg appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cool disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ruby disabled:opacity-40 disabled:cursor-not-allowed"
         style={{
           background: `linear-gradient(to right, ${
-            accentColor === "warm" ? "#d4af37" : "#38bdf8"
+            accentColor === "warm" ? "#fa2d55" : "#38bdf8"
           } 0%, ${
-            accentColor === "warm" ? "#d4af37" : "#38bdf8"
-          } ${pct}%, #1b2230 ${pct}%, #1b2230 100%)`,
+            accentColor === "warm" ? "#fb7185" : "#38bdf8"
+          } ${pct}%, rgba(255, 255, 255, 0.1) ${pct}%, rgba(255, 255, 255, 0.1) 100%)`,
         }}
         {...props}
       />

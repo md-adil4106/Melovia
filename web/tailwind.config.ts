@@ -18,6 +18,13 @@ const config: Config = {
           text: "var(--color-ink-text)",
           muted: "var(--color-ink-muted)",
         },
+        ruby: {
+          DEFAULT: "#fa2d55",
+          hover: "#e11d48",
+          dark: "#be123c",
+          light: "#fb7185",
+          subtle: "rgba(250, 45, 85, 0.15)",
+        },
         warm: {
           DEFAULT: "var(--color-accent-warm)",
           hover: "var(--color-accent-warm-hover)",
@@ -34,6 +41,7 @@ const config: Config = {
         md: "var(--radius-md)",
         lg: "var(--radius-lg)",
         xl: "var(--radius-xl)",
+        "2xl": "var(--radius-2xl)",
         full: "var(--radius-full)",
       },
       spacing: {
@@ -51,8 +59,13 @@ const config: Config = {
       },
       fontFamily: {
         display: ["var(--font-serif-display)", "Georgia", "serif"],
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
+      },
+      boxShadow: {
+        ruby: "0 4px 24px rgba(250, 45, 85, 0.4)",
+        "ruby-lg": "0 8px 32px rgba(250, 45, 85, 0.55)",
+        glass: "0 8px 32px 0 rgba(0, 0, 0, 0.45)",
       },
     },
   },

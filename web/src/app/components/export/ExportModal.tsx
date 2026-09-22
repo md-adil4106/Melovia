@@ -281,18 +281,18 @@ export function ExportModal({
       tabIndex={-1}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-[#0f131a] border border-[#232a3b] rounded-2xl shadow-2xl overflow-hidden focus:outline-none focus:ring-1 focus:ring-[#d4af37]">
+      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-[#07080b]/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden focus:outline-none focus:ring-1 focus:ring-[#fa2d55]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1b2230] bg-[#141923]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/[0.02]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#d4af37]/10 border border-[#d4af37]/30 flex items-center justify-center text-[#d4af37]">
+            <div className="w-8 h-8 rounded-xl bg-[#fa2d55]/15 border border-[#fa2d55]/30 flex items-center justify-center text-[#fa2d55]">
               <Download className="w-4 h-4" />
             </div>
             <div>
-              <h2 id="export-modal-title" className="text-base font-semibold text-[#f1f3f7]">
+              <h2 id="export-modal-title" className="text-base font-semibold text-white">
                 Export Playlist
               </h2>
-              <p className="text-xs text-[#8c96a8]">
+              <p className="text-xs text-white/50">
                 {normalizedTracks.length} track{normalizedTracks.length === 1 ? "" : "s"} ready for export
               </p>
             </div>
@@ -301,21 +301,21 @@ export function ExportModal({
             type="button"
             onClick={onClose}
             aria-label="Close export modal"
-            className="p-1.5 rounded-lg text-[#8c96a8] hover:text-[#f1f3f7] hover:bg-[#1f2637] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+            className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-[#1b2230] bg-[#111620] px-6">
+        <div className="flex border-b border-white/10 bg-white/[0.01] px-6">
           <button
             type="button"
             onClick={() => setActiveTab("files")}
             className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${
               activeTab === "files"
-                ? "border-[#d4af37] text-[#d4af37]"
-                : "border-transparent text-[#8c96a8] hover:text-[#f1f3f7]"
+                ? "border-[#fa2d55] text-[#fa2d55]"
+                : "border-transparent text-white/60 hover:text-white"
             }`}
           >
             <FileSpreadsheet className="w-4 h-4" />

@@ -113,19 +113,19 @@ export function WhyDrawer({
     >
       <div
         ref={drawerRef}
-        className="w-full max-w-lg bg-[#0e121a] border-l border-[#232a3b] h-full overflow-y-auto shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-300"
+        className="w-full max-w-lg bg-[#07080b]/95 backdrop-blur-2xl border-l border-white/10 h-full overflow-y-auto shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-300"
       >
         {/* Drawer Header */}
-        <div className="p-6 border-b border-[#1f2637] bg-[#121622] sticky top-0 z-10">
+        <div className="p-6 border-b border-white/10 bg-white/[0.03] sticky top-0 z-10 backdrop-blur-xl">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="relative w-12 h-12 rounded-lg bg-[#1c2230] border border-[#2a3449] flex items-center justify-center text-[#d4af37] flex-shrink-0 overflow-hidden shadow-sm">
-                <Music className="w-5 h-5 text-[#d4af37]/70" />
+              <div className="relative w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#fa2d55] flex-shrink-0 overflow-hidden shadow-md">
+                <Music className="w-5 h-5 text-[#fa2d55]/70" />
                 {track.artwork_url ? (
                   <img
                     src={track.artwork_url}
                     alt=""
-                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                    className="absolute inset-0 w-full h-full object-cover rounded-xl"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
                     }}
@@ -133,17 +133,17 @@ export function WhyDrawer({
                 ) : null}
               </div>
               <div className="min-w-0">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#d4af37] font-semibold flex items-center gap-1.5 mb-1">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#fa2d55] font-semibold flex items-center gap-1.5 mb-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   Recommendation Signals
                 </span>
                 <h3
                   id="why-drawer-title"
-                  className="text-lg font-bold text-[#f1f3f7] truncate font-serif-display"
+                  className="text-lg font-bold text-white truncate font-sans"
                 >
                   Why &quot;{track.title}&quot;?
                 </h3>
-                <p className="text-xs text-[#8c96a8] truncate">
+                <p className="text-xs text-white/60 truncate">
                   by {track.artist_name} {track.year ? `• ${track.year}` : ""}
                 </p>
               </div>
@@ -153,7 +153,7 @@ export function WhyDrawer({
               onClick={onClose}
               data-testid="why-drawer-close"
               aria-label="Close why explanation"
-              className="p-1.5 rounded-lg text-[#8c96a8] hover:text-[#f1f3f7] hover:bg-[#1a202c] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+              className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
             >
               <X className="w-5 h-5" />
             </button>
@@ -191,9 +191,9 @@ export function WhyDrawer({
                   {(data.reasons || []).map((reason, idx) => (
                     <div
                       key={reason.id || idx}
-                      className="bg-[#141924] border border-[#222a3a] rounded-xl p-3.5 flex items-start gap-3 hover:border-[#344057] transition-colors"
+                      className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3.5 flex items-start gap-3 hover:border-white/15 transition-colors"
                     >
-                      <div className="p-1.5 rounded-lg bg-[#1c2232] text-[#d4af37] flex-shrink-0 mt-0.5">
+                      <div className="p-1.5 rounded-lg bg-[#fa2d55]/15 text-[#fa2d55] flex-shrink-0 mt-0.5">
                         {reason.id.includes("TAG") ? (
                           <Tag className="w-3.5 h-3.5" />
                         ) : reason.id.includes("ACOUSTIC") ? (
@@ -209,14 +209,14 @@ export function WhyDrawer({
                         )}
                       </div>
                       <div className="space-y-1 min-w-0">
-                        <p className="text-xs font-medium text-[#f1f3f7] leading-relaxed">
+                        <p className="text-xs font-medium text-white/90 leading-relaxed">
                           {reason.text}
                         </p>
                         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                           {reason.signal_keys.map((key) => (
                             <span
                               key={key}
-                              className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#10141d] border border-[#232a3b] text-[#718096]"
+                              className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/10 text-white/60"
                             >
                               {key}
                             </span>
@@ -230,14 +230,14 @@ export function WhyDrawer({
 
               {/* Signal Bars */}
               <div className="space-y-4 pt-2">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#9aa4b8]">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-white/60">
                   Signal Strength Breakdown
                 </h4>
 
                 {/* Semantic Taste Channel */}
-                <div className="bg-[#141924] border border-[#222a3a] rounded-xl p-3.5 space-y-2">
+                <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3.5 space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-medium text-[#c8d1e0] flex items-center gap-1.5">
+                    <span className="font-medium text-white/90 flex items-center gap-1.5">
                       <Tag className="w-3.5 h-3.5 text-[#38bdf8]" />
                       Semantic Taste Alignment (t)
                     </span>
@@ -245,21 +245,21 @@ export function WhyDrawer({
                       {pctT !== null ? `${pctT}%` : "—"}
                     </span>
                   </div>
-                  <div className="w-full h-1.5 bg-[#1b2230] rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#38bdf8] rounded-full transition-all duration-500"
                       style={{ width: `${pctT || 0}%` }}
                     />
                   </div>
-                  <p className="text-[11px] text-[#78859e]">
+                  <p className="text-[11px] text-white/50">
                     Percentile match with your seed genres and community folksonomy tags.
                   </p>
                 </div>
 
                 {/* Acoustic Texture Channel */}
-                <div className="bg-[#141924] border border-[#222a3a] rounded-xl p-3.5 space-y-2">
+                <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3.5 space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-medium text-[#c8d1e0] flex items-center gap-1.5">
+                    <span className="font-medium text-white/90 flex items-center gap-1.5">
                       <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
                       Acoustic Texture Match (a)
                     </span>
@@ -267,13 +267,13 @@ export function WhyDrawer({
                       {pctA !== null ? `${pctA}%` : "No Audio"}
                     </span>
                   </div>
-                  <div className="w-full h-1.5 bg-[#1b2230] rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-emerald-400 rounded-full transition-all duration-500"
                       style={{ width: `${pctA || 0}%` }}
                     />
                   </div>
-                  <p className="text-[11px] text-[#78859e]">
+                  <p className="text-[11px] text-white/50">
                     {pctA !== null
                       ? "AcousticBrainz features matching tempo, energy, and harmonic timbre."
                       : "Acoustic analysis is unavailable for this track; weights were dynamically renormalized to semantic taste."}
@@ -281,31 +281,31 @@ export function WhyDrawer({
                 </div>
 
                 {/* Novelty / Familiarity */}
-                <div className="bg-[#141924] border border-[#222a3a] rounded-xl p-3.5 space-y-2">
+                <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3.5 space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-medium text-[#c8d1e0] flex items-center gap-1.5">
-                      <Compass className="w-3.5 h-3.5 text-[#e2bf48]" />
+                    <span className="font-medium text-white/90 flex items-center gap-1.5">
+                      <Compass className="w-3.5 h-3.5 text-[#fb7185]" />
                       Discovery Novelty
                     </span>
-                    <span className="font-mono font-bold text-[#e2bf48]">
+                    <span className="font-mono font-bold text-[#fb7185]">
                       {novPct !== null ? `${novPct}%` : "—"}
                     </span>
                   </div>
-                  <div className="w-full h-1.5 bg-[#1b2230] rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#e2bf48] rounded-full transition-all duration-500"
+                      className="h-full bg-gradient-to-r from-[#fa2d55] to-[#fb7185] rounded-full transition-all duration-500"
                       style={{ width: `${novPct || 0}%` }}
                     />
                   </div>
-                  <p className="text-[11px] text-[#78859e]">
+                  <p className="text-[11px] text-white/50">
                     Information-theoretic novelty measuring exploration of less familiar catalog territories.
                   </p>
                 </div>
 
                 {/* Popularity */}
-                <div className="bg-[#141924] border border-[#222a3a] rounded-xl p-3.5 space-y-2">
+                <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3.5 space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-medium text-[#c8d1e0] flex items-center gap-1.5">
+                    <span className="font-medium text-white/90 flex items-center gap-1.5">
                       <Disc className="w-3.5 h-3.5 text-purple-400" />
                       Catalog Exposure / Popularity
                     </span>
@@ -313,21 +313,21 @@ export function WhyDrawer({
                       {popPct}%
                     </span>
                   </div>
-                  <div className="w-full h-1.5 bg-[#1b2230] rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-purple-400 rounded-full transition-all duration-500"
                       style={{ width: `${popPct}%` }}
                     />
                   </div>
-                  <p className="text-[11px] text-[#78859e]">
+                  <p className="text-[11px] text-white/50">
                     Percentile standing in overall catalog exposure (lower indicates underground appeal).
                   </p>
                 </div>
               </div>
 
               {/* Approximate Proxy Disclaimer */}
-              <div className="flex items-start gap-2 text-[11px] text-[#6b778c] p-3 rounded-lg bg-[#0a0d13] border border-[#1b2230]">
-                <Info className="w-3.5 h-3.5 text-[#8896ab] flex-shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 text-[11px] text-white/50 p-3 rounded-xl bg-white/[0.02] border border-white/10">
+                <Info className="w-3.5 h-3.5 text-white/60 flex-shrink-0 mt-0.5" />
                 <span>
                   Reasons mentioning energy or emotional mood are based on composite heuristic proxies (energy_idx, valence_idx) and are indicated as approximate.
                 </span>
@@ -337,10 +337,10 @@ export function WhyDrawer({
         </div>
 
         {/* Drawer Footer */}
-        <div className="p-4 border-t border-[#1f2637] bg-[#121622] flex justify-end">
+        <div className="p-4 border-t border-white/10 bg-white/[0.02] flex justify-end backdrop-blur-xl">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-[#1a202c] hover:bg-[#252e3e] text-xs font-semibold text-[#f1f3f7] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]"
+            className="px-5 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-xs font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
           >
             Close
           </button>
