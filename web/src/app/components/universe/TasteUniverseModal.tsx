@@ -137,24 +137,24 @@ export default function TasteUniverseModal() {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
     >
       {/* Modal Container */}
-      <div className="relative w-full h-full max-w-[100vw] max-h-[100vh] flex flex-col bg-[#0b0e16] text-[#f1f3f7] overflow-hidden">
+      <div className="relative w-full h-full max-w-[100vw] max-h-[100vh] flex flex-col bg-[#07080b] text-white overflow-hidden font-sans">
         {/* Top Control Bar */}
-        <header className="h-14 bg-[#121622]/95 border-b border-[#202738] px-4 flex items-center justify-between shrink-0 z-20 backdrop-blur-md">
+        <header className="h-14 bg-[#0e1118]/85 border-b border-white/[0.08] px-4 flex items-center justify-between shrink-0 z-20 backdrop-blur-2xl">
           {/* Title & Brand */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#d4af37]/20 border border-[#d4af37]/40 flex items-center justify-center text-[#d4af37]">
-              <Compass className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#fa2d55] to-[#8b5cf6] flex items-center justify-center text-white shadow-ruby">
+              <Compass className="w-4 h-4 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold tracking-wide text-[#f5ecd5] uppercase">
+                <h2 className="text-sm font-bold tracking-tight text-white">
                   Taste Universe
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-[#1d2434] text-[#d4af37] border border-[#2d374d] font-mono">
+                <span className="text-[10px] px-2 py-0.5 rounded-md bg-white/[0.06] text-white/80 border border-white/10 font-mono">
                   {renderMode.toUpperCase()} Map
                 </span>
               </div>
-              <p className="text-[10px] text-[#8c96a8]">
+              <p className="text-[10px] text-white/50">
                 Deterministic 3D projection of catalog vectors (visualization only)
               </p>
             </div>
@@ -166,15 +166,15 @@ export default function TasteUniverseModal() {
               <button
                 type="button"
                 onClick={() => setIsRegionDropdownOpen(!isRegionDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#171d2b] hover:bg-[#20283a] border border-[#2b354a] text-xs text-[#c8d0de] transition-colors focus:outline-none focus:ring-1 focus:ring-[#d4af37]"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-xs text-white/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
               >
-                <Layers className="w-3.5 h-3.5 text-[#d4af37]" />
+                <Layers className="w-3.5 h-3.5 text-[#fb7185]" />
                 <span>{currentRegionName ? `Region: ${currentRegionName}` : "All 24 Regions"}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-[#8c96a8]" />
+                <ChevronDown className="w-3.5 h-3.5 text-white/50" />
               </button>
 
               {isRegionDropdownOpen && universeData?.regions && (
-                <div className="absolute top-full left-0 mt-1.5 w-64 max-h-80 bg-[#141924] border border-[#283247] rounded-xl shadow-2xl overflow-y-auto p-1.5 z-50">
+                <div className="absolute top-full left-0 mt-1.5 w-64 max-h-80 glass-dropdown rounded-xl border border-white/15 shadow-2xl overflow-y-auto p-1.5 z-50">
                   <button
                     type="button"
                     onClick={() => {
@@ -183,13 +183,13 @@ export default function TasteUniverseModal() {
                     }}
                     className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
                       universeFocusedRegionId === null
-                        ? "bg-[#d4af37]/20 text-[#d4af37] font-semibold"
-                        : "text-[#c8d0de] hover:bg-[#1b2230]"
+                        ? "bg-[#fa2d55]/20 text-[#fb7185] font-semibold"
+                        : "text-white/80 hover:bg-white/[0.08]"
                     }`}
                   >
                     View All Regions (Overview)
                   </button>
-                  <div className="h-px bg-[#202738] my-1" />
+                  <div className="h-px bg-white/10 my-1" />
                   {universeData.regions.map((reg) => (
                     <button
                       key={reg.region_id}
@@ -200,8 +200,8 @@ export default function TasteUniverseModal() {
                       }}
                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
                         universeFocusedRegionId === reg.region_id
-                          ? "bg-[#d4af37]/20 text-[#d4af37] font-semibold"
-                          : "text-[#c8d0de] hover:bg-[#1b2230]"
+                          ? "bg-[#fa2d55]/20 text-[#fb7185] font-semibold"
+                          : "text-white/80 hover:bg-white/[0.08]"
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
@@ -214,7 +214,7 @@ export default function TasteUniverseModal() {
                         />
                         <span className="truncate">{reg.name}</span>
                       </div>
-                      <span className="text-[10px] text-[#647187] font-mono">
+                      <span className="text-[10px] text-white/40 font-mono">
                         R{reg.region_id}
                       </span>
                     </button>
@@ -228,7 +228,7 @@ export default function TasteUniverseModal() {
               <button
                 type="button"
                 onClick={() => setUniverseFocusedRegionId(exploringRegion.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-950/40 hover:bg-sky-900/50 border border-sky-700/50 text-sky-300 text-xs font-semibold transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-200 text-xs font-semibold transition-colors"
               >
                 <Sparkles className="w-3.5 h-3.5 text-sky-400" />
                 <span>Fly to Blindspot ({exploringRegion.name})</span>
@@ -240,14 +240,14 @@ export default function TasteUniverseModal() {
           <div className="flex items-center gap-3">
             {/* 3D / 2D Switcher */}
             {hasWebGL && (
-              <div className="flex items-center bg-[#0d1017] p-0.5 rounded-lg border border-[#202738]">
+              <div className="flex items-center bg-white/[0.05] p-0.5 rounded-lg border border-white/10">
                 <button
                   type="button"
                   onClick={() => setRenderMode("3d")}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
                     renderMode === "3d"
-                      ? "bg-[#1f2738] text-[#d4af37] shadow"
-                      : "text-[#8c96a8] hover:text-[#f1f3f7]"
+                      ? "bg-white/[0.15] text-white shadow-sm"
+                      : "text-white/60 hover:text-white"
                   }`}
                 >
                   3D View
@@ -255,10 +255,10 @@ export default function TasteUniverseModal() {
                 <button
                   type="button"
                   onClick={() => setRenderMode("2d")}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
                     renderMode === "2d"
-                      ? "bg-[#1f2738] text-[#d4af37] shadow"
-                      : "text-[#8c96a8] hover:text-[#f1f3f7]"
+                      ? "bg-white/[0.15] text-white shadow-sm"
+                      : "text-white/60 hover:text-white"
                   }`}
                 >
                   2D Canvas
@@ -268,22 +268,22 @@ export default function TasteUniverseModal() {
 
             {/* Quality Tier Selector (3D only) */}
             {renderMode === "3d" && (
-              <div className="hidden sm:flex items-center gap-1 bg-[#0d1017] px-2 py-1 rounded-lg border border-[#202738] text-xs">
-                <Gauge className="w-3.5 h-3.5 text-[#d4af37]" />
-                <span className="font-mono text-[11px] text-[#c8d0de] mr-1">{fps} FPS</span>
+              <div className="hidden sm:flex items-center gap-1 bg-white/[0.05] px-2 py-1 rounded-lg border border-white/10 text-xs">
+                <Gauge className="w-3.5 h-3.5 text-[#fa2d55]" />
+                <span className="font-mono text-[11px] text-white/80 mr-1">{fps} FPS</span>
                 <select
                   value={tier}
                   onChange={(e) => setTier(e.target.value as QualityTier)}
                   aria-label="Quality tier"
-                  className="bg-transparent text-[#8c96a8] hover:text-[#f1f3f7] font-medium text-xs focus:outline-none cursor-pointer"
+                  className="bg-transparent text-white/70 hover:text-white font-medium text-xs focus:outline-none cursor-pointer"
                 >
-                  <option value="high" className="bg-[#121622] text-[#f1f3f7]">
+                  <option value="high" className="bg-[#0e1118] text-white">
                     High (15k)
                   </option>
-                  <option value="mid" className="bg-[#121622] text-[#f1f3f7]">
+                  <option value="mid" className="bg-[#0e1118] text-white">
                     Mid (8k)
                   </option>
-                  <option value="mobile" className="bg-[#121622] text-[#f1f3f7]">
+                  <option value="mobile" className="bg-[#0e1118] text-white">
                     Low (4k)
                   </option>
                 </select>
@@ -295,7 +295,7 @@ export default function TasteUniverseModal() {
               type="button"
               onClick={() => setUniverseModalOpen(false)}
               aria-label="Close 3D universe modal (Esc)"
-              className="p-1.5 rounded-lg bg-[#18202e] hover:bg-[#252f44] border border-[#2d374d] text-[#8c96a8] hover:text-[#f1f3f7] transition-colors focus:outline-none focus:ring-1 focus:ring-[#d4af37]"
+              className="p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white/70 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
             >
               <X className="w-4 h-4" />
             </button>
@@ -369,28 +369,28 @@ export default function TasteUniverseModal() {
         </div>
 
         {/* Footer Status Bar */}
-        <footer className="h-8 bg-[#0d1017] border-t border-[#1d2433] px-4 flex items-center justify-between text-[11px] text-[#647187] shrink-0 z-20">
+        <footer className="h-8 bg-[#090b10] border-t border-white/[0.08] px-4 flex items-center justify-between text-[11px] text-white/50 shrink-0 z-20">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 text-[#8c96a8]">
-              <Info className="w-3 h-3 text-[#d4af37]" />
+            <span className="flex items-center gap-1.5 text-white/70">
+              <Info className="w-3 h-3 text-[#fa2d55]" />
               Trustworthiness (k=15):{" "}
-              <strong className="text-[#c8d0de]">
+              <strong className="text-white">
                 {universeData
                   ? `${(universeData.quality_metrics.trustworthiness_k15 * 100).toFixed(1)}%`
                   : "98.3%"}
               </strong>
             </span>
-            <span className="hidden sm:inline text-[#3a4457]">|</span>
-            <span className="hidden sm:inline text-[#8c96a8]">
+            <span className="hidden sm:inline text-white/20">|</span>
+            <span className="hidden sm:inline text-white/50">
               Decisions use 256d vectors; 3D coordinates are visualization only
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[#8c96a8]">
+            <span className="font-mono text-white/60">
               {tier === "high" ? "15,000" : tier === "mid" ? "8,000" : "4,000"} Points
             </span>
-            <span className="text-[#8c96a8]">Press <kbd className="px-1 py-0.5 rounded bg-[#1c2333] border border-[#2b364d] text-[10px] text-[#c8d0de]">Esc</kbd> to close</span>
+            <span className="text-white/50">Press <kbd className="px-1.5 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-[10px] text-white/80 font-mono">Esc</kbd> to close</span>
           </div>
         </footer>
       </div>

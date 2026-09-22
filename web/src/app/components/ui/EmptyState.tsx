@@ -13,7 +13,7 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon = <Music className="w-8 h-8 text-[#d4af37]" />,
+  icon = <Music className="w-8 h-8 text-[#fa2d55]" />,
   title,
   description,
   actionLabel,
@@ -23,15 +23,15 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center p-8 text-center bg-[#141923]/60 border border-[#232a3b] rounded-2xl",
+        "flex flex-col items-center justify-center p-8 text-center bg-white/[0.025] backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-lg",
         className
       )}
     >
-      <div className="w-16 h-16 rounded-2xl bg-[#1c2433] border border-[#2a364d] flex items-center justify-center mb-4 shadow-inner">
+      <div className="w-14 h-14 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center mb-4 text-[#fa2d55] shadow-inner">
         {icon}
       </div>
-      <h3 className="text-base font-bold text-[#f1f3f7] mb-1">{title}</h3>
-      <p className="text-xs sm:text-sm text-[#8c96a8] max-w-sm mb-6 leading-relaxed">
+      <h3 className="text-base font-bold text-white mb-1.5">{title}</h3>
+      <p className="text-xs sm:text-sm text-white/60 max-w-sm mb-6 leading-relaxed">
         {description}
       </p>
       {actionLabel && onAction && (

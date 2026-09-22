@@ -147,19 +147,19 @@ export default function StudyPage() {
       <div className="space-y-1.5 p-3.5 bg-[#121620] rounded-xl border border-[#202738]">
         <div className="flex justify-between items-center text-xs">
           <span className="font-semibold text-[#f1f3f7]">{label}</span>
-          <span className="font-mono text-xs font-bold text-[#d4af37]">{value} / 5</span>
+          <span className="font-mono text-xs font-bold text-[#fa2d55]">{value} / 5</span>
         </div>
-        <p className="text-[11px] text-[#8c96a8]">{description}</p>
+        <p className="text-[11px] text-white/60">{description}</p>
         <div className="flex items-center gap-2 pt-1">
           {[1, 2, 3, 4, 5].map((num) => (
             <button
               key={num}
               type="button"
               onClick={() => onChange(num)}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${
                 value === num
-                  ? "bg-[#d4af37] text-black shadow-md"
-                  : "bg-[#1b2230] text-[#8c96a8] hover:text-[#f1f3f7] hover:bg-[#252f44]"
+                  ? "bg-gradient-to-r from-[#fa2d55] to-[#e11d48] text-white shadow-md"
+                  : "bg-white/[0.05] text-white/60 hover:text-white hover:bg-white/[0.1]"
               }`}
             >
               {num}
@@ -171,31 +171,31 @@ export default function StudyPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#090b10] text-[#f1f3f7] font-sans pb-24">
+    <main className="min-h-screen aurora-bg text-white font-sans pb-24 selection:bg-[#fa2d55]/30 selection:text-white">
       {/* Top Header */}
-      <header className="border-b border-[#212631] bg-[#11141d]/90 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <header className="border-b border-white/[0.08] bg-[#07080b]/75 backdrop-blur-2xl sticky top-0 z-40">
+        <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex items-center gap-1.5 text-xs text-[#8c96a8] hover:text-[#f1f3f7] transition-colors p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cool"
+              className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fa2d55]"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Engine</span>
             </Link>
-            <span className="text-zinc-600">|</span>
+            <span className="text-white/20">|</span>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-[#38bdf8]/20 text-[#38bdf8] flex items-center justify-center font-bold text-xs">
+              <div className="w-6 h-6 rounded-md bg-[#fa2d55]/20 text-[#fa2d55] border border-[#fa2d55]/30 flex items-center justify-center font-bold text-xs">
                 A/B
               </div>
-              <h1 className="text-sm font-bold text-[#f5ecd5] font-serif-display">
+              <h1 className="text-sm font-bold text-white tracking-tight">
                 Double-Blind Evaluation Study
               </h1>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-[#1b2230] border border-[#2b354a] text-[#8c96a8]">
+            <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-white/70">
               Anonymous Participant
             </span>
           </div>
@@ -205,19 +205,19 @@ export default function StudyPage() {
       {/* Main Container */}
       <div className="max-w-5xl mx-auto px-4 pt-8">
         {/* Informed Consent Notice */}
-        <div className="mb-6 p-4 bg-[#11141d] border border-[#273042] rounded-2xl flex items-start gap-3.5 shadow-lg">
-          <Info className="w-5 h-5 text-[#38bdf8] shrink-0 mt-0.5" />
-          <div className="text-xs text-[#8c96a8] leading-relaxed">
-            <span className="font-semibold text-[#f1f3f7]">Study Protocol & Consent: </span>
+        <div className="mb-6 p-4 bg-white/[0.035] border border-white/[0.08] rounded-xl flex items-start gap-3.5 shadow-lg backdrop-blur-xl">
+          <Info className="w-5 h-5 text-[#fa2d55] shrink-0 mt-0.5" />
+          <div className="text-xs text-white/70 leading-relaxed">
+            <span className="font-semibold text-white">Study Protocol & Consent: </span>
             You are evaluating two distinct candidate playlists (&ldquo;Playlist A&rdquo; and &ldquo;Playlist B&rdquo;) generated from the same seed tracks. One playlist was created by Melovia&apos;s Multi-Channel Engine; the other by a standard reference control. The assignment is strictly blinded and randomized. Zero personal data is collected.
           </div>
         </div>
 
         {/* Loading State */}
         {isLoading && (
-          <div className="flex flex-col items-center justify-center py-24 text-[#8c96a8]">
-            <RefreshCw className="w-8 h-8 animate-spin text-[#d4af37] mb-3" />
-            <p className="text-sm font-medium">Generating randomized trial session...</p>
+          <div className="flex flex-col items-center justify-center py-24 text-white/50">
+            <RefreshCw className="w-8 h-8 animate-spin text-[#fa2d55] mb-3" />
+            <p className="text-sm font-medium text-white/80">Generating randomized trial session...</p>
           </div>
         )}
 
@@ -232,12 +232,12 @@ export default function StudyPage() {
 
         {/* Completion Card */}
         {isSubmitted && (
-          <Card className="max-w-xl mx-auto text-center p-8 bg-[#111520] border-[#d4af37]/40">
-            <div className="w-16 h-16 rounded-2xl bg-[#d4af37]/20 border border-[#d4af37]/50 flex items-center justify-center text-[#d4af37] mx-auto mb-4">
-              <CheckCircle2 className="w-8 h-8" />
+          <Card className="max-w-xl mx-auto text-center p-8 bg-white/[0.04] border-white/10 rounded-xl">
+            <div className="w-14 h-14 rounded-xl bg-[#fa2d55]/15 border border-[#fa2d55]/30 flex items-center justify-center text-[#fa2d55] mx-auto mb-4">
+              <CheckCircle2 className="w-7 h-7" />
             </div>
-            <CardTitle className="text-2xl mb-2">Evaluation Submitted!</CardTitle>
-            <CardDescription className="mb-6">
+            <CardTitle className="text-2xl mb-2 text-white">Evaluation Submitted!</CardTitle>
+            <CardDescription className="mb-6 text-white/60">
               Your ratings have been securely and anonymously recorded for empirical statistical analysis. Thank you for contributing to music recommendation research!
             </CardDescription>
             <div className="flex justify-center gap-3">
@@ -257,18 +257,18 @@ export default function StudyPage() {
         {session && !isSubmitted && (
           <div className="space-y-8">
             {/* Reference Seeds Card */}
-            <Card>
+            <Card className="rounded-xl">
               <CardHeader className="mb-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#d4af37] uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-[#fa2d55] uppercase tracking-wider">
                     Reference Seeds
                   </span>
-                  <span className="text-xs text-[#8c96a8]">
+                  <span className="text-xs text-white/50">
                     {session.seed_set_name} ({session.seed_tracks.length} tracks)
                   </span>
                 </div>
-                <CardTitle className="text-base">Target Musical Theme</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-base text-white">Target Musical Theme</CardTitle>
+                <CardDescription className="text-white/60">
                   Both playlists were seeded with these reference tracks. Compare how well each playlist captures this vibe while offering exciting discovery and smooth flow.
                 </CardDescription>
               </CardHeader>
@@ -277,14 +277,14 @@ export default function StudyPage() {
                 {session.seed_tracks.map((st) => (
                   <div
                     key={st.id}
-                    className="p-3 bg-[#11141d] border border-[#202738] rounded-xl flex items-center gap-3"
+                    className="p-3 bg-white/[0.03] border border-white/[0.08] rounded-lg flex items-center gap-3"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-[#1b2230] border border-[#2b354a] flex items-center justify-center text-[#d4af37] shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-[#fa2d55] shrink-0">
                       <Music className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-[#f1f3f7] truncate">{st.title}</p>
-                      <p className="text-[11px] text-[#8c96a8] truncate">
+                      <p className="text-xs font-semibold text-white truncate">{st.title}</p>
+                      <p className="text-[11px] text-white/50 truncate">
                         {st.artist_name} {st.year ? `• ${st.year}` : ""}
                       </p>
                     </div>
@@ -296,19 +296,19 @@ export default function StudyPage() {
             {/* Blind Playlists Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-[#f1f3f7] flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-[#38bdf8]" />
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-[#fa2d55]" />
                   <span>Audition Playlists</span>
                 </h3>
-                <div className="flex bg-[#11141d] p-1 rounded-xl border border-[#202738]">
+                <div className="flex bg-white/[0.06] p-1 rounded-lg border border-white/10 backdrop-blur-md">
                   <button
                     type="button"
                     data-testid="tab-playlist-a"
                     onClick={() => setActiveTab("a")}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
                       activeTab === "a"
-                        ? "bg-[#1b2230] text-[#38bdf8] shadow"
-                        : "text-[#8c96a8] hover:text-[#f1f3f7]"
+                        ? "bg-white/[0.14] text-white shadow-sm"
+                        : "text-white/60 hover:text-white"
                     }`}
                   >
                     Playlist A ({session.playlist_a.length} tracks)
@@ -317,10 +317,10 @@ export default function StudyPage() {
                     type="button"
                     data-testid="tab-playlist-b"
                     onClick={() => setActiveTab("b")}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
                       activeTab === "b"
-                        ? "bg-[#1b2230] text-[#38bdf8] shadow"
-                        : "text-[#8c96a8] hover:text-[#f1f3f7]"
+                        ? "bg-white/[0.14] text-white shadow-sm"
+                        : "text-white/60 hover:text-white"
                     }`}
                   >
                     Playlist B ({session.playlist_b.length} tracks)
@@ -329,10 +329,10 @@ export default function StudyPage() {
               </div>
 
               {/* Playlist Tracks Table */}
-              <div className="bg-[#141923] border border-[#232a3b] rounded-2xl p-4 shadow-xl overflow-x-auto">
+              <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4 shadow-xl overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-[#202738] text-[#8c96a8]">
+                    <tr className="border-b border-white/[0.08] text-white/50">
                       <th className="py-2.5 px-3 w-12 text-center">#</th>
                       <th className="py-2.5 px-3">Title</th>
                       <th className="py-2.5 px-3">Artist</th>
@@ -340,16 +340,16 @@ export default function StudyPage() {
                       <th className="py-2.5 px-3">Tags</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1b2230]">
+                  <tbody className="divide-y divide-white/[0.04]">
                     {(activeTab === "a" ? session.playlist_a : session.playlist_b).map(
                       (track, idx) => (
-                        <tr key={track.id} className="hover:bg-[#18202d] transition-colors">
-                          <td className="py-3 px-3 text-center font-mono text-[#647187]">
+                        <tr key={track.id} className="hover:bg-white/[0.04] transition-colors">
+                          <td className="py-3 px-3 text-center font-mono text-white/40">
                             {idx + 1}
                           </td>
-                          <td className="py-3 px-3 font-semibold text-[#f1f3f7]">{track.title}</td>
-                          <td className="py-3 px-3 text-[#c8d0de]">{track.artist_name}</td>
-                          <td className="py-3 px-3 text-[#8c96a8] font-mono">
+                          <td className="py-3 px-3 font-semibold text-white">{track.title}</td>
+                          <td className="py-3 px-3 text-white/80">{track.artist_name}</td>
+                          <td className="py-3 px-3 text-white/50 font-mono">
                             {track.year || "—"}
                           </td>
                           <td className="py-3 px-3">
@@ -360,7 +360,7 @@ export default function StudyPage() {
                                   return (
                                     <span
                                       key={tIdx}
-                                      className="px-2 py-0.5 rounded bg-[#1b2230] text-[10px] text-[#8c96a8]"
+                                      className="px-2 py-0.5 rounded-md bg-white/[0.06] text-[10px] text-white/70 border border-white/10"
                                     >
                                       #{tagStr}
                                     </span>
@@ -376,22 +376,20 @@ export default function StudyPage() {
               </div>
             </div>
 
-            {/* Likert Rating Form */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#d4af37]" />
-                  <CardTitle className="text-base">Evaluation Form (1–5 Likert Scales)</CardTitle>
-                </div>
-                <CardDescription>
-                  Rate each playlist independently on the 4 evaluation dimensions, then indicate your overall preference.
+            {/* Evaluation Form Card */}
+            <Card className="rounded-xl">
+              <CardHeader className="mb-4">
+                <CardTitle className="text-base text-white">Comparative Evaluation</CardTitle>
+                <CardDescription className="text-white/60">
+                  Rate each playlist independently on a 1–5 scale, then specify which playlist was more satisfying overall.
                 </CardDescription>
               </CardHeader>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Playlist A Ratings */}
-                <div className="space-y-3 p-4 bg-[#0d1017] rounded-2xl border border-[#202738]">
-                  <h4 className="text-sm font-bold text-[#38bdf8] flex items-center gap-2">
+                <div className="space-y-3 p-4 bg-white/[0.025] rounded-xl border border-white/[0.08]">
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#fa2d55]" />
                     <span>Playlist A Ratings</span>
                   </h4>
                   {renderLikertSelector(
@@ -421,8 +419,9 @@ export default function StudyPage() {
                 </div>
 
                 {/* Playlist B Ratings */}
-                <div className="space-y-3 p-4 bg-[#0d1017] rounded-2xl border border-[#202738]">
-                  <h4 className="text-sm font-bold text-[#38bdf8] flex items-center gap-2">
+                <div className="space-y-3 p-4 bg-white/[0.025] rounded-xl border border-white/[0.08]">
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#8b5cf6]" />
                     <span>Playlist B Ratings</span>
                   </h4>
                   {renderLikertSelector(
@@ -453,9 +452,9 @@ export default function StudyPage() {
               </div>
 
               {/* Forced Choice & Qualitative Feedback */}
-              <div className="mt-6 pt-6 border-t border-[#202738] space-y-4">
+              <div className="mt-6 pt-6 border-t border-white/[0.08] space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-[#f1f3f7] uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-white uppercase tracking-wider mb-2">
                     Which playlist did you prefer overall?
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -468,10 +467,10 @@ export default function StudyPage() {
                         key={opt.val}
                         type="button"
                         onClick={() => setPreferredOverall(opt.val as any)}
-                        className={`p-3 rounded-xl text-xs font-bold border transition-all ${
+                        className={`p-3 rounded-lg text-xs font-semibold border transition-all ${
                           preferredOverall === opt.val
-                            ? "bg-[#d4af37]/20 border-[#d4af37] text-[#f5ecd5] shadow-md"
-                            : "bg-[#121620] border-[#202738] text-[#8c96a8] hover:text-[#f1f3f7] hover:bg-[#1a212e]"
+                            ? "bg-[#fa2d55]/20 border-[#fa2d55] text-white shadow-md"
+                            : "bg-white/[0.04] border-white/10 text-white/70 hover:text-white hover:bg-white/[0.08]"
                         }`}
                       >
                         {opt.label}
@@ -481,7 +480,7 @@ export default function StudyPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="feedback-text" className="block text-xs font-bold text-[#c8d0de] mb-1.5">
+                  <label htmlFor="feedback-text" className="block text-xs font-bold text-white/80 mb-1.5">
                     Optional Feedback / Observations (Max 1000 chars):
                   </label>
                   <textarea
@@ -491,7 +490,7 @@ export default function StudyPage() {
                     maxLength={1000}
                     rows={3}
                     placeholder="Describe what stood out in either playlist (e.g. surprising track connections, abrupt changes, or favorite discoveries)..."
-                    className="w-full bg-[#0d1017] border border-[#262e40] rounded-xl p-3 text-xs text-[#f1f3f7] placeholder-[#5a657a] focus:outline-none focus:ring-2 focus:ring-[#d4af37]/60"
+                    className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-xs text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
                   />
                 </div>
 

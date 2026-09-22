@@ -21,7 +21,7 @@ export function Chip({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border select-none backdrop-blur-md",
+        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border select-none backdrop-blur-md",
         selected
           ? "bg-[#fa2d55]/20 border-[#fa2d55]/50 text-white shadow-[0_0_12px_rgba(250,45,85,0.25)]"
           : "bg-white/[0.05] border-white/10 text-[#f1f3f7] hover:bg-white/[0.09] hover:border-white/20",

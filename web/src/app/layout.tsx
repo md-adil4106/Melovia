@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const serifDisplay = Playfair_Display({
+const displayFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-serif-display",
+  variable: "--font-display",
   display: "swap",
+  weight: ["500", "600", "700", "800"],
 });
 
-const sansClean = Plus_Jakarta_Sans({
+const sansFont = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 const monoFont = JetBrains_Mono({
@@ -35,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${serifDisplay.variable} ${sansClean.variable} ${monoFont.variable} dark`}
+      className={`${displayFont.variable} ${sansFont.variable} ${monoFont.variable} dark`}
     >
       <body className="bg-ink-bg text-ink-text antialiased min-h-screen">
         <Providers>{children}</Providers>

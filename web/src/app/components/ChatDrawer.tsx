@@ -236,22 +236,22 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
       <div
         ref={drawerRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative flex h-full w-full max-w-md flex-col bg-zinc-950 border-l border-zinc-800 shadow-2xl overflow-hidden transition-transform duration-200 ease-out sm:max-w-lg"
+        className="relative flex h-full w-full max-w-md flex-col bg-[#0d1017]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl overflow-hidden transition-transform duration-200 ease-out sm:max-w-lg font-sans text-white"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-800/80 bg-zinc-900/40">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.08] bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              <MessageSquare className="h-5 w-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-tr from-[#fa2d55] to-[#8b5cf6] text-white shadow-ruby">
+              <MessageSquare className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 id="chat-drawer-title" className="text-base font-semibold text-zinc-100 flex items-center gap-2">
+              <h2 id="chat-drawer-title" className="text-base font-semibold text-white flex items-center gap-2">
                 Steer Discovery
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-purple-500/15 text-purple-300 border border-purple-500/20">
+                <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-[#fa2d55]/15 text-[#fb7185] border border-[#fa2d55]/30">
                   WOW #4
                 </span>
               </h2>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-white/50">
                 Natural-language session steering via untrusted LLM boundary
               </p>
             </div>
@@ -259,7 +259,7 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="rounded-lg p-2 text-white/60 hover:bg-white/[0.08] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
             aria-label="Close chat drawer"
           >
             <X className="h-5 w-5" />
@@ -269,10 +269,10 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 text-sm">
           {/* Architecture Guarantee Info Banner */}
-          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-3.5 text-xs text-zinc-400 flex items-start gap-2.5">
-            <Sparkles className="h-4 w-4 text-purple-400 flex-shrink-0 mt-0.5" />
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3.5 text-xs text-white/70 flex items-start gap-2.5">
+            <Sparkles className="h-4 w-4 text-[#fb7185] flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-zinc-300">Strict Boundary Invariant: </span>
+              <span className="font-semibold text-white">Strict Boundary Invariant: </span>
               The LLM parses intent into mathematical constraints (knobs & vectors). It never selects tracks, invents metadata, or mutates persistent profiles.
             </div>
           </div>
@@ -280,8 +280,8 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
           {/* Active Applied Constraints */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                <Sliders className="h-3.5 w-3.5 text-zinc-400" />
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-white/60 flex items-center gap-1.5">
+                <Sliders className="h-3.5 w-3.5 text-white/60" />
                 Active Session Context ({appliedConstraints.length})
               </h3>
               {appliedConstraints.length > 0 && (
@@ -289,7 +289,7 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
                   type="button"
                   onClick={() => resetSessionMutation.mutate()}
                   disabled={resetSessionMutation.isPending}
-                  className="text-xs text-zinc-400 hover:text-red-400 flex items-center gap-1 transition-colors disabled:opacity-50"
+                  className="text-xs text-white/50 hover:text-rose-400 flex items-center gap-1 transition-colors disabled:opacity-50"
                   title="Clear all session steering"
                 >
                   <RotateCcw className="h-3 w-3" />
@@ -299,7 +299,7 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
             </div>
 
             {appliedConstraints.length === 0 ? (
-              <p className="text-xs text-zinc-500 italic py-2">
+              <p className="text-xs text-white/40 italic py-2">
                 No active session steering. Type an utterance below or choose a suggestion to steer your vibe.
               </p>
             ) : (
@@ -307,9 +307,9 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
                 {appliedConstraints.map((c: AppliedConstraint) => (
                   <span
                     key={c.id}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium bg-zinc-900 text-zinc-200 border border-zinc-700/80 shadow-sm"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium bg-white/[0.06] text-white border border-white/10 shadow-sm"
                   >
-                    <span className="text-purple-400 font-mono text-[11px] uppercase tracking-wide">
+                    <span className="text-[#fb7185] font-mono text-[11px] uppercase tracking-wide">
                       {c.type}:
                     </span>
                     <span>{c.description}</span>
@@ -317,7 +317,7 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
                       type="button"
                       onClick={() => deleteConstraintMutation.mutate(c.id)}
                       disabled={deleteConstraintMutation.isPending}
-                      className="ml-1 text-zinc-400 hover:text-red-400 hover:bg-zinc-800 rounded p-0.5 transition-colors focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      className="ml-1 text-white/50 hover:text-rose-400 hover:bg-white/[0.08] rounded p-0.5 transition-colors focus:outline-none focus:ring-1 focus:ring-[#fa2d55]"
                       aria-label={`Remove constraint ${c.description}`}
                     >
                       <X className="h-3 w-3" />
@@ -351,10 +351,10 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
 
           {/* Clarification Notice */}
           {clarificationMessage && (
-            <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3.5 text-xs text-blue-200 flex items-start gap-2">
-              <HelpCircle className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-3.5 text-xs text-sky-200 flex items-start gap-2">
+              <HelpCircle className="h-4 w-4 text-sky-400 flex-shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold text-blue-300">Notice: </span>
+                <span className="font-semibold text-sky-300">Notice: </span>
                 {clarificationMessage}
               </div>
             </div>
@@ -362,15 +362,15 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-200 flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-200 flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-rose-400 flex-shrink-0 mt-0.5" />
               <div>{errorMessage}</div>
             </div>
           )}
 
           {/* Quick Suggestions */}
           <div className="space-y-2 pt-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-white/50">
               Suggestions
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -380,7 +380,7 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
                   type="button"
                   onClick={() => handleSuggestionClick(sugg)}
                   disabled={refineMutation.isPending || !candidateSetId}
-                  className="rounded-lg border border-zinc-800 bg-zinc-900/60 px-2.5 py-1.5 text-xs text-zinc-300 hover:border-purple-500/40 hover:bg-zinc-800/80 hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-white/80 hover:border-[#fa2d55]/40 hover:bg-white/[0.08] hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
                 >
                   {sugg}
                 </button>
@@ -390,7 +390,7 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
         </div>
 
         {/* Input Footer */}
-        <div className="border-t border-zinc-800/80 bg-zinc-900/50 p-4">
+        <div className="border-t border-white/[0.08] bg-white/[0.02] p-4">
           <form onSubmit={handleSubmit} className="space-y-2">
             <div className="relative">
               <textarea
@@ -411,12 +411,12 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
                 }
                 disabled={!candidateSetId || refineMutation.isPending}
                 rows={2}
-                className="w-full resize-none rounded-xl border border-zinc-700/80 bg-zinc-950 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 shadow-inner focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full resize-none rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-sm text-white placeholder-white/40 shadow-inner focus:border-[#fa2d55] focus:outline-none focus:ring-2 focus:ring-[#fa2d55]/20 disabled:cursor-not-allowed disabled:opacity-50"
               />
               <div className="absolute right-2.5 bottom-2.5 flex items-center gap-2">
                 <span
                   className={`text-[11px] font-mono ${
-                    utterance.length > 270 ? "text-amber-400" : "text-zinc-500"
+                    utterance.length > 270 ? "text-amber-400" : "text-white/40"
                   }`}
                 >
                   {utterance.length}/300
@@ -424,18 +424,18 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
                 <button
                   type="submit"
                   disabled={!utterance.trim() || !candidateSetId || refineMutation.isPending}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600 text-white shadow-md hover:bg-purple-500 transition-colors disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg btn-ruby shadow-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
                   aria-label="Submit refinement"
                 >
                   {refineMutation.isPending ? (
                     <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   ) : (
-                    <Send className="h-3.5 w-3.5" />
+                    <Send className="h-3.5 w-3.5 text-white" />
                   )}
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-zinc-500 px-1">
+            <div className="flex items-center justify-between text-[11px] text-white/40 px-1">
               <span>Press Enter to apply refinement</span>
               <span>Temporary session context</span>
             </div>

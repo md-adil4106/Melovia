@@ -58,7 +58,7 @@ const config: Config = {
         slow: "var(--motion-slow)",
       },
       fontFamily: {
-        display: ["var(--font-serif-display)", "Georgia", "serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
         sans: ["var(--font-sans)", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
       },

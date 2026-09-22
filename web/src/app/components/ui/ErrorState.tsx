@@ -22,12 +22,12 @@ export function ErrorState({
     <div
       role="alert"
       className={cn(
-        "p-4 bg-rose-950/30 border border-rose-800/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-rose-200",
+        "p-4 bg-rose-950/30 border border-rose-800/50 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-rose-200 backdrop-blur-xl",
         className
       )}
     >
       <div className="flex items-start gap-3">
-        <div className="p-2 rounded-xl bg-rose-900/50 text-rose-300 shrink-0 mt-0.5 sm:mt-0">
+        <div className="p-2 rounded-lg bg-rose-900/50 text-rose-300 shrink-0 mt-0.5 sm:mt-0">
           <AlertCircle className="w-5 h-5" />
         </div>
         <div>
