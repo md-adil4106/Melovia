@@ -448,3 +448,91 @@ def sequence_playlist(
         active_weights=active_weights,
         dropped_features=dropped_features,
     )
+
+
+def order_radio_flow(
+    items: list[Any],
+    catalog: Any,
+    n: int = 30,
+    max_per_artist: int = 2,
+) -> list[Any]:
+    """Sequence recommendations into an acoustic radio flow progression.
+
+    Rules:
+    1. Position 1 is anchored to the highest-scoring candidate.
+    2. Strict anti-burst: avoids consecutive tracks by the same artist.
+    3. Respects max_per_artist saturation cap.
+    4. Greedily minimizes energy and tempo transition friction.
+    5. Deterministic tie-breaking by track_id.
+    """
+    if len(items) <= 1 or n <= 1:
+        return list(items[:n])
+
+    # 1. Filter candidates to respect artist saturation cap
+    artist_counts: dict[str, int] = {}
+    filtered_items: list[Any] = []
+
+    for it in items:
+        t_id = str(it.track_id) if hasattr(it, "track_id") else str(it.get("id", ""))
+        t_meta = catalog.get_track_dict(t_id) if catalog.contains_id(t_id) else {}
+        art_id = str(t_meta.get("artist_id") or t_meta.get("artist_name") or "unknown")
+
+        count = artist_counts.get(art_id, 0)
+        if count < max_per_artist:
+            artist_counts[art_id] = count + 1
+            filtered_items.append(it)
+
+    pool = filtered_items if len(filtered_items) >= min(n, len(items)) else list(items)
+    if not pool:
+        return list(items[:n])
+
+    target_n = min(n, len(pool))
+
+    def _get_scalars(it: Any) -> tuple[float, float, str]:
+        t_id = str(it.track_id) if hasattr(it, "track_id") else str(it.get("id", ""))
+        t_meta = catalog.get_track_dict(t_id) if catalog.contains_id(t_id) else {}
+        sc = t_meta.get("scalars") or {}
+        e = float(sc.get("energy", 0.50))
+        t = float(sc.get("tempo_bpm", sc.get("bpm", 115.0)))
+        art = str(t_meta.get("artist_id") or t_meta.get("artist_name") or t_id)
+        return e, t, art
+
+    sequenced = [pool[0]]
+    remaining = pool[1:]
+    last_e, last_t, last_art = _get_scalars(sequenced[0])
+
+    while len(sequenced) < target_n and remaining:
+        different_artist_cands = [
+            cand for cand in remaining if _get_scalars(cand)[2] != last_art
+        ]
+        candidate_pool = different_artist_cands if different_artist_cands else remaining
+
+        best_cand = None
+        best_cost = float("inf")
+        best_tid = ""
+
+        for cand in candidate_pool:
+            cand_e, cand_t, cand_art = _get_scalars(cand)
+            cand_score = float(getattr(cand, "score", 0.5))
+            c_tid = str(getattr(cand, "track_id", ""))
+
+            delta_e = abs(cand_e - last_e)
+            delta_t = min(1.0, abs(cand_t - last_t) / 100.0)
+            score_deficit = 1.0 - cand_score
+
+            cost = (0.50 * delta_e) + (0.30 * delta_t) + (0.20 * score_deficit)
+
+            if cost < best_cost or (abs(cost - best_cost) < 1e-6 and c_tid < best_tid):
+                best_cost = cost
+                best_cand = cand
+                best_tid = c_tid
+
+        if best_cand is None:
+            best_cand = candidate_pool[0]
+
+        sequenced.append(best_cand)
+        remaining.remove(best_cand)
+        last_e, last_t, last_art = _get_scalars(best_cand)
+
+    return sequenced
+

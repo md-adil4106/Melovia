@@ -215,6 +215,21 @@ def score_candidates(
                     if track_val is not None and seed_val is not None:
                         scalar_deltas[s_key] = round(float(track_val - seed_val), 4)
 
+        # Acoustic audio features proximity score
+        acoustic_compat = 1.0
+        if scalar_deltas:
+            delta_e = abs(scalar_deltas.get("energy_idx", scalar_deltas.get("energy", 0.0)))
+            delta_v = abs(scalar_deltas.get("valence_idx", scalar_deltas.get("valence", 0.0)))
+            delta_t = abs(scalar_deltas.get("tempo_norm", 0.0))
+            delta_ac = abs(scalar_deltas.get("acousticness", 0.0))
+            acoustic_compat = float(
+                np.clip(
+                    1.0 - (0.35 * delta_e + 0.30 * delta_v + 0.20 * delta_t + 0.15 * delta_ac),
+                    0.0,
+                    1.0,
+                )
+            )
+
         # Region metadata
         region_id = region_col[t_idx] if t_idx < len(region_col) else None
         region_label = region_name_map.get(region_id) if region_id is not None else None
@@ -236,6 +251,7 @@ def score_candidates(
             "nearest_seed_similarity": nearest_seed_sim,
             "shared_tags": shared_tags_list,
             "scalar_deltas": scalar_deltas,
+            "acoustic_compatibility": round(acoustic_compat, 4),
             "region_id": region_id,
             "region_label": region_label,
             "session_facets_matched": [],

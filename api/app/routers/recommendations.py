@@ -301,7 +301,22 @@ async def create_recommendations(
             "bridge_reason": f"Bridging your taste into {reg_name} (adjacent musical cluster).",
         }
 
-    top_items = final_list.top_n(payload.n)
+    from app.recsys.sequencing import order_radio_flow
+
+    candidate_items = final_list.top_n(
+        min(len(final_list.items), max(payload.n * 2, payload.n))
+    )
+    max_art = (
+        config.artist_cap_discovery
+        if payload.discovery >= config.artist_cap_threshold_d
+        else config.artist_cap_default
+    )
+    top_items = order_radio_flow(
+        items=candidate_items,
+        catalog=catalog_store,
+        n=payload.n,
+        max_per_artist=max_art,
+    )
     response_items = _build_response_items(
         top_items=top_items,
         catalog_store=catalog_store,
@@ -365,7 +380,22 @@ async def rerank_recommendations(
         discovery=payload.discovery,
     )
 
-    top_items = reranked_list.top_n(payload.n)
+    from app.recsys.sequencing import order_radio_flow
+
+    candidate_items = reranked_list.top_n(
+        min(len(reranked_list.items), max(payload.n * 2, payload.n))
+    )
+    max_art = (
+        config.artist_cap_discovery
+        if payload.discovery >= config.artist_cap_threshold_d
+        else config.artist_cap_default
+    )
+    top_items = order_radio_flow(
+        items=candidate_items,
+        catalog=catalog_store,
+        n=payload.n,
+        max_per_artist=max_art,
+    )
     response_items = _build_response_items(
         top_items=top_items,
         catalog_store=catalog_store,

@@ -150,6 +150,151 @@ GENRE_SCALARS: dict[str, dict[str, float]] = {
     },
 }
 
+# Collaborative and stylistic peer graph modeled after Spotify/YouTube Music co-listening graphs
+ARTIST_COLLABORATOR_GRAPH: dict[str, list[str]] = {
+    # Bollywood / Indian Romantic, Indie & Filmi
+    "faheem abdullah": [
+        "Huzaif Nazar", "Rather Hashim", "Hyder Dar", "Anuv Jain", "Babil Khan",
+        "Arijit Singh", "Mohit Chauhan",
+    ],
+    "huzaif nazar": [
+        "Faheem Abdullah", "Rather Hashim", "Hyder Dar", "Anuv Jain",
+    ],
+    "navjot ahuja": [
+        "Faheem Abdullah", "Anuv Jain", "Jasleen Royal", "Prateek Kuhad",
+    ],
+    "arijit singh": [
+        "Pritam", "Shreya Ghoshal", "Jasleen Royal", "Mohit Chauhan", "Atif Aslam",
+        "Mithoon", "A.R. Rahman", "Anirudh Ravichander",
+    ],
+    "pritam": [
+        "Arijit Singh", "Mohit Chauhan", "KK", "Atif Aslam", "Shreya Ghoshal",
+        "Sunidhi Chauhan",
+    ],
+    "atif aslam": [
+        "Pritam", "Mithoon", "Sachin-Jigar", "Shreya Ghoshal", "Arijit Singh",
+        "Mohit Chauhan",
+    ],
+    "mohit chauhan": [
+        "Pritam", "A.R. Rahman", "Lucky Ali", "KK", "Arijit Singh", "Atif Aslam",
+    ],
+    "javed ali": [
+        "Sonu Nigam", "A.R. Rahman", "Pritam", "Kailash Kher", "Shreya Ghoshal",
+    ],
+    "sonu nigam": [
+        "Javed Ali", "Udit Narayan", "Alka Yagnik", "Shreya Ghoshal", "A.R. Rahman",
+        "Shaan",
+    ],
+    "kk": [
+        "Pritam", "Mohit Chauhan", "Shaan", "Arijit Singh", "Emraan Hashmi hits",
+    ],
+    "shreya ghoshal": [
+        "Arijit Singh", "Sonu Nigam", "Atif Aslam", "Pritam", "A.R. Rahman",
+    ],
+    "jasleen royal": [
+        "Arijit Singh", "Prateek Kuhad", "Anuv Jain", "Babil Khan",
+    ],
+    "anuv jain": [
+        "Jasleen Royal", "Prateek Kuhad", "Faheem Abdullah", "Babil Khan",
+        "The Local Train",
+    ],
+    "prateek kuhad": [
+        "Anuv Jain", "Jasleen Royal", "When Chai Met Toast", "The Local Train",
+    ],
+    # Hip-Hop / Melodic Trap / Rap
+    "travis scott": [
+        "Don Toliver", "Metro Boomin", "Future", "21 Savage", "Quavo",
+        "Playboi Carti", "Sheck Wes",
+    ],
+    "don toliver": [
+        "Travis Scott", "Metro Boomin", "Future", "Gunna", "Kali Uchis",
+        "Lil Yachty",
+    ],
+    "gunna": [
+        "Future", "Young Thug", "Lil Baby", "Metro Boomin", "Don Toliver",
+        "21 Savage",
+    ],
+    "future": [
+        "Metro Boomin", "Drake", "Gunna", "Travis Scott", "21 Savage",
+        "Young Thug",
+    ],
+    "metro boomin": [
+        "Future", "21 Savage", "Travis Scott", "Don Toliver", "Young Thug",
+        "Drake",
+    ],
+    "21 savage": [
+        "Metro Boomin", "Drake", "J. Cole", "Future", "Travis Scott",
+        "Young Nudy",
+    ],
+    "playboi carti": [
+        "Ken Carson", "Destroy Lonely", "Travis Scott", "Lil Uzi Vert", "Yeat",
+    ],
+    "lil baby": [
+        "Gunna", "Future", "Lil Durk", "21 Savage", "Drake", "Metro Boomin",
+    ],
+    "drake": [
+        "21 Savage", "Future", "Travis Scott", "PARTYNEXTDOOR", "Lil Wayne",
+    ],
+    "kendrick lamar": [
+        "Baby Keem", "SZA", "Jay Rock", "ScHoolboy Q", "J. Cole",
+    ],
+    "j. cole": [
+        "Kendrick Lamar", "Bas", "JID", "Drake", "21 Savage",
+    ],
+    # Western Pop
+    "the weeknd": [
+        "Daft Punk", "Lana Del Rey", "Post Malone", "Playboi Carti", "Future",
+    ],
+    "billie eilish": [
+        "Finneas", "Olivia Rodrigo", "Phoebe Bridgers", "Lorde", "Clairo",
+    ],
+    "olivia rodrigo": [
+        "Billie Eilish", "Taylor Swift", "Conan Gray", "Sabrina Carpenter",
+        "Chappell Roan",
+    ],
+    "taylor swift": [
+        "Phoebe Bridgers", "Lana Del Rey", "Sabrina Carpenter", "Gracie Abrams",
+    ],
+    "dua lipa": [
+        "Calvin Harris", "Elton John", "Miley Cyrus", "The Weeknd", "Ava Max",
+    ],
+    "post malone": [
+        "Swae Lee", "The Weeknd", "Morgan Wallen", "Noah Kahan", "21 Savage",
+    ],
+    # R&B / Soul
+    "sza": [
+        "Kendrick Lamar", "Frank Ocean", "Summer Walker", "Brent Faiyaz",
+        "Jhené Aiko",
+    ],
+    "frank ocean": [
+        "Tyler, The Creator", "Daniel Caesar", "Brent Faiyaz", "SZA",
+        "Steve Lacy",
+    ],
+    "daniel caesar": [
+        "H.E.R.", "Kali Uchis", "Frank Ocean", "Giveon", "Omar Apollo",
+    ],
+    # Rock / Alternative
+    "arctic monkeys": [
+        "The Strokes", "The Last Shadow Puppets", "Miles Kane", "Tame Impala",
+        "Fontaines D.C.",
+    ],
+    "the strokes": [
+        "Arctic Monkeys", "The Voidz", "Franz Ferdinand", "Interpol",
+    ],
+    "tame impala": [
+        "MGMT", "Unknown Mortal Orchestra", "Pond", "Mac DeMarco", "Gorillaz",
+    ],
+    # K-Pop
+    "bts": ["Jimin", "Jung Kook", "V", "Agust D", "TXT", "SEVENTEEN"],
+    "newjeans": ["ILLIT", "LE SSERAFIM", "IVE", "aespa", "TWICE"],
+    "blackpink": ["Jennie", "ROSÉ", "LISA", "aespa", "TWICE"],
+    # Latin / Reggaeton
+    "bad bunny": [
+        "Rauw Alejandro", "J Balvin", "Tainy", "Chencho Corleone", "Feid", "Mora",
+    ],
+    "peso pluma": ["Junior H", "Natanael Cano", "Eslabon Armado", "Fuerza Regida"],
+}
+
 
 def classify_genre_and_culture(primary_genre: str, tags: list[str] | None = None) -> str:
     """Classify genre and cultural market into a coherent domain."""
@@ -303,13 +448,45 @@ class LiveSearchService:
 
         # Determine audio scalars proxy
         scalars_preset = GENRE_SCALARS.get(genre_key, GENRE_SCALARS.get("pop", {}))
+        base_bpm = float(scalars_preset.get("bpm", 120.0))
+        base_energy = float(scalars_preset.get("energy", 0.60))
+        base_valence = float(scalars_preset.get("valence", 0.50))
+        base_dance = float(scalars_preset.get("danceability", 0.65))
+        base_acoustic = float(scalars_preset.get("acousticness", 0.25))
+
+        title_lower = str(title).lower()
+        if any(
+            w in title_lower
+            for w in ("acoustic", "unplugged", "piano", "reprise", "ballad", "slowed", "lullaby")
+        ):
+            base_acoustic = min(0.95, base_acoustic + 0.40)
+            base_energy = max(0.20, base_energy - 0.25)
+            base_bpm = max(68.0, base_bpm - 25.0)
+            base_dance = max(0.25, base_dance - 0.20)
+        elif any(
+            w in title_lower
+            for w in ("remix", "club", "party", "dance", "dj", "drill", "bass")
+        ):
+            base_acoustic = max(0.02, base_acoustic - 0.20)
+            base_energy = min(0.98, base_energy + 0.25)
+            base_bpm = min(150.0, base_bpm + 20.0)
+            base_dance = min(0.95, base_dance + 0.20)
+        elif any(
+            w in title_lower
+            for w in ("lo-fi", "chill", "relax", "midnight", "late night", "sad")
+        ):
+            base_acoustic = min(0.85, base_acoustic + 0.30)
+            base_energy = max(0.25, base_energy - 0.25)
+            base_valence = max(0.25, base_valence - 0.20)
+            base_bpm = max(72.0, base_bpm - 18.0)
+
         scalars = {
-            "bpm": scalars_preset.get("bpm", 120.0),
-            "tempo_bpm": scalars_preset.get("bpm", 120.0),
-            "energy": scalars_preset.get("energy", 0.60),
-            "valence": scalars_preset.get("valence", 0.50),
-            "danceability": scalars_preset.get("danceability", 0.65),
-            "acousticness": scalars_preset.get("acousticness", 0.25),
+            "bpm": base_bpm,
+            "tempo_bpm": base_bpm,
+            "energy": base_energy,
+            "valence": base_valence,
+            "danceability": base_dance,
+            "acousticness": base_acoustic,
             "instrumentalness": 0.05,
             "loudness_db": -8.0,
         }
@@ -497,10 +674,23 @@ class LiveSearchService:
         elif "latin" in seed_cultures:
             primary_country = "MX"
 
-        # 2. Formulate search queries based on seed artists
-        search_queries = list(seed_artists)
+        # 2. Extract collaborator and peer artists from collaborative knowledge graph
+        graph_peers: list[str] = []
+        for art in seed_artists:
+            art_lower = art.lower().strip()
+            for g_key, peers in ARTIST_COLLABORATOR_GRAPH.items():
+                if g_key in art_lower or art_lower in g_key:
+                    for p in peers:
+                        if p not in graph_peers:
+                            graph_peers.append(p)
 
-        # 3. Add genre- and culture-specific peer discovery query terms
+        # 3. Formulate multi-source search queries:
+        # A. Seed Artist Radio (core artist catalog)
+        search_queries = list(seed_artists)
+        # B. Direct Collaborators & Co-listening Peers
+        search_queries.extend(graph_peers)
+
+        # 4. Add genre- and culture-specific peer discovery query terms
         if "bollywood_desi" in seed_cultures:
             search_queries.extend([
                 "Arijit Singh romantic",
@@ -583,7 +773,7 @@ class LiveSearchService:
                 unique_queries.append(q)
 
         # Query iTunes for top queries using the targeted country storefront
-        for q in unique_queries[:10]:
+        for q in unique_queries[:14]:
             results = await self.search_tracks(q, limit=limit_per_query, country=primary_country)
             for r in results:
                 # Culture boundary guard: if seeds are Bollywood, exclude Western pop/rap candidates

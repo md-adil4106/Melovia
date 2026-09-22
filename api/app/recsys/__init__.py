@@ -50,6 +50,7 @@ from app.recsys.sequencing import (
     PlaylistSequenceResult,
     TransitionCostItem,
     generate_arc_target,
+    order_radio_flow,
     sequence_playlist,
 )
 from app.recsys.taste import Modes, RecsysError, SeedNotFoundError, build_modes
@@ -96,6 +97,7 @@ __all__ = [
     "PlaylistSequenceResult",
     "TransitionCostItem",
     "generate_arc_target",
+    "order_radio_flow",
     "sequence_playlist",
     "DimensionScore",
     "MusicDNA",
