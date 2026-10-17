@@ -27,6 +27,8 @@ export interface Track {
   artwork_url?: string | null;
   preview_url?: string | null;
   album_name?: string | null;
+  duration_ms?: number | null;
+  duration_sec?: number | null;
 }
 
 export interface RecommendationSignals {
@@ -208,6 +210,17 @@ interface DiscoveryStore {
   setUniverseFocusedRegionId: (id: number | null) => void;
   universeFocusedTrackId: string | null;
   setUniverseFocusedTrackId: (id: string | null) => void;
+  // Recommendation Sizing & Duration Target
+  recommendationLengthMode: "count" | "duration";
+  setRecommendationLengthMode: (mode: "count" | "duration") => void;
+  targetCount: number;
+  setTargetCount: (count: number) => void;
+  targetDurationMinutes: number;
+  setTargetDurationMinutes: (minutes: number) => void;
+  totalDurationSeconds: number;
+  setTotalDurationSeconds: (sec: number) => void;
+  totalDurationFormatted: string;
+  setTotalDurationFormatted: (fmt: string) => void;
 }
 
 export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
@@ -237,7 +250,19 @@ export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
       unsupportedIntents: [],
       clarificationMessage: null,
       isChatDrawerOpen: false,
+      totalDurationSeconds: 0,
+      totalDurationFormatted: "",
     }),
+  recommendationLengthMode: "count",
+  setRecommendationLengthMode: (mode) => set({ recommendationLengthMode: mode }),
+  targetCount: 30,
+  setTargetCount: (count) => set({ targetCount: count }),
+  targetDurationMinutes: 60,
+  setTargetDurationMinutes: (minutes) => set({ targetDurationMinutes: minutes }),
+  totalDurationSeconds: 0,
+  setTotalDurationSeconds: (sec) => set({ totalDurationSeconds: sec }),
+  totalDurationFormatted: "",
+  setTotalDurationFormatted: (fmt) => set({ totalDurationFormatted: fmt }),
   recommendations: [],
   setRecommendations: (items) => set({ recommendations: items, error: null }),
   candidateSetId: null,

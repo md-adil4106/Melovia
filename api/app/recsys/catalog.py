@@ -17,6 +17,8 @@ import numpy as np
 import numpy.typing as npt
 import pyarrow.parquet as pq
 
+from app.recsys.mood import classify_track_mood, get_mood_anchor_vector
+
 
 class CatalogError(Exception):
     """Base exception for catalog-related failures."""
@@ -102,7 +104,13 @@ class CatalogStore:
         self.layout2d = layout2d
         self.render_sample = render_sample
 
-        for opt_col in ("artwork_url", "preview_url", "album_name"):
+        for opt_col in (
+            "artwork_url",
+            "preview_url",
+            "album_name",
+            "duration_ms",
+            "duration_sec",
+        ):
             if opt_col not in self._tracks_metadata:
                 self._tracks_metadata[opt_col] = [None] * len(self.track_ids)
 
@@ -373,13 +381,38 @@ class CatalogStore:
             elif any(k in tag_text for k in ("pop", "dance pop")):
                 culture_key = "western_pop"
 
+        mood_key = classify_track_mood(raw_track)
+        mood_v: npt.NDArray[np.float32] | None = (
+            get_mood_anchor_vector(mood_key, self.dim_t) if mood_key != "general" else None
+        )
+
         genre_v: npt.NDArray[np.float32] | None = None
-        if tag_vectors and culture_key:
+        if tag_vectors and culture_key and mood_v is not None:
+            mean_tag = np.mean(tag_vectors, axis=0)
+            tag_norm = float(np.linalg.norm(mean_tag))
+            tag_unit = mean_tag / (tag_norm + 1e-12)
+            anchor_v = get_culture_anchor_vector(culture_key, self.dim_t)
+            blended = 0.40 * tag_unit + 0.35 * anchor_v + 0.25 * mood_v
+            blended_norm = float(np.linalg.norm(blended))
+            genre_v = np.asarray(blended / (blended_norm + 1e-12), dtype=np.float32)
+        elif tag_vectors and culture_key:
             mean_tag = np.mean(tag_vectors, axis=0)
             tag_norm = float(np.linalg.norm(mean_tag))
             tag_unit = mean_tag / (tag_norm + 1e-12)
             anchor_v = get_culture_anchor_vector(culture_key, self.dim_t)
             blended = 0.5 * tag_unit + 0.5 * anchor_v
+            blended_norm = float(np.linalg.norm(blended))
+            genre_v = np.asarray(blended / (blended_norm + 1e-12), dtype=np.float32)
+        elif culture_key and mood_v is not None:
+            anchor_v = get_culture_anchor_vector(culture_key, self.dim_t)
+            blended = 0.65 * anchor_v + 0.35 * mood_v
+            blended_norm = float(np.linalg.norm(blended))
+            genre_v = np.asarray(blended / (blended_norm + 1e-12), dtype=np.float32)
+        elif tag_vectors and mood_v is not None:
+            mean_tag = np.mean(tag_vectors, axis=0)
+            tag_norm = float(np.linalg.norm(mean_tag))
+            tag_unit = mean_tag / (tag_norm + 1e-12)
+            blended = 0.65 * tag_unit + 0.35 * mood_v
             blended_norm = float(np.linalg.norm(blended))
             genre_v = np.asarray(blended / (blended_norm + 1e-12), dtype=np.float32)
         elif tag_vectors:
@@ -388,6 +421,8 @@ class CatalogStore:
             genre_v = np.asarray(mean_tag / tag_norm, dtype=np.float32) if tag_norm > 1e-6 else None
         elif culture_key:
             genre_v = get_culture_anchor_vector(culture_key, self.dim_t)
+        elif mood_v is not None:
+            genre_v = mood_v
 
         if genre_v is not None:
             combined = 0.85 * genre_v + 0.53 * track_jitter_norm
@@ -419,6 +454,8 @@ class CatalogStore:
                     "genre_category",
                     "tags",
                     "scalars",
+                    "duration_ms",
+                    "duration_sec",
                 ):
                     if raw_track.get(k):
                         existing_dict[k] = raw_track[k]
@@ -476,6 +513,10 @@ class CatalogStore:
                 meta[col_name].append(raw_track.get("preview_url"))
             elif col_name == "album_name":
                 meta[col_name].append(raw_track.get("album_name"))
+            elif col_name == "duration_ms":
+                meta[col_name].append(raw_track.get("duration_ms", 210000))
+            elif col_name == "duration_sec":
+                meta[col_name].append(raw_track.get("duration_sec", 210.0))
             else:
                 meta[col_name].append(raw_track.get(col_name))
 
@@ -522,6 +563,11 @@ class CatalogStore:
         tid = self.get_id(idx)
         if tid in self._dynamic_tracks:
             record.update(self._dynamic_tracks[tid])
+
+        if not record.get("duration_ms"):
+            record["duration_ms"] = 210000
+        if not record.get("duration_sec"):
+            record["duration_sec"] = 210.0
 
         return record
 

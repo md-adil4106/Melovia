@@ -11,6 +11,13 @@ from typing import Any
 
 import httpx
 
+from app.recsys.mood import (
+    MOOD_PARTY,
+    MOOD_SAD,
+    classify_track_mood,
+    detect_seed_mood_profile,
+)
+
 logger = logging.getLogger(__name__)
 
 # Genre-to-heuristic scalars mapping for dynamic tracks
@@ -626,6 +633,11 @@ class LiveSearchService:
             base_valence = max(0.25, base_valence - 0.20)
             base_bpm = max(72.0, base_bpm - 18.0)
 
+        # Extract track duration in milliseconds
+        track_time_ms = item.get("trackTimeMillis")
+        duration_ms = int(track_time_ms) if track_time_ms is not None else 210000
+        duration_sec = round(duration_ms / 1000.0, 1)
+
         scalars = {
             "bpm": base_bpm,
             "tempo_bpm": base_bpm,
@@ -635,6 +647,8 @@ class LiveSearchService:
             "acousticness": base_acoustic,
             "instrumentalness": 0.05,
             "loudness_db": -8.0,
+            "duration_ms": duration_ms,
+            "duration_sec": duration_sec,
         }
 
         canonical_id = f"ext:itunes:{track_id}"
@@ -660,6 +674,8 @@ class LiveSearchService:
             "culture": culture,
             "artwork_url": item.get("artworkUrl100") or item.get("artworkUrl60"),
             "preview_url": item.get("previewUrl"),
+            "duration_ms": duration_ms,
+            "duration_sec": duration_sec,
             "source": "itunes_live",
         }
 
@@ -836,6 +852,10 @@ class LiveSearchService:
             culture = s.get("culture") or classify_genre_and_culture(genre, tags)
             seed_cultures.add(culture)
 
+        # Detect dominant mood of the seeds
+        mood_profile = detect_seed_mood_profile(seed_tracks)
+        dominant_mood = mood_profile["dominant_mood"]
+
         # Determine primary market country based on seed cultures
         primary_country = "IN" if "bollywood_desi" in seed_cultures else "US"
         if "kpop" in seed_cultures:
@@ -859,38 +879,91 @@ class LiveSearchService:
         # B. Direct Collaborators & Co-listening Peers
         search_queries.extend(graph_peers)
 
-        # 4. Add genre- and culture-specific peer discovery query terms
+        # 4. Add mood- and culture-specific peer discovery query terms
         if "bollywood_desi" in seed_cultures:
-            search_queries.extend(
-                [
-                    "Arijit Singh romantic",
-                    "Pritam romantic hits",
-                    "Mohit Chauhan romantic",
-                    "Atif Aslam romantic",
-                    "Faheem Abdullah hits",
-                    "Anuv Jain hits",
-                    "bollywood romantic hits",
-                    "hindi romcom songs",
-                    "Jasleen Royal romantic",
-                    "KK romantic hits",
-                    "Javed Ali romantic hits",
-                    "Sonu Nigam romantic hits",
-                ]
-            )
+            if dominant_mood == MOOD_SAD:
+                search_queries.extend(
+                    [
+                        "Arijit Singh sad hits",
+                        "KK sad songs",
+                        "Atif Aslam sad songs",
+                        "Mohit Chauhan sad songs",
+                        "B Praak sad songs",
+                        "Anuv Jain hits",
+                        "Faheem Abdullah",
+                        "The Local Train",
+                        "Prateek Kuhad heartbreak",
+                        "bollywood sad songs",
+                        "hindi heartbreak songs",
+                        "Mustafa Zahid sad",
+                        "Pritam sad hits",
+                        "hindi melancholic songs",
+                        "soulful hindi songs",
+                    ]
+                )
+                for art in seed_artists:
+                    search_queries.append(f"{art} sad")
+                    search_queries.append(f"{art} emotional")
+            elif dominant_mood == MOOD_PARTY:
+                search_queries.extend(
+                    [
+                        "bollywood party hits",
+                        "hindi dance club songs",
+                        "punjabi party songs",
+                        "Badshah dance hits",
+                        "Yo Yo Honey Singh party",
+                        "Diljit Dosanjh party",
+                    ]
+                )
+                for art in seed_artists:
+                    search_queries.append(f"{art} party")
+                    search_queries.append(f"{art} dance")
+            else:
+                # Romantic / Melodic / General
+                search_queries.extend(
+                    [
+                        "Arijit Singh romantic",
+                        "Pritam romantic hits",
+                        "Mohit Chauhan romantic",
+                        "Atif Aslam romantic",
+                        "Faheem Abdullah hits",
+                        "Anuv Jain hits",
+                        "bollywood romantic hits",
+                        "hindi romcom songs",
+                        "Jasleen Royal romantic",
+                        "KK romantic hits",
+                        "Javed Ali romantic hits",
+                        "Sonu Nigam romantic hits",
+                    ]
+                )
+                for art in seed_artists:
+                    search_queries.append(f"{art} romantic")
         elif "hiphop" in seed_cultures:
-            search_queries.extend(
-                [
-                    "Travis Scott",
-                    "Metro Boomin",
-                    "Future",
-                    "21 Savage",
-                    "Gunna",
-                    "Lil Baby",
-                    "Playboi Carti",
-                    "Drake",
-                    "Kendrick Lamar",
-                ]
-            )
+            if dominant_mood == MOOD_SAD:
+                search_queries.extend(
+                    [
+                        "Juice WRLD",
+                        "XXXTentacion",
+                        "Lil Peep",
+                        "Rod Wave",
+                        "sad rap melodic",
+                        "melodic emotional trap",
+                    ]
+                )
+            else:
+                search_queries.extend(
+                    [
+                        "Travis Scott",
+                        "Metro Boomin",
+                        "Future",
+                        "21 Savage",
+                        "Gunna",
+                        "Lil Baby",
+                        "Playboi Carti",
+                        "Drake",
+                        "Kendrick Lamar",
+                    ]
+                )
         elif "rock" in seed_cultures:
             search_queries.extend(
                 [
@@ -956,17 +1029,66 @@ class LiveSearchService:
                 unique_queries.append(q)
 
         # Query iTunes for top queries using the targeted country storefront
-        for q in unique_queries[:14]:
+        for q in unique_queries[:20]:
             results = await self.search_tracks(q, limit=limit_per_query, country=primary_country)
             for r in results:
-                # Culture boundary guard: if seeds are Bollywood, exclude Western pop/rap candidates
+                # 1. Culture boundary guard: if seeds are Bollywood, exclude foreign tracks
                 r_culture = r.get("culture") or classify_genre_and_culture(
                     str(r.get("primaryGenreName") or ""), r.get("tags")
                 )
-                if "bollywood_desi" in seed_cultures and r_culture in ("western_pop", "hiphop"):
+                if "bollywood_desi" in seed_cultures:
+                    if r_culture != "bollywood_desi":
+                        r_blob = (
+                            f"{str(r.get('title', ''))} {str(r.get('artist_name', ''))}"
+                        ).lower()
+                        if not any(
+                            k in r_blob
+                            for k in (
+                                "singh",
+                                "shreya",
+                                "pritam",
+                                "kumar",
+                                "ali",
+                                "khan",
+                                "jain",
+                                "nigam",
+                                "malik",
+                                "raval",
+                                "nautiyal",
+                                "kaur",
+                                "dhillon",
+                                "b praak",
+                                "local train",
+                                "kuhad",
+                            )
+                        ):
+                            continue
+                elif "hiphop" in seed_cultures and r_culture in ("bollywood_desi", "kpop"):
                     continue
-                if "hiphop" in seed_cultures and r_culture in ("bollywood_desi", "kpop"):
-                    continue
+
+                # 2. Strict mood boundary guard
+                if dominant_mood == MOOD_SAD:
+                    cand_mood = classify_track_mood(r)
+                    if cand_mood == MOOD_PARTY:
+                        continue
+                    r_title = str(r.get("title", "")).lower()
+                    if any(
+                        bad in r_title
+                        for bad in (
+                            "party",
+                            "remix",
+                            "club mix",
+                            "dj mix",
+                            "dhamaka",
+                            "bhangra dance",
+                            "celebration",
+                        )
+                    ):
+                        continue
+                elif dominant_mood == MOOD_PARTY:
+                    cand_mood = classify_track_mood(r)
+                    if cand_mood == MOOD_SAD:
+                        continue
 
                 rid = str(r.get("id"))
                 r_key = (

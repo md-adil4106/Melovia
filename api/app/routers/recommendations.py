@@ -41,6 +41,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
 
+def _format_duration(seconds: float) -> str:
+    """Format duration in seconds into human-readable string (e.g. '2 hr 04 min' or '45 min')."""
+    total_min = int(round(seconds / 60.0))
+    hours = total_min // 60
+    mins = total_min % 60
+    if hours > 0:
+        return f"{hours} hr {mins:02d} min" if mins > 0 else f"{hours} hr"
+    return f"{mins} min"
+
+
 def _build_response_items(
     top_items: list[ScoredItem],
     catalog_store: CatalogStore,
@@ -54,6 +64,17 @@ def _build_response_items(
 
         raw_scalars = t_dict.get("scalars")
         scalars_obj = AudioScalars(**raw_scalars) if raw_scalars else None
+
+        dur_ms = t_dict.get("duration_ms")
+        dur_sec = t_dict.get("duration_sec")
+        if dur_ms is None and raw_scalars and "duration_ms" in raw_scalars:
+            dur_ms = int(raw_scalars["duration_ms"])
+        if dur_sec is None and raw_scalars and "duration_sec" in raw_scalars:
+            dur_sec = float(raw_scalars["duration_sec"])
+        if dur_ms is None:
+            dur_ms = 210000
+        if dur_sec is None:
+            dur_sec = round(dur_ms / 1000.0, 1)
 
         track_resp = TrackDetailResponse(
             id=t_dict["id"],
@@ -73,6 +94,8 @@ def _build_response_items(
             artwork_url=t_dict.get("artwork_url"),
             preview_url=t_dict.get("preview_url"),
             album_name=t_dict.get("album_name"),
+            duration_ms=dur_ms,
+            duration_sec=dur_sec,
         )
 
         discovery_val = 0.0
@@ -239,10 +262,7 @@ async def create_recommendations(
                 else catalog_store.track_ids[idx].startswith("ext:itunes:")
             )
         ]
-        min_needed = (
-            min(len(current_live_candidate_ids), payload.n) if current_live_candidate_ids else 1
-        )
-        if len(live_indices) >= min_needed and len(live_indices) > 0:
+        if len(live_indices) > 0:
             sub_indices = np.array(live_indices, dtype=np.int64)
             idx_map = {idx: i for i, idx in enumerate(pool.track_indices)}
             row_sel = [idx_map[idx] for idx in live_indices]
@@ -263,13 +283,21 @@ async def create_recommendations(
     # 3. Score candidates for base multi-channel relevance
     scored_list = score_candidates(pool, catalog_store, config=config)
 
+    # Determine target track count budget
+    target_count = payload.n
+    target_duration_sec: float | None = None
+    if payload.duration_mode == "duration" and payload.target_duration_minutes is not None:
+        target_duration_sec = payload.target_duration_minutes * 60.0
+        estimated_n = int(np.ceil(target_duration_sec / 180.0))
+        target_count = min(max(estimated_n, 15), 100)
+
     # 4. Apply Discovery Control reranking
     final_list = rerank_candidates(
         pool=pool,
         scored_list=scored_list,
         catalog=catalog_store,
         discovery=payload.discovery,
-        n=payload.n,
+        n=target_count,
         config=config,
     )
 
@@ -301,7 +329,9 @@ async def create_recommendations(
 
     from app.recsys.sequencing import order_radio_flow
 
-    candidate_items = final_list.top_n(min(len(final_list.items), max(payload.n * 2, payload.n)))
+    candidate_items = final_list.top_n(
+        min(len(final_list.items), max(target_count * 2, target_count))
+    )
     max_art = (
         config.artist_cap_discovery
         if payload.discovery >= config.artist_cap_threshold_d
@@ -310,9 +340,23 @@ async def create_recommendations(
     top_items = order_radio_flow(
         items=candidate_items,
         catalog=catalog_store,
-        n=payload.n,
+        n=target_count,
         max_per_artist=max_art,
     )
+
+    # If duration_mode == "duration", accumulate until target duration is met
+    if target_duration_sec is not None:
+        accumulated_items: list[ScoredItem] = []
+        current_dur_sec = 0.0
+        for item in top_items:
+            t_dict = catalog_store.get_track_dict(item.track_idx)
+            dur = float(t_dict.get("duration_sec") or 210.0)
+            accumulated_items.append(item)
+            current_dur_sec += dur
+            if current_dur_sec >= target_duration_sec:
+                break
+        top_items = accumulated_items
+
     response_items = _build_response_items(
         top_items=top_items,
         catalog_store=catalog_store,
@@ -320,10 +364,15 @@ async def create_recommendations(
         bridge_info=bridge_info,
     )
 
+    total_sec = sum(item.track.duration_sec or 210.0 for item in response_items)
+    formatted_duration = _format_duration(total_sec)
+
     return RecommendationResponse(
         candidate_set_id=candidate_set_id,
         total_candidates=final_list.total_candidates,
         items=response_items,
+        total_duration_seconds=round(total_sec, 1),
+        total_duration_formatted=formatted_duration,
     )
 
 
@@ -359,13 +408,20 @@ async def rerank_recommendations(
 
     config = cached_set.config
 
+    target_count = payload.n
+    target_duration_sec: float | None = None
+    if payload.duration_mode == "duration" and payload.target_duration_minutes is not None:
+        target_duration_sec = payload.target_duration_minutes * 60.0
+        estimated_n = int(np.ceil(target_duration_sec / 180.0))
+        target_count = min(max(estimated_n, 15), 100)
+
     # Apply Discovery Control reranking on the cached candidate pool
     reranked_list = rerank_candidates(
         pool=cached_set.pool,
         scored_list=cached_set.scored_list,
         catalog=catalog_store,
         discovery=payload.discovery,
-        n=payload.n,
+        n=target_count,
         config=config,
     )
 
@@ -379,7 +435,7 @@ async def rerank_recommendations(
     from app.recsys.sequencing import order_radio_flow
 
     candidate_items = reranked_list.top_n(
-        min(len(reranked_list.items), max(payload.n * 2, payload.n))
+        min(len(reranked_list.items), max(target_count * 2, target_count))
     )
     max_art = (
         config.artist_cap_discovery
@@ -389,19 +445,38 @@ async def rerank_recommendations(
     top_items = order_radio_flow(
         items=candidate_items,
         catalog=catalog_store,
-        n=payload.n,
+        n=target_count,
         max_per_artist=max_art,
     )
+
+    # If duration_mode == "duration", accumulate until target duration is met
+    if target_duration_sec is not None:
+        accumulated_items = []
+        current_dur_sec = 0.0
+        for item in top_items:
+            t_dict = catalog_store.get_track_dict(item.track_idx)
+            dur = float(t_dict.get("duration_sec") or 210.0)
+            accumulated_items.append(item)
+            current_dur_sec += dur
+            if current_dur_sec >= target_duration_sec:
+                break
+        top_items = accumulated_items
+
     response_items = _build_response_items(
         top_items=top_items,
         catalog_store=catalog_store,
         include_signals=payload.include_signals,
     )
 
+    total_sec = sum(item.track.duration_sec or 210.0 for item in response_items)
+    formatted_duration = _format_duration(total_sec)
+
     return RecommendationResponse(
         candidate_set_id=payload.candidate_set_id,
         total_candidates=reranked_list.total_candidates,
         items=response_items,
+        total_duration_seconds=round(total_sec, 1),
+        total_duration_formatted=formatted_duration,
     )
 
 

@@ -18,6 +18,8 @@ class AudioScalars(BaseModel):
         default=None, ge=0.0, le=1.0, description="Instrumentalness score"
     )
     loudness_db: float | None = Field(default=None, description="Overall loudness in decibels")
+    duration_ms: int | None = Field(default=None, description="Track runtime in milliseconds")
+    duration_sec: float | None = Field(default=None, description="Track runtime in seconds")
 
 
 class TrackDetailResponse(BaseModel):
@@ -40,6 +42,8 @@ class TrackDetailResponse(BaseModel):
     artwork_url: str | None = Field(default=None, description="Album artwork image URL")
     preview_url: str | None = Field(default=None, description="Audio preview clip URL")
     album_name: str | None = Field(default=None, description="Album or collection name")
+    duration_ms: int | None = Field(default=None, description="Track runtime in milliseconds")
+    duration_sec: float | None = Field(default=None, description="Track runtime in seconds")
 
 
 class TrackSearchResponse(BaseModel):

@@ -6,6 +6,7 @@ import {
   Bookmark,
   BookmarkCheck,
   BookmarkPlus,
+  Clock,
   Compass,
   Download,
   Globe,
@@ -188,6 +189,16 @@ export default function DiscoveryHome() {
     clearExploringRegion,
     setUniverseModalOpen,
     setUniverseFocusedRegionId,
+    recommendationLengthMode,
+    setRecommendationLengthMode,
+    targetCount,
+    setTargetCount,
+    targetDurationMinutes,
+    setTargetDurationMinutes,
+    totalDurationSeconds,
+    setTotalDurationSeconds,
+    totalDurationFormatted,
+    setTotalDurationFormatted,
   } = useDiscoveryStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -352,6 +363,11 @@ export default function DiscoveryHome() {
       useSavedTaste?: boolean;
       regionId?: number | null;
     }) => {
+      const payloadN =
+        recommendationLengthMode === "count"
+          ? targetCount
+          : Math.min(Math.max(Math.ceil((targetDurationMinutes * 60) / 180), 15), 100);
+
       const res = await fetch(`${API_BASE}/recommendations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -359,10 +375,13 @@ export default function DiscoveryHome() {
         body: JSON.stringify({
           seed_track_ids: seedIds || [],
           use_saved_taste: useSavedTaste,
-          n: 30,
+          n: payloadN,
           discovery: d,
           region_id: regionId,
           include_signals: true,
+          duration_mode: recommendationLengthMode,
+          target_duration_minutes:
+            recommendationLengthMode === "duration" ? targetDurationMinutes : undefined,
         }),
       });
       if (!res.ok) {
@@ -374,6 +393,12 @@ export default function DiscoveryHome() {
     onSuccess: (data) => {
       setRecommendations(data.items || []);
       setCandidateSetId(data.candidate_set_id);
+      if (data.total_duration_seconds) {
+        setTotalDurationSeconds(data.total_duration_seconds);
+      }
+      if (data.total_duration_formatted) {
+        setTotalDurationFormatted(data.total_duration_formatted);
+      }
     },
   });
 
@@ -447,20 +472,29 @@ export default function DiscoveryHome() {
     mutationFn: async ({
       candidate_set_id,
       d,
-      n = 30,
+      n,
     }: {
       candidate_set_id: string;
       d: number;
       n?: number;
     }) => {
+      const payloadN =
+        n ||
+        (recommendationLengthMode === "count"
+          ? targetCount
+          : Math.min(Math.max(Math.ceil((targetDurationMinutes * 60) / 180), 15), 100));
+
       const res = await fetch(`${API_BASE}/recommendations/rerank`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           candidate_set_id,
           discovery: d,
-          n,
+          n: payloadN,
           include_signals: true,
+          duration_mode: recommendationLengthMode,
+          target_duration_minutes:
+            recommendationLengthMode === "duration" ? targetDurationMinutes : undefined,
         }),
       });
       if (!res.ok) {
@@ -474,6 +508,12 @@ export default function DiscoveryHome() {
     },
     onSuccess: (data) => {
       setRecommendations(data.items || []);
+      if (data.total_duration_seconds) {
+        setTotalDurationSeconds(data.total_duration_seconds);
+      }
+      if (data.total_duration_formatted) {
+        setTotalDurationFormatted(data.total_duration_formatted);
+      }
     },
     onError: (err: Error) => {
       // If cached candidate set expired, automatically fallback to full recommendation generation
@@ -970,6 +1010,85 @@ export default function DiscoveryHome() {
             )}
           </div>
 
+          {/* Recommendation Size & Listening Duration Selector */}
+          <div className="mt-5 pt-4 border-t border-white/[0.08] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/[0.03] p-3.5 rounded-xl border border-white/[0.06] shadow-sm backdrop-blur-md">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-white/90">
+                <Clock className="w-3.5 h-3.5 text-[#fa2d55]" />
+                <span>Length:</span>
+              </div>
+              <div className="inline-flex items-center bg-black/40 border border-white/10 rounded-lg p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setRecommendationLengthMode("count")}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                    recommendationLengthMode === "count"
+                      ? "bg-white/[0.15] text-white font-semibold shadow-sm"
+                      : "text-white/50 hover:text-white"
+                  }`}
+                >
+                  Songs Count
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRecommendationLengthMode("duration")}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                    recommendationLengthMode === "duration"
+                      ? "bg-white/[0.15] text-white font-semibold shadow-sm"
+                      : "text-white/50 hover:text-white"
+                  }`}
+                >
+                  Listening Time
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {recommendationLengthMode === "count" ? (
+                <>
+                  {[15, 25, 30, 45, 60, 80].map((cnt) => (
+                    <button
+                      key={cnt}
+                      type="button"
+                      onClick={() => setTargetCount(cnt)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                        targetCount === cnt
+                          ? "bg-gradient-to-r from-[#fa2d55] to-[#fb7185] text-white shadow-[0_2px_10px_rgba(250,45,85,0.35)]"
+                          : "bg-white/[0.05] hover:bg-white/[0.1] text-white/70 hover:text-white border border-white/5"
+                      }`}
+                    >
+                      {cnt} songs
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <>
+                  {[
+                    { label: "30m", mins: 30 },
+                    { label: "45m", mins: 45 },
+                    { label: "1 hr", mins: 60 },
+                    { label: "1.5 hr", mins: 90 },
+                    { label: "2 hr", mins: 120 },
+                    { label: "3 hr", mins: 180 },
+                  ].map((dur) => (
+                    <button
+                      key={dur.mins}
+                      type="button"
+                      onClick={() => setTargetDurationMinutes(dur.mins)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                        targetDurationMinutes === dur.mins
+                          ? "bg-gradient-to-r from-[#fa2d55] to-[#fb7185] text-white shadow-[0_2px_10px_rgba(250,45,85,0.35)]"
+                          : "bg-white/[0.05] hover:bg-white/[0.1] text-white/70 hover:text-white border border-white/5"
+                      }`}
+                    >
+                      {dur.label}
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+
           {/* Action Row */}
           <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
             <div className="text-xs text-white/60 flex items-center gap-1.5">
@@ -1208,8 +1327,12 @@ export default function DiscoveryHome() {
                   <Download className="w-3.5 h-3.5" />
                   <span>Export</span>
                 </button>
-                <span className="text-xs text-white/60 bg-white/[0.04] px-2.5 py-1 rounded-md border border-white/10">
-                  {recommendations.length} recommendations ranked
+                <span className="text-xs text-white/70 bg-white/[0.04] px-2.5 py-1.5 rounded-md border border-white/10 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#fb7185]" />
+                  <span>
+                    {recommendations.length} {recommendations.length === 1 ? "track" : "tracks"}
+                    {totalDurationFormatted ? ` • ${totalDurationFormatted}` : ""}
+                  </span>
                 </span>
               </div>
             )}

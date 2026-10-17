@@ -23,8 +23,18 @@ class RecommendationRequest(BaseModel):
     n: int = Field(
         default=30,
         ge=1,
-        le=50,
-        description="Number of recommended tracks to return (1 to 50, default 30)",
+        le=100,
+        description="Number of recommended tracks to return (1 to 100, default 30)",
+    )
+    target_duration_minutes: float | None = Field(
+        default=None,
+        ge=5.0,
+        le=360.0,
+        description="Target total listening duration in minutes (e.g. 120 for 2 hours)",
+    )
+    duration_mode: str = Field(
+        default="count",
+        description="Recommendation sizing mode: 'count' or 'duration'",
     )
     excluded_artist_ids: list[str] = Field(
         default_factory=list,
@@ -73,8 +83,18 @@ class RerankRequest(BaseModel):
     n: int = Field(
         default=30,
         ge=1,
-        le=50,
-        description="Number of reranked tracks to return (1 to 50, default 30)",
+        le=100,
+        description="Number of reranked tracks to return (1 to 100, default 30)",
+    )
+    target_duration_minutes: float | None = Field(
+        default=None,
+        ge=5.0,
+        le=360.0,
+        description="Target total listening duration in minutes (e.g. 120 for 2 hours)",
+    )
+    duration_mode: str = Field(
+        default="count",
+        description="Recommendation sizing mode: 'count' or 'duration'",
     )
     include_signals: bool = Field(
         default=True,
@@ -134,6 +154,14 @@ class RecommendationResponse(BaseModel):
     items: list[RecommendedTrackItem] = Field(
         default_factory=list,
         description="Ranked list of recommended tracks",
+    )
+    total_duration_seconds: float = Field(
+        default=0.0,
+        description="Total duration in seconds of recommended tracks",
+    )
+    total_duration_formatted: str = Field(
+        default="",
+        description="Formatted total listening duration (e.g. '2 hr 04 min')",
     )
 
 
