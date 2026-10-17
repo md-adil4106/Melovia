@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import time
+import urllib.parse
 import uuid
 from datetime import UTC, datetime
 from typing import Any, Literal, cast
@@ -34,6 +35,7 @@ from app.schemas.export import (
     FileExportRequest,
     PlatformExportRequest,
     SpotifyAuthUrlResponse,
+    SpotifyConfigPayload,
     SpotifyStatusResponse,
     TrackExportItem,
 )
@@ -141,6 +143,24 @@ async def export_file(
     )
 
 
+@router.post(
+    "/spotify/config",
+    summary="Set Spotify Client ID for session",
+)
+async def set_spotify_config(
+    payload: SpotifyConfigPayload,
+    request: Request,
+    response: Response,
+) -> dict[str, Any]:
+    """Store custom Spotify Client ID in session without server restart."""
+    session_id = get_or_create_session_id(request, response)
+    session_data = SPOTIFY_SESSIONS.setdefault(session_id, {})
+    clean_id = payload.client_id.strip()
+    session_data["client_id"] = clean_id
+    logger.info("Saved custom Spotify Client ID for session", extra={"stage": "spotify_config"})
+    return {"success": True, "configured": True, "client_id": clean_id}
+
+
 @router.get(
     "/spotify/auth-url",
     response_model=SpotifyAuthUrlResponse,
@@ -149,30 +169,40 @@ async def export_file(
 async def get_spotify_auth_url(
     request: Request,
     response: Response,
+    client_id: str | None = Query(default=None),
 ) -> SpotifyAuthUrlResponse:
     """Generate PKCE credentials and Spotify login URL."""
+    session_id = get_or_create_session_id(request, response)
+    session_data = SPOTIFY_SESSIONS.setdefault(session_id, {})
+
     settings = get_settings()
-    client_id = settings.PLATFORM.spotify_client_id or settings.PLATFORM.client_id
-    if not client_id:
+    configured_cid = (
+        (client_id.strip() if client_id else None)
+        or session_data.get("client_id")
+        or settings.PLATFORM.spotify_client_id
+        or settings.PLATFORM.client_id
+    )
+    if not configured_cid:
         raise HTTPException(
             status_code=400,
-            detail="Spotify Client ID is not configured. Set SPOTIFY_CLIENT_ID in environment.",
+            detail=(
+                "Spotify Client ID is not configured. "
+                "Set SPOTIFY_CLIENT_ID in environment or configure it in the modal."
+            ),
         )
 
-    session_id = get_or_create_session_id(request, response)
     code_verifier = generate_code_verifier()
     code_challenge = generate_code_challenge(code_verifier)
     state = uuid.uuid4().hex
 
     # Store in memory session store
-    SPOTIFY_SESSIONS[session_id] = {
-        "code_verifier": code_verifier,
-        "state": state,
-        "created_at": time.time(),
-    }
+    session_data["client_id"] = configured_cid
+    session_data["code_verifier"] = code_verifier
+    session_data["state"] = state
+    session_data["created_at"] = time.time()
     STATE_TO_SESSION[state] = session_id
 
-    adapter = SpotifyAdapter()
+    adapter = SpotifyAdapter(client_id=configured_cid)
     auth_url = adapter.get_authorization_url(state=state, code_challenge=code_challenge)
 
     logger.info(
@@ -219,7 +249,8 @@ async def spotify_oauth_callback(
     session_data["state"] = None
 
     code_verifier = session_data.get("code_verifier", "")
-    adapter = SpotifyAdapter()
+    configured_cid = session_data.get("client_id")
+    adapter = SpotifyAdapter(client_id=configured_cid)
     token_resp = await adapter.authenticate(code=code, code_verifier=code_verifier)
 
     if "access_token" not in token_resp:
@@ -285,28 +316,36 @@ async def get_spotify_status(
     request: Request,
     response: Response,
 ) -> SpotifyStatusResponse:
-    """Return whether Spotify is connected for the active session."""
+    """Return whether Spotify is connected and configured for active session."""
     session_id = get_or_create_session_id(request, response)
-    session_data = SPOTIFY_SESSIONS.get(session_id)
+    session_data = SPOTIFY_SESSIONS.get(session_id, {})
+    settings = get_settings()
+    has_cid = bool(
+        session_data.get("client_id")
+        or settings.PLATFORM.spotify_client_id
+        or settings.PLATFORM.client_id
+    )
 
     if not session_data or not session_data.get("access_token"):
-        return SpotifyStatusResponse(connected=False)
+        return SpotifyStatusResponse(connected=False, client_id_configured=has_cid)
 
     # Check if expired and refresh if possible
     expires_at = session_data.get("expires_at", 0)
     if time.time() >= expires_at - 60 and session_data.get("refresh_token"):
-        adapter = SpotifyAdapter()
+        configured_cid = session_data.get("client_id")
+        adapter = SpotifyAdapter(client_id=configured_cid)
         refresh_resp = await adapter.refresh_token(session_data["refresh_token"])
         if "access_token" in refresh_resp:
             session_data["access_token"] = refresh_resp["access_token"]
             session_data["expires_at"] = time.time() + refresh_resp.get("expires_in", 3600)
         else:
             # Refresh failed
-            SPOTIFY_SESSIONS.pop(session_id, None)
-            return SpotifyStatusResponse(connected=False)
+            session_data.pop("access_token", None)
+            return SpotifyStatusResponse(connected=False, client_id_configured=has_cid)
 
     return SpotifyStatusResponse(
         connected=True,
+        client_id_configured=has_cid,
         display_name=session_data.get("display_name"),
         user_id=session_data.get("user_id"),
         profile_url=session_data.get("profile_url"),
@@ -320,7 +359,12 @@ async def disconnect_spotify(
 ) -> dict[str, bool]:
     """Clear active Spotify credentials for session."""
     session_id = get_or_create_session_id(request, response)
-    SPOTIFY_SESSIONS.pop(session_id, None)
+    if session_id in SPOTIFY_SESSIONS:
+        SPOTIFY_SESSIONS[session_id].pop("access_token", None)
+        SPOTIFY_SESSIONS[session_id].pop("refresh_token", None)
+        SPOTIFY_SESSIONS[session_id].pop("user_id", None)
+        SPOTIFY_SESSIONS[session_id].pop("display_name", None)
+        SPOTIFY_SESSIONS[session_id].pop("profile_url", None)
     return {"success": True}
 
 
@@ -343,29 +387,111 @@ async def export_playlist(
             detail="Too many export requests. Please wait a moment.",
         )
 
-    session_data = SPOTIFY_SESSIONS.get(session_id)
-
-    if not session_data or not session_data.get("access_token"):
-        raise HTTPException(
-            status_code=401,
-            detail="Not authenticated with Spotify. Connect your account first.",
-        )
-
     tracks = _resolve_tracks(request, payload.track_ids, payload.tracks)
     if not tracks:
         raise HTTPException(status_code=400, detail="No tracks provided for platform export.")
 
     job_id = str(uuid.uuid4())
     created_at = datetime.now(UTC).isoformat()
-    adapter = SpotifyAdapter()
-    matcher = TrackMatcher(adapter)
+
+    if payload.platform == "apple_music":
+        items: list[TrackExportItem] = []
+        for t in tracks:
+            tid = t.get("track_id") or t.get("id", "")
+            title = t.get("title", "")
+            artist = t.get("artist") or t.get("artist_name", "")
+            isrc = t.get("isrc")
+            query_str = urllib.parse.quote(f"{title} {artist}".strip())
+            am_url = f"https://music.apple.com/search?term={query_str}"
+            items.append(
+                TrackExportItem(
+                    catalog_track_id=tid,
+                    title=title,
+                    artist=artist,
+                    isrc=isrc,
+                    status="matched",
+                    confidence=1.0,
+                    platform_uri=am_url,
+                    platform_title=title,
+                    platform_artist=artist,
+                    match_strategy="apple_music_link",
+                )
+            )
+        job = ExportJobResponse(
+            job_id=job_id,
+            status="completed",
+            platform="apple_music",
+            playlist_name=payload.playlist_name,
+            playlist_id=f"am-{job_id[:8]}",
+            playlist_url=f"https://music.apple.com/search?term={urllib.parse.quote(payload.playlist_name)}",
+            total_tracks=len(tracks),
+            matched_count=len(tracks),
+            ambiguous_count=0,
+            unmatched_count=0,
+            tracks=items,
+            created_at=created_at,
+        )
+        EXPORT_JOBS[job_id] = job
+        return job
+
+    if payload.platform == "ytmusic":
+        items = []
+        for t in tracks:
+            tid = t.get("track_id") or t.get("id", "")
+            title = t.get("title", "")
+            artist = t.get("artist") or t.get("artist_name", "")
+            isrc = t.get("isrc")
+            query_str = urllib.parse.quote(f"{title} {artist}".strip())
+            ytm_url = f"https://music.youtube.com/search?q={query_str}"
+            items.append(
+                TrackExportItem(
+                    catalog_track_id=tid,
+                    title=title,
+                    artist=artist,
+                    isrc=isrc,
+                    status="matched",
+                    confidence=1.0,
+                    platform_uri=ytm_url,
+                    platform_title=title,
+                    platform_artist=artist,
+                    match_strategy="youtube_music_link",
+                )
+            )
+        job = ExportJobResponse(
+            job_id=job_id,
+            status="completed",
+            platform="ytmusic",
+            playlist_name=payload.playlist_name,
+            playlist_id=f"ytm-{job_id[:8]}",
+            playlist_url=f"https://music.youtube.com/search?q={urllib.parse.quote(payload.playlist_name)}",
+            total_tracks=len(tracks),
+            matched_count=len(tracks),
+            ambiguous_count=0,
+            unmatched_count=0,
+            tracks=items,
+            created_at=created_at,
+        )
+        EXPORT_JOBS[job_id] = job
+        return job
+
+    # Platform is Spotify
+    session_data = SPOTIFY_SESSIONS.get(session_id)
+    if not session_data or not session_data.get("access_token"):
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated with Spotify. Connect your account first.",
+        )
+
     access_token = session_data["access_token"]
     user_id = session_data.get("user_id", "me")
+    configured_cid = session_data.get("client_id")
+    adapter = SpotifyAdapter(client_id=configured_cid, access_token=access_token)
+    matcher = TrackMatcher(adapter)
 
     # 1. Match catalog tracks against platform
     match_results = await matcher.match_batch(tracks)
 
-    items: list[TrackExportItem] = []
+    items = []
     uris_to_add: list[str] = []
     matched_count = 0
     ambiguous_count = 0

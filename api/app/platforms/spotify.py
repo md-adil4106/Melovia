@@ -52,6 +52,7 @@ class SpotifyAdapter(PlatformAdapter):
         client_secret: str | None = None,
         redirect_uri: str | None = None,
         http_client: httpx.AsyncClient | None = None,
+        access_token: str | None = None,
     ) -> None:
         settings = get_settings()
         plat = settings.PLATFORM
@@ -60,6 +61,7 @@ class SpotifyAdapter(PlatformAdapter):
         self.redirect_uri = redirect_uri or plat.spotify_redirect_uri or plat.redirect_uri
         self._custom_client = http_client
         self._client_credentials_token: str | None = None
+        self.access_token = access_token
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._custom_client:
@@ -185,7 +187,7 @@ class SpotifyAdapter(PlatformAdapter):
         access_token: str | None = None,
     ) -> list[dict[str, Any]]:
         """Search Spotify for tracks matching ISRC or title+artist."""
-        token = access_token or await self.get_client_credentials_token()
+        token = access_token or self.access_token or await self.get_client_credentials_token()
         if not token:
             return []
 

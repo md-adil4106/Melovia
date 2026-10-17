@@ -249,3 +249,71 @@ async def test_export_playlist_flow():
             assert res_unmatched.status_code == 200
             assert "text/csv" in res_unmatched.headers["content-type"]
             assert "Unknown Mystery Sound" in res_unmatched.text
+
+
+@pytest.mark.asyncio
+async def test_spotify_custom_client_id_config():
+    """Verify POST /export/spotify/config sets client ID in session and enables auth-url."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Without credentials or config, auth-url returns 400
+        res_fail = await client.get("/export/spotify/auth-url")
+        assert res_fail.status_code == 400
+
+        # 2. Configure client_id
+        res_cfg = await client.post(
+            "/export/spotify/config",
+            json={"client_id": "test_custom_client_id_12345678"},
+        )
+        assert res_cfg.status_code == 200
+        assert res_cfg.json()["configured"] is True
+
+        # 3. Check status shows client_id_configured
+        res_st = await client.get("/export/spotify/status")
+        assert res_st.status_code == 200
+        assert res_st.json()["client_id_configured"] is True
+
+        # 4. Now auth-url succeeds with configured client ID
+        res_auth = await client.get("/export/spotify/auth-url")
+        assert res_auth.status_code == 200
+        assert "test_custom_client_id_12345678" in res_auth.json()["auth_url"]
+
+
+@pytest.mark.asyncio
+async def test_export_playlist_apple_music_and_ytmusic():
+    """Verify POST /export/playlist generates Apple Music and YouTube Music links without auth."""
+    tracks = [
+        {"id": "t1", "title": "Kesariya", "artist": "Arijit Singh", "isrc": "IN123"},
+        {"id": "t2", "title": "Tum Hi Ho", "artist": "Arijit Singh", "isrc": "IN124"},
+    ]
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Apple Music export
+        res_am = await client.post(
+            "/export/playlist",
+            json={
+                "platform": "apple_music",
+                "playlist_name": "Bollywood Romance",
+                "tracks": tracks,
+            },
+        )
+        assert res_am.status_code == 200
+        data_am = res_am.json()
+        assert data_am["status"] == "completed"
+        assert data_am["platform"] == "apple_music"
+        assert data_am["matched_count"] == 2
+        assert "music.apple.com" in data_am["tracks"][0]["platform_uri"]
+
+        # 2. YouTube Music export
+        res_ytm = await client.post(
+            "/export/playlist",
+            json={
+                "platform": "ytmusic",
+                "playlist_name": "Bollywood Romance",
+                "tracks": tracks,
+            },
+        )
+        assert res_ytm.status_code == 200
+        data_ytm = res_ytm.json()
+        assert data_ytm["status"] == "completed"
+        assert data_ytm["platform"] == "ytmusic"
+        assert data_ytm["matched_count"] == 2
+        assert "music.youtube.com" in data_ytm["tracks"][0]["platform_uri"]

@@ -142,6 +142,46 @@ describe("ExportModal Component", () => {
     });
   });
 
+  it("switches to Apple Music tab and displays Apple Music export options", async () => {
+    renderWithClient(
+      <ExportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        tracks={mockTracks}
+        playlistName="Test Playlist"
+        apiBase="http://test-api"
+      />
+    );
+
+    const appleTab = screen.getByRole("button", { name: /apple music/i });
+    fireEvent.click(appleTab);
+
+    await waitFor(() => {
+      expect(screen.getByText("Export Directly to Apple Music")).toBeDefined();
+      expect(screen.getByRole("button", { name: /download apple music \.m3u8/i })).toBeDefined();
+    });
+  });
+
+  it("switches to YouTube Music tab and displays YouTube Music export options", async () => {
+    renderWithClient(
+      <ExportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        tracks={mockTracks}
+        playlistName="Test Playlist"
+        apiBase="http://test-api"
+      />
+    );
+
+    const ytmTab = screen.getByRole("button", { name: /youtube music/i });
+    fireEvent.click(ytmTab);
+
+    await waitFor(() => {
+      expect(screen.getByText("Export to YouTube Music")).toBeDefined();
+      expect(screen.getByRole("link", { name: /open in youtube music/i })).toBeDefined();
+    });
+  });
+
   it("calls onClose when clicking close button or pressing Escape", () => {
     const handleClose = vi.fn();
     renderWithClient(

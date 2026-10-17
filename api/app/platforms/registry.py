@@ -29,23 +29,36 @@ def list_supported_platforms() -> list[dict[str, Any]]:
         },
         {
             "id": "spotify",
-            "name": "Spotify Dev Mode",
-            "formats": ["playlist"],
+            "name": "Spotify",
+            "formats": ["playlist", "uri_clipboard", "universal"],
             "requires_auth": True,
             "auth_flow": "oauth_pkce",
             "status": "ready",
-            "description": "Export playlist directly to your Spotify account using OAuth PKCE.",
+            "description": (
+                "Export playlist directly to Spotify via OAuth PKCE, "
+                "copy URIs, or transfer instantly."
+            ),
         },
         {
             "id": "apple_music",
             "name": "Apple Music",
-            "formats": ["playlist"],
-            "requires_auth": True,
-            "auth_flow": "musickit",
-            "status": "planned",
+            "formats": ["m3u8", "web_links", "universal"],
+            "requires_auth": False,
+            "status": "ready",
             "description": (
-                "Requires an active Apple Developer Program membership ($99/yr) "
-                "and MusicKit Developer Key."
+                "Export native UTF-8 .m3u8 playlist file (imports into macOS Music / iTunes) "
+                "or open track matches in Apple Music Web."
+            ),
+        },
+        {
+            "id": "ytmusic",
+            "name": "YouTube Music",
+            "formats": ["queue", "tracklist", "universal"],
+            "requires_auth": False,
+            "status": "ready",
+            "description": (
+                "Launch tracks in YouTube Music search/queue, copy tracklist, "
+                "or transfer instantly."
             ),
         },
     ]

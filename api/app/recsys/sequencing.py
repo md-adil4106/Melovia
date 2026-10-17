@@ -502,9 +502,7 @@ def order_radio_flow(
     last_e, last_t, last_art = _get_scalars(sequenced[0])
 
     while len(sequenced) < target_n and remaining:
-        different_artist_cands = [
-            cand for cand in remaining if _get_scalars(cand)[2] != last_art
-        ]
+        different_artist_cands = [cand for cand in remaining if _get_scalars(cand)[2] != last_art]
         candidate_pool = different_artist_cands if different_artist_cands else remaining
 
         best_cand = None
@@ -535,4 +533,3 @@ def order_radio_flow(
         last_e, last_t, last_art = _get_scalars(best_cand)
 
     return sequenced
-

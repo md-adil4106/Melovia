@@ -37,12 +37,15 @@ class FileExportRequest(BaseModel):
 
 
 class PlatformExportRequest(BaseModel):
-    """Payload for exporting tracks to an external music service (Spotify)."""
+    """Payload for exporting tracks to an external music service.
+
+    Supported platforms: Spotify, Apple Music, YouTube Music.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
-    platform: Literal["spotify"] = Field(
-        default="spotify", description="Target platform ('spotify')"
+    platform: Literal["spotify", "apple_music", "ytmusic"] = Field(
+        default="spotify", description="Target platform ('spotify', 'apple_music', 'ytmusic')"
     )
     playlist_name: str = Field(
         default="Melovia Discoveries", max_length=100, description="Playlist title on platform"
@@ -115,6 +118,16 @@ class ExportJobResponse(BaseModel):
     created_at: str = Field(..., description="ISO 8601 UTC timestamp of export creation")
 
 
+class SpotifyConfigPayload(BaseModel):
+    """Payload for configuring Spotify client ID in session."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    client_id: str = Field(
+        ..., min_length=16, max_length=64, description="Spotify Developer Client ID"
+    )
+
+
 class SpotifyAuthUrlResponse(BaseModel):
     """Response containing PKCE authorization URL for Spotify login."""
 
@@ -127,6 +140,9 @@ class SpotifyStatusResponse(BaseModel):
     """Status of Spotify OAuth connection for the current session."""
 
     connected: bool = Field(..., description="Whether valid Spotify credentials exist for session")
+    client_id_configured: bool = Field(
+        default=False, description="Whether Spotify client ID is configured in backend or session"
+    )
     display_name: str | None = Field(default=None, description="Spotify user display name")
     user_id: str | None = Field(default=None, description="Spotify user ID")
     profile_url: str | None = Field(default=None, description="Link to user's Spotify profile")

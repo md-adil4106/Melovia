@@ -240,9 +240,7 @@ async def create_recommendations(
             )
         ]
         min_needed = (
-            min(len(current_live_candidate_ids), payload.n)
-            if current_live_candidate_ids
-            else 1
+            min(len(current_live_candidate_ids), payload.n) if current_live_candidate_ids else 1
         )
         if len(live_indices) >= min_needed and len(live_indices) > 0:
             sub_indices = np.array(live_indices, dtype=np.int64)
@@ -303,9 +301,7 @@ async def create_recommendations(
 
     from app.recsys.sequencing import order_radio_flow
 
-    candidate_items = final_list.top_n(
-        min(len(final_list.items), max(payload.n * 2, payload.n))
-    )
+    candidate_items = final_list.top_n(min(len(final_list.items), max(payload.n * 2, payload.n)))
     max_art = (
         config.artist_cap_discovery
         if payload.discovery >= config.artist_cap_threshold_d

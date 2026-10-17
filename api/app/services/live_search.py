@@ -154,135 +154,278 @@ GENRE_SCALARS: dict[str, dict[str, float]] = {
 ARTIST_COLLABORATOR_GRAPH: dict[str, list[str]] = {
     # Bollywood / Indian Romantic, Indie & Filmi
     "faheem abdullah": [
-        "Huzaif Nazar", "Rather Hashim", "Hyder Dar", "Anuv Jain", "Babil Khan",
-        "Arijit Singh", "Mohit Chauhan",
+        "Huzaif Nazar",
+        "Rather Hashim",
+        "Hyder Dar",
+        "Anuv Jain",
+        "Babil Khan",
+        "Arijit Singh",
+        "Mohit Chauhan",
     ],
     "huzaif nazar": [
-        "Faheem Abdullah", "Rather Hashim", "Hyder Dar", "Anuv Jain",
+        "Faheem Abdullah",
+        "Rather Hashim",
+        "Hyder Dar",
+        "Anuv Jain",
     ],
     "navjot ahuja": [
-        "Faheem Abdullah", "Anuv Jain", "Jasleen Royal", "Prateek Kuhad",
+        "Faheem Abdullah",
+        "Anuv Jain",
+        "Jasleen Royal",
+        "Prateek Kuhad",
     ],
     "arijit singh": [
-        "Pritam", "Shreya Ghoshal", "Jasleen Royal", "Mohit Chauhan", "Atif Aslam",
-        "Mithoon", "A.R. Rahman", "Anirudh Ravichander",
+        "Pritam",
+        "Shreya Ghoshal",
+        "Jasleen Royal",
+        "Mohit Chauhan",
+        "Atif Aslam",
+        "Mithoon",
+        "A.R. Rahman",
+        "Anirudh Ravichander",
     ],
     "pritam": [
-        "Arijit Singh", "Mohit Chauhan", "KK", "Atif Aslam", "Shreya Ghoshal",
+        "Arijit Singh",
+        "Mohit Chauhan",
+        "KK",
+        "Atif Aslam",
+        "Shreya Ghoshal",
         "Sunidhi Chauhan",
     ],
     "atif aslam": [
-        "Pritam", "Mithoon", "Sachin-Jigar", "Shreya Ghoshal", "Arijit Singh",
+        "Pritam",
+        "Mithoon",
+        "Sachin-Jigar",
+        "Shreya Ghoshal",
+        "Arijit Singh",
         "Mohit Chauhan",
     ],
     "mohit chauhan": [
-        "Pritam", "A.R. Rahman", "Lucky Ali", "KK", "Arijit Singh", "Atif Aslam",
+        "Pritam",
+        "A.R. Rahman",
+        "Lucky Ali",
+        "KK",
+        "Arijit Singh",
+        "Atif Aslam",
     ],
     "javed ali": [
-        "Sonu Nigam", "A.R. Rahman", "Pritam", "Kailash Kher", "Shreya Ghoshal",
+        "Sonu Nigam",
+        "A.R. Rahman",
+        "Pritam",
+        "Kailash Kher",
+        "Shreya Ghoshal",
     ],
     "sonu nigam": [
-        "Javed Ali", "Udit Narayan", "Alka Yagnik", "Shreya Ghoshal", "A.R. Rahman",
+        "Javed Ali",
+        "Udit Narayan",
+        "Alka Yagnik",
+        "Shreya Ghoshal",
+        "A.R. Rahman",
         "Shaan",
     ],
     "kk": [
-        "Pritam", "Mohit Chauhan", "Shaan", "Arijit Singh", "Emraan Hashmi hits",
+        "Pritam",
+        "Mohit Chauhan",
+        "Shaan",
+        "Arijit Singh",
+        "Emraan Hashmi hits",
     ],
     "shreya ghoshal": [
-        "Arijit Singh", "Sonu Nigam", "Atif Aslam", "Pritam", "A.R. Rahman",
+        "Arijit Singh",
+        "Sonu Nigam",
+        "Atif Aslam",
+        "Pritam",
+        "A.R. Rahman",
     ],
     "jasleen royal": [
-        "Arijit Singh", "Prateek Kuhad", "Anuv Jain", "Babil Khan",
+        "Arijit Singh",
+        "Prateek Kuhad",
+        "Anuv Jain",
+        "Babil Khan",
     ],
     "anuv jain": [
-        "Jasleen Royal", "Prateek Kuhad", "Faheem Abdullah", "Babil Khan",
+        "Jasleen Royal",
+        "Prateek Kuhad",
+        "Faheem Abdullah",
+        "Babil Khan",
         "The Local Train",
     ],
     "prateek kuhad": [
-        "Anuv Jain", "Jasleen Royal", "When Chai Met Toast", "The Local Train",
+        "Anuv Jain",
+        "Jasleen Royal",
+        "When Chai Met Toast",
+        "The Local Train",
     ],
     # Hip-Hop / Melodic Trap / Rap
     "travis scott": [
-        "Don Toliver", "Metro Boomin", "Future", "21 Savage", "Quavo",
-        "Playboi Carti", "Sheck Wes",
+        "Don Toliver",
+        "Metro Boomin",
+        "Future",
+        "21 Savage",
+        "Quavo",
+        "Playboi Carti",
+        "Sheck Wes",
     ],
     "don toliver": [
-        "Travis Scott", "Metro Boomin", "Future", "Gunna", "Kali Uchis",
+        "Travis Scott",
+        "Metro Boomin",
+        "Future",
+        "Gunna",
+        "Kali Uchis",
         "Lil Yachty",
     ],
     "gunna": [
-        "Future", "Young Thug", "Lil Baby", "Metro Boomin", "Don Toliver",
+        "Future",
+        "Young Thug",
+        "Lil Baby",
+        "Metro Boomin",
+        "Don Toliver",
         "21 Savage",
     ],
     "future": [
-        "Metro Boomin", "Drake", "Gunna", "Travis Scott", "21 Savage",
+        "Metro Boomin",
+        "Drake",
+        "Gunna",
+        "Travis Scott",
+        "21 Savage",
         "Young Thug",
     ],
     "metro boomin": [
-        "Future", "21 Savage", "Travis Scott", "Don Toliver", "Young Thug",
+        "Future",
+        "21 Savage",
+        "Travis Scott",
+        "Don Toliver",
+        "Young Thug",
         "Drake",
     ],
     "21 savage": [
-        "Metro Boomin", "Drake", "J. Cole", "Future", "Travis Scott",
+        "Metro Boomin",
+        "Drake",
+        "J. Cole",
+        "Future",
+        "Travis Scott",
         "Young Nudy",
     ],
     "playboi carti": [
-        "Ken Carson", "Destroy Lonely", "Travis Scott", "Lil Uzi Vert", "Yeat",
+        "Ken Carson",
+        "Destroy Lonely",
+        "Travis Scott",
+        "Lil Uzi Vert",
+        "Yeat",
     ],
     "lil baby": [
-        "Gunna", "Future", "Lil Durk", "21 Savage", "Drake", "Metro Boomin",
+        "Gunna",
+        "Future",
+        "Lil Durk",
+        "21 Savage",
+        "Drake",
+        "Metro Boomin",
     ],
     "drake": [
-        "21 Savage", "Future", "Travis Scott", "PARTYNEXTDOOR", "Lil Wayne",
+        "21 Savage",
+        "Future",
+        "Travis Scott",
+        "PARTYNEXTDOOR",
+        "Lil Wayne",
     ],
     "kendrick lamar": [
-        "Baby Keem", "SZA", "Jay Rock", "ScHoolboy Q", "J. Cole",
+        "Baby Keem",
+        "SZA",
+        "Jay Rock",
+        "ScHoolboy Q",
+        "J. Cole",
     ],
     "j. cole": [
-        "Kendrick Lamar", "Bas", "JID", "Drake", "21 Savage",
+        "Kendrick Lamar",
+        "Bas",
+        "JID",
+        "Drake",
+        "21 Savage",
     ],
     # Western Pop
     "the weeknd": [
-        "Daft Punk", "Lana Del Rey", "Post Malone", "Playboi Carti", "Future",
+        "Daft Punk",
+        "Lana Del Rey",
+        "Post Malone",
+        "Playboi Carti",
+        "Future",
     ],
     "billie eilish": [
-        "Finneas", "Olivia Rodrigo", "Phoebe Bridgers", "Lorde", "Clairo",
+        "Finneas",
+        "Olivia Rodrigo",
+        "Phoebe Bridgers",
+        "Lorde",
+        "Clairo",
     ],
     "olivia rodrigo": [
-        "Billie Eilish", "Taylor Swift", "Conan Gray", "Sabrina Carpenter",
+        "Billie Eilish",
+        "Taylor Swift",
+        "Conan Gray",
+        "Sabrina Carpenter",
         "Chappell Roan",
     ],
     "taylor swift": [
-        "Phoebe Bridgers", "Lana Del Rey", "Sabrina Carpenter", "Gracie Abrams",
+        "Phoebe Bridgers",
+        "Lana Del Rey",
+        "Sabrina Carpenter",
+        "Gracie Abrams",
     ],
     "dua lipa": [
-        "Calvin Harris", "Elton John", "Miley Cyrus", "The Weeknd", "Ava Max",
+        "Calvin Harris",
+        "Elton John",
+        "Miley Cyrus",
+        "The Weeknd",
+        "Ava Max",
     ],
     "post malone": [
-        "Swae Lee", "The Weeknd", "Morgan Wallen", "Noah Kahan", "21 Savage",
+        "Swae Lee",
+        "The Weeknd",
+        "Morgan Wallen",
+        "Noah Kahan",
+        "21 Savage",
     ],
     # R&B / Soul
     "sza": [
-        "Kendrick Lamar", "Frank Ocean", "Summer Walker", "Brent Faiyaz",
+        "Kendrick Lamar",
+        "Frank Ocean",
+        "Summer Walker",
+        "Brent Faiyaz",
         "Jhené Aiko",
     ],
     "frank ocean": [
-        "Tyler, The Creator", "Daniel Caesar", "Brent Faiyaz", "SZA",
+        "Tyler, The Creator",
+        "Daniel Caesar",
+        "Brent Faiyaz",
+        "SZA",
         "Steve Lacy",
     ],
     "daniel caesar": [
-        "H.E.R.", "Kali Uchis", "Frank Ocean", "Giveon", "Omar Apollo",
+        "H.E.R.",
+        "Kali Uchis",
+        "Frank Ocean",
+        "Giveon",
+        "Omar Apollo",
     ],
     # Rock / Alternative
     "arctic monkeys": [
-        "The Strokes", "The Last Shadow Puppets", "Miles Kane", "Tame Impala",
+        "The Strokes",
+        "The Last Shadow Puppets",
+        "Miles Kane",
+        "Tame Impala",
         "Fontaines D.C.",
     ],
     "the strokes": [
-        "Arctic Monkeys", "The Voidz", "Franz Ferdinand", "Interpol",
+        "Arctic Monkeys",
+        "The Voidz",
+        "Franz Ferdinand",
+        "Interpol",
     ],
     "tame impala": [
-        "MGMT", "Unknown Mortal Orchestra", "Pond", "Mac DeMarco", "Gorillaz",
+        "MGMT",
+        "Unknown Mortal Orchestra",
+        "Pond",
+        "Mac DeMarco",
+        "Gorillaz",
     ],
     # K-Pop
     "bts": ["Jimin", "Jung Kook", "V", "Agust D", "TXT", "SEVENTEEN"],
@@ -290,7 +433,12 @@ ARTIST_COLLABORATOR_GRAPH: dict[str, list[str]] = {
     "blackpink": ["Jennie", "ROSÉ", "LISA", "aespa", "TWICE"],
     # Latin / Reggaeton
     "bad bunny": [
-        "Rauw Alejandro", "J Balvin", "Tainy", "Chencho Corleone", "Feid", "Mora",
+        "Rauw Alejandro",
+        "J Balvin",
+        "Tainy",
+        "Chencho Corleone",
+        "Feid",
+        "Mora",
     ],
     "peso pluma": ["Junior H", "Natanael Cano", "Eslabon Armado", "Fuerza Regida"],
 }
@@ -464,16 +612,14 @@ class LiveSearchService:
             base_bpm = max(68.0, base_bpm - 25.0)
             base_dance = max(0.25, base_dance - 0.20)
         elif any(
-            w in title_lower
-            for w in ("remix", "club", "party", "dance", "dj", "drill", "bass")
+            w in title_lower for w in ("remix", "club", "party", "dance", "dj", "drill", "bass")
         ):
             base_acoustic = max(0.02, base_acoustic - 0.20)
             base_energy = min(0.98, base_energy + 0.25)
             base_bpm = min(150.0, base_bpm + 20.0)
             base_dance = min(0.95, base_dance + 0.20)
         elif any(
-            w in title_lower
-            for w in ("lo-fi", "chill", "relax", "midnight", "late night", "sad")
+            w in title_lower for w in ("lo-fi", "chill", "relax", "midnight", "late night", "sad")
         ):
             base_acoustic = min(0.85, base_acoustic + 0.30)
             base_energy = max(0.25, base_energy - 0.25)
@@ -535,22 +681,45 @@ class LiveSearchService:
             if any(
                 term in q_lower
                 for term in (
-                    "khat", "sajde", "guzarish", "arijit", "pritam", "rahman", "javed ali",
-                    "faheem", "atif", "mohit chauhan", "navjot", "bollywood", "hindi",
-                    "punjabi", "sonu nigam", "shreya ghoshal", "anuv jain", "prateek kuhad",
-                    "jasleen royal", "kk", "armaan malik", "darshan raval", "jubin nautiyal",
-                    "diljit", "sidhu", "ap dhillon", "badshah", "honey singh", "desi", "sufi"
+                    "khat",
+                    "sajde",
+                    "guzarish",
+                    "arijit",
+                    "pritam",
+                    "rahman",
+                    "javed ali",
+                    "faheem",
+                    "atif",
+                    "mohit chauhan",
+                    "navjot",
+                    "bollywood",
+                    "hindi",
+                    "punjabi",
+                    "sonu nigam",
+                    "shreya ghoshal",
+                    "anuv jain",
+                    "prateek kuhad",
+                    "jasleen royal",
+                    "kk",
+                    "armaan malik",
+                    "darshan raval",
+                    "jubin nautiyal",
+                    "diljit",
+                    "sidhu",
+                    "ap dhillon",
+                    "badshah",
+                    "honey singh",
+                    "desi",
+                    "sufi",
                 )
             ):
                 target_country = "IN"
             elif any(
-                term in q_lower
-                for term in ("bts", "blackpink", "newjeans", "stray kids", "twice")
+                term in q_lower for term in ("bts", "blackpink", "newjeans", "stray kids", "twice")
             ):
                 target_country = "KR"
             elif any(
-                term in q_lower
-                for term in ("bad bunny", "peso pluma", "karol g", "reggaeton")
+                term in q_lower for term in ("bad bunny", "peso pluma", "karol g", "reggaeton")
             ):
                 target_country = "MX"
             else:
@@ -692,76 +861,90 @@ class LiveSearchService:
 
         # 4. Add genre- and culture-specific peer discovery query terms
         if "bollywood_desi" in seed_cultures:
-            search_queries.extend([
-                "Arijit Singh romantic",
-                "Pritam romantic hits",
-                "Mohit Chauhan romantic",
-                "Atif Aslam romantic",
-                "Faheem Abdullah hits",
-                "Anuv Jain hits",
-                "bollywood romantic hits",
-                "hindi romcom songs",
-                "Jasleen Royal romantic",
-                "KK romantic hits",
-                "Javed Ali romantic hits",
-                "Sonu Nigam romantic hits",
-            ])
+            search_queries.extend(
+                [
+                    "Arijit Singh romantic",
+                    "Pritam romantic hits",
+                    "Mohit Chauhan romantic",
+                    "Atif Aslam romantic",
+                    "Faheem Abdullah hits",
+                    "Anuv Jain hits",
+                    "bollywood romantic hits",
+                    "hindi romcom songs",
+                    "Jasleen Royal romantic",
+                    "KK romantic hits",
+                    "Javed Ali romantic hits",
+                    "Sonu Nigam romantic hits",
+                ]
+            )
         elif "hiphop" in seed_cultures:
-            search_queries.extend([
-                "Travis Scott",
-                "Metro Boomin",
-                "Future",
-                "21 Savage",
-                "Gunna",
-                "Lil Baby",
-                "Playboi Carti",
-                "Drake",
-                "Kendrick Lamar",
-            ])
+            search_queries.extend(
+                [
+                    "Travis Scott",
+                    "Metro Boomin",
+                    "Future",
+                    "21 Savage",
+                    "Gunna",
+                    "Lil Baby",
+                    "Playboi Carti",
+                    "Drake",
+                    "Kendrick Lamar",
+                ]
+            )
         elif "rock" in seed_cultures:
-            search_queries.extend([
-                "Arctic Monkeys",
-                "The Strokes",
-                "Tame Impala",
-                "Nirvana",
-                "Radiohead",
-            ])
+            search_queries.extend(
+                [
+                    "Arctic Monkeys",
+                    "The Strokes",
+                    "Tame Impala",
+                    "Nirvana",
+                    "Radiohead",
+                ]
+            )
         elif "western_pop" in seed_cultures:
-            search_queries.extend([
-                "The Weeknd",
-                "Dua Lipa",
-                "Billie Eilish",
-                "Olivia Rodrigo",
-                "Taylor Swift",
-                "Post Malone",
-                "Ariana Grande",
-            ])
+            search_queries.extend(
+                [
+                    "The Weeknd",
+                    "Dua Lipa",
+                    "Billie Eilish",
+                    "Olivia Rodrigo",
+                    "Taylor Swift",
+                    "Post Malone",
+                    "Ariana Grande",
+                ]
+            )
         elif "rnb" in seed_cultures:
-            search_queries.extend([
-                "SZA",
-                "Frank Ocean",
-                "Brent Faiyaz",
-                "Daniel Caesar",
-                "Giveon",
-            ])
+            search_queries.extend(
+                [
+                    "SZA",
+                    "Frank Ocean",
+                    "Brent Faiyaz",
+                    "Daniel Caesar",
+                    "Giveon",
+                ]
+            )
         elif "kpop" in seed_cultures:
-            search_queries.extend([
-                "BTS",
-                "NewJeans",
-                "BLACKPINK",
-                "Stray Kids",
-                "LE SSERAFIM",
-                "TWICE",
-            ])
+            search_queries.extend(
+                [
+                    "BTS",
+                    "NewJeans",
+                    "BLACKPINK",
+                    "Stray Kids",
+                    "LE SSERAFIM",
+                    "TWICE",
+                ]
+            )
         elif "latin" in seed_cultures:
-            search_queries.extend([
-                "Bad Bunny",
-                "J Balvin",
-                "Rauw Alejandro",
-                "Karol G",
-                "Feid",
-                "Peso Pluma",
-            ])
+            search_queries.extend(
+                [
+                    "Bad Bunny",
+                    "J Balvin",
+                    "Rauw Alejandro",
+                    "Karol G",
+                    "Feid",
+                    "Peso Pluma",
+                ]
+            )
 
         # Deduplicate search queries while preserving order
         unique_queries: list[str] = []

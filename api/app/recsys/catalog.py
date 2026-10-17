@@ -385,11 +385,7 @@ class CatalogStore:
         elif tag_vectors:
             mean_tag = np.mean(tag_vectors, axis=0)
             tag_norm = float(np.linalg.norm(mean_tag))
-            genre_v = (
-                np.asarray(mean_tag / tag_norm, dtype=np.float32)
-                if tag_norm > 1e-6
-                else None
-            )
+            genre_v = np.asarray(mean_tag / tag_norm, dtype=np.float32) if tag_norm > 1e-6 else None
         elif culture_key:
             genre_v = get_culture_anchor_vector(culture_key, self.dim_t)
 
@@ -397,9 +393,7 @@ class CatalogStore:
             combined = 0.85 * genre_v + 0.53 * track_jitter_norm
             norm_comb = float(np.linalg.norm(combined))
             vector_t = (
-                np.asarray(combined / norm_comb, dtype=np.float32)
-                if norm_comb > 1e-6
-                else genre_v
+                np.asarray(combined / norm_comb, dtype=np.float32) if norm_comb > 1e-6 else genre_v
             )
         else:
             vector_t = np.asarray(track_jitter_norm, dtype=np.float32)
