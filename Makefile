@@ -103,6 +103,7 @@ web-test:
 # Development servers
 dev:
 	@echo "Starting Melovia development servers..."
+	@echo "Windows 1-Click: double-click 'run.bat' or 'start.bat'"
 	@echo "In terminal 1 (API): cd api && uv run uvicorn app.main:app --reload --port 8000"
 	@echo "In terminal 2 (Web): cd web && $(PNPM) dev"
 

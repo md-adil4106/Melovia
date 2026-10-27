@@ -166,6 +166,15 @@ make check
 ```
 
 ### 4. Launch Development Servers
+
+**Option A: 1-Click Launcher (Windows)**
+Simply double-click **`run.bat`** (or `start.bat`) in the project root.
+- Automatically initializes environment & catalog if needed.
+- Launches the FastAPI backend (`http://127.0.0.1:8000`) and Next.js frontend (`http://localhost:3000`) in separate windows.
+- Automatically opens your default browser to `http://localhost:3000`.
+- To stop both servers in 1 click, double-click **`stop.bat`**.
+
+**Option B: Manual Terminals**
 ```bash
 # Terminal 1: FastAPI Backend
 cd api && uv run uvicorn app.main:app --reload --port 8000
