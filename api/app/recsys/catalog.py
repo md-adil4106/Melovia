@@ -100,9 +100,13 @@ class CatalogStore:
         self.scalars = {k: list(v) for k, v in (scalars or {}).items()}
         self.tag_vocab = tag_vocab or {}
         self.regions = regions or []
-        self.layout3d = layout3d
-        self.layout2d = layout2d
-        self.render_sample = render_sample
+        self.layout3d = (
+            np.array(layout3d, dtype=np.float32, copy=True) if layout3d is not None else None
+        )
+        self.layout2d = (
+            np.array(layout2d, dtype=np.float32, copy=True) if layout2d is not None else None
+        )
+        self.render_sample = list(render_sample) if render_sample is not None else None
 
         for opt_col in (
             "artwork_url",
@@ -484,6 +488,42 @@ class CatalogStore:
         self.mask_t = np.append(self.mask_t, True)
         self.mask_a = np.append(self.mask_a, False)
 
+        # Determine region and interpolate 3D/2D coordinates
+        base_len = min(new_idx, len(self.layout3d) if self.layout3d is not None else new_idx)
+        if base_len > 0:
+            sims = np.dot(self.vectors_t[:base_len], vec_t)
+            best_base_idx = int(np.argmax(sims))
+            nearest_reg = self._tracks_metadata.get("region_id", [0])[best_base_idx]
+            assigned_region_id = (
+                int(nearest_reg) if (nearest_reg is not None and str(nearest_reg).isdigit()) else 0
+            )
+        else:
+            sims = np.array([], dtype=np.float32)
+            assigned_region_id = 0
+
+        if raw_track.get("region_id") is not None:
+            try:
+                assigned_region_id = int(raw_track["region_id"])
+            except (ValueError, TypeError):
+                pass
+
+        if self.layout3d is not None and base_len > 0:
+            top_k = min(10, base_len)
+            top_indices = np.argsort(-sims)[:top_k]
+            top_sims = sims[top_indices]
+            scaled = (top_sims - np.max(top_sims)) / 0.05
+            exp_w = np.exp(scaled)
+            weights = exp_w / max(float(np.sum(exp_w)), 1e-12)
+            p3 = np.sum(self.layout3d[top_indices] * weights[:, np.newaxis], axis=0)
+            self.layout3d = np.vstack([self.layout3d, p3.reshape(1, 3).astype(np.float32)])
+
+            if self.layout2d is not None and len(self.layout2d) >= base_len:
+                p2 = np.sum(self.layout2d[top_indices] * weights[:, np.newaxis], axis=0)
+                self.layout2d = np.vstack([self.layout2d, p2.reshape(1, 2).astype(np.float32)])
+
+        if self.render_sample is not None:
+            self.render_sample.append(new_idx)
+
         # 3. Append to metadata columns
         meta = self._tracks_metadata
         for col_name in meta:
@@ -505,6 +545,8 @@ class CatalogStore:
                 meta[col_name].append(False)
             elif col_name == "has_t":
                 meta[col_name].append(True)
+            elif col_name == "region_id":
+                meta[col_name].append(assigned_region_id)
             elif col_name == "tags":
                 meta[col_name].append(list(raw_track.get("tags") or []))
             elif col_name == "artwork_url":
@@ -526,9 +568,10 @@ class CatalogStore:
             v = raw_scalars.get(s_key, 0.5)
             self.scalars[s_key].append(float(v) if v is not None else 0.5)
 
-        # 5. Store in dynamic registry with assigned track_idx
+        # 5. Store in dynamic registry with assigned track_idx and region_id
         track_dict = dict(raw_track)
         track_dict["track_idx"] = new_idx
+        track_dict["region_id"] = assigned_region_id
         self._dynamic_tracks[track_id] = track_dict
         self._dynamic_vectors_t[track_id] = vec_t
         return track_id

@@ -40,7 +40,7 @@ export function UniverseFallback2D({
 
   // Subsample points for 2D canvas drawing (max 6,000 points for smooth 2D canvas drawing)
   const renderPoints = useMemo(() => {
-    const raw = data.points_quantized;
+    const raw = data.points_quantized || (data as any).points || [];
     const stride = 5;
     const totalPoints = Math.floor(raw.length / stride);
     const step = Math.max(1, Math.floor(totalPoints / 6000));

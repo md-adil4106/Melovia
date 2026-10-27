@@ -132,10 +132,12 @@ async def get_universe(
 
     return UniverseResponse(
         points=flat_points,
+        points_quantized=flat_points,
         point_count=len(indices_to_render),
         scale=32767.0,
         regions=region_responses,
         metrics=metrics,
+        quality_metrics=metrics,
     )
 
 
@@ -158,16 +160,29 @@ async def place_points(
         for tid in payload.track_ids:
             if catalog.contains_id(tid):
                 idx = catalog.get_idx(tid)
-                p3 = catalog.layout3d[idx]
-                p2 = catalog.layout2d[idx] if catalog.layout2d is not None else None
+                if idx < len(catalog.layout3d):
+                    p3 = [round(float(x), 5) for x in catalog.layout3d[idx]]
+                    p2 = (
+                        [round(float(x), 5) for x in catalog.layout2d[idx]]
+                        if catalog.layout2d is not None and idx < len(catalog.layout2d)
+                        else None
+                    )
+                else:
+                    vec_t = catalog.get_vector_t(tid)
+                    interp = place_in_universe(vec_t.reshape(1, -1), catalog=catalog, k=5)
+                    p3 = interp[0]["position_3d"] if interp else [0.0, 0.0, 0.0]
+                    p2 = interp[0]["position_2d"] if interp else None
+
                 placed_items.append(
                     PlacedUniverseItem(
                         id=tid,
                         type="track",
-                        position_3d=[round(float(x), 5) for x in p3],
-                        position_2d=[round(float(x), 5) for x in p2] if p2 is not None else None,
+                        position_3d=p3,
+                        position_2d=p2,
                         nearest_track_ids=[tid],
+                        nearest_catalog_id=tid,
                         weights=[1.0],
+                        confidence=1.0,
                     )
                 )
 
@@ -188,11 +203,13 @@ async def place_points(
                         position_3d=res["position_3d"],
                         position_2d=res["position_2d"],
                         nearest_track_ids=res["nearest_track_ids"],
+                        nearest_catalog_id=res.get("nearest_catalog_id"),
                         weights=res["weights"],
+                        confidence=1.0,
                     )
                 )
 
-    return UniversePlaceResponse(items=placed_items)
+    return UniversePlaceResponse(items=placed_items, placements=placed_items)
 
 
 @router.get(
@@ -220,14 +237,38 @@ async def get_neighbors(
     # Compute high-dimensional nearest neighbors in original space
     raw_neighbors = find_original_neighbors(track_idx=track_idx, catalog=catalog, k=6)
 
+    # 3D position of target track
+    pos_3d: list[float] = [0.0, 0.0, 0.0]
+    if catalog.layout3d is not None:
+        if track_idx < len(catalog.layout3d):
+            pos_3d = [round(float(x), 5) for x in catalog.layout3d[track_idx]]
+        else:
+            vec_t = catalog.get_vector_t(track_id)
+            interp = place_in_universe(vec_t.reshape(1, -1), catalog=catalog, k=5)
+            if interp:
+                pos_3d = interp[0]["position_3d"]
+
+    # Target region
+    reg_id_val = target_dict.get("region_id")
+    target_reg_int = (
+        int(reg_id_val) if (reg_id_val is not None and str(reg_id_val).isdigit()) else 0
+    )
+    target_reg_name = ""
+    for r_meta in catalog.regions:
+        if int(r_meta.get("region_id", r_meta.get("id", -1))) == target_reg_int:
+            target_reg_name = str(r_meta.get("name") or r_meta.get("label", ""))
+            break
+
     neighbor_items = [
         UniverseNeighborItem(
             track_idx=nb["track_idx"],
             track_id=nb["track_id"],
             title=nb["title"],
             artist_name=nb["artist_name"],
-            region_id=nb["region_id"],
+            region_id=nb.get("region_id"),
+            region_name=nb.get("region_name", ""),
             similarity_combined=nb["similarity_combined"],
+            original_cosine_sim=nb.get("original_cosine_sim", nb["similarity_combined"]),
             similarity_t=nb["similarity_t"],
             similarity_a=nb["similarity_a"],
             shared_tags=nb["shared_tags"],
@@ -237,8 +278,15 @@ async def get_neighbors(
 
     return UniverseNeighborsResponse(
         target_track_id=track_id,
+        track_id=track_id,
         target_track_title=target_dict.get("title", ""),
-        target_region_id=target_dict.get("region_id"),
+        track_title=target_dict.get("title", ""),
+        artist_name=target_dict.get("artist_name", ""),
+        position_3d=pos_3d,
+        target_region_id=target_reg_int,
+        region_id=target_reg_int,
+        region_name=target_reg_name,
         neighbors=neighbor_items,
         distortion_disclaimer=DISTORTION_DISCLAIMER,
+        distortion_warning=DISTORTION_DISCLAIMER,
     )

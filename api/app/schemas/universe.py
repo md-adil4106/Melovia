@@ -19,7 +19,9 @@ class UniverseRegionResponse(BaseModel):
     """Acoustic region centroid and display properties in 3D/2D space."""
 
     id: int = Field(..., description="Region integer identifier (0..23)")
+    region_id: int = Field(default=0, description="Alias for id for web client compatibility")
     label: str = Field(..., description="Descriptive display name of the region")
+    name: str = Field(default="", description="Alias for label for web client compatibility")
     genre_focus: str = Field(..., description="Musical scene or genre focus")
     description: str = Field(..., description="Non-evaluative musical character description")
     centroid_3d: list[float] = Field(
@@ -46,6 +48,10 @@ class UniverseResponse(BaseModel):
             "where qx/qy/qz are scaled by 32767 to map [-1.0, 1.0] coordinates into integers."
         ),
     )
+    points_quantized: list[int] = Field(
+        default_factory=list,
+        description="Alias for points for web client compatibility",
+    )
     point_count: int = Field(..., description="Total number of points encoded in the points array")
     scale: float = Field(
         default=32767.0, description="Divisor used to dequantize Int16 values back to float [-1, 1]"
@@ -54,6 +60,9 @@ class UniverseResponse(BaseModel):
         ..., description="All 24 region centroids and visual metadata"
     )
     metrics: UniverseMetrics = Field(..., description="Neighborhood preservation quality metrics")
+    quality_metrics: UniverseMetrics | None = Field(
+        default=None, description="Alias for metrics for web client compatibility"
+    )
 
 
 class UniversePlaceRequest(BaseModel):
@@ -86,6 +95,10 @@ class PlacedUniverseItem(BaseModel):
     weights: list[float] = Field(
         default_factory=list, description="Softmax interpolation weights assigned to nearest tracks"
     )
+    nearest_catalog_id: str | None = Field(
+        default=None, description="First nearest catalog track ID for client convenience"
+    )
+    confidence: float = Field(default=1.0, description="Interpolation confidence score")
 
 
 class UniversePlaceResponse(BaseModel):
@@ -93,6 +106,9 @@ class UniversePlaceResponse(BaseModel):
 
     items: list[PlacedUniverseItem] = Field(
         default_factory=list, description="List of placed items"
+    )
+    placements: list[PlacedUniverseItem] = Field(
+        default_factory=list, description="Alias for items for web client compatibility"
     )
 
 
@@ -104,8 +120,12 @@ class UniverseNeighborItem(BaseModel):
     title: str
     artist_name: str
     region_id: int | None = None
+    region_name: str = ""
     similarity_combined: float = Field(
         ..., description="Combined audio + taste cosine similarity in original space"
+    )
+    original_cosine_sim: float = Field(
+        default=0.0, description="Alias for similarity_combined for web client compatibility"
     )
     similarity_t: float = Field(..., description="Taste embedding cosine similarity")
     similarity_a: float | None = Field(
@@ -120,8 +140,17 @@ class UniverseNeighborsResponse(BaseModel):
     """True original-space neighbors for a 3D-selected track with distortion disclosure."""
 
     target_track_id: str
+    track_id: str = Field(default="", description="Alias for target_track_id for web client")
     target_track_title: str
+    track_title: str = Field(default="", description="Alias for target_track_title for web client")
+    artist_name: str = ""
+    position_3d: list[float] = Field(
+        default_factory=lambda: [0.0, 0.0, 0.0],
+        description="3D coordinates of target track for client side panel",
+    )
     target_region_id: int | None = None
+    region_id: int = 0
+    region_name: str = ""
     neighbors: list[UniverseNeighborItem] = Field(
         default_factory=list, description="Nearest neighbors computed in original vector space"
     )
@@ -131,4 +160,8 @@ class UniverseNeighborsResponse(BaseModel):
             "Honest disclosure explaining that 3D coordinates are non-linear approximations, "
             "and true musical recommendations are derived from high-dimensional vectors."
         ),
+    )
+    distortion_warning: str = Field(
+        default="",
+        description="Alias for distortion_disclaimer for web client",
     )

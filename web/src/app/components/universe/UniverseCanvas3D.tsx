@@ -63,7 +63,7 @@ function Starfield({
   const maxPoints = tier === "high" ? 15000 : tier === "mid" ? 8000 : 4000;
 
   const { geometry, trackIndices, positionsArray } = useMemo(() => {
-    const raw = data.points_quantized;
+    const raw = data.points_quantized || (data as any).points || [];
     const stride = 5;
     const totalCount = Math.floor(raw.length / stride);
     const step = Math.max(1, Math.floor(totalCount / maxPoints));

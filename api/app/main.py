@@ -135,8 +135,14 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Middleware execution order: Last added executes first
-    # 1. CORS
+    # Middleware execution order: Last added executes first (outermost)
+    # 1. Structured request logging and latency tracking (inner)
+    app.add_middleware(RequestLoggingMiddleware)
+
+    # 2. Security Headers (middle)
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # 3. CORS (outermost - added last so all responses receive CORS headers)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.API_CORS_ORIGINS,
@@ -144,12 +150,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-    # 2. Security Headers
-    app.add_middleware(SecurityHeadersMiddleware)
-
-    # 3. Structured request logging and latency tracking
-    app.add_middleware(RequestLoggingMiddleware)
 
     # Centralized exception handlers
     register_exception_handlers(app)

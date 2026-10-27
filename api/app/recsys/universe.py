@@ -132,11 +132,16 @@ def place_in_universe(
     dots = np.clip(np.dot(vectors, ref_matrix.T), -1.0, 1.0)
     layout_3d = catalog.layout3d
     layout_2d = catalog.layout2d
+    assert layout_3d is not None
+
+    # Bound reference similarity lookup to available layout3d tracks
+    base_count = len(layout_3d)
+    dots_base = dots[:, :base_count]
 
     results: list[dict[str, Any]] = []
 
     for q_idx in range(n_queries):
-        sims_q = dots[q_idx]
+        sims_q = dots_base[q_idx]
         # Top-k catalog indices
         top_k_indices = np.argsort(-sims_q)[:k]
         top_k_sims = sims_q[top_k_indices]
@@ -152,7 +157,7 @@ def place_in_universe(
 
         # Weighted 2D position if available
         pos_2d: list[float] | None = None
-        if layout_2d is not None:
+        if layout_2d is not None and len(layout_2d) >= base_count:
             coords_2d = layout_2d[top_k_indices]  # (k, 2)
             pos_2d_arr = np.sum(coords_2d * weights[:, np.newaxis], axis=0)
             pos_2d = [round(float(pos_2d_arr[0]), 5), round(float(pos_2d_arr[1]), 5)]
@@ -169,6 +174,7 @@ def place_in_universe(
                 "position_2d": pos_2d,
                 "nearest_track_indices": top_k_indices.tolist(),
                 "nearest_track_ids": nearest_track_ids,
+                "nearest_catalog_id": nearest_track_ids[0] if nearest_track_ids else "",
                 "weights": [round(float(w), 5) for w in weights],
             }
         )
@@ -222,14 +228,28 @@ def find_original_neighbors(
         if has_a and catalog.mask_a[neighbor_idx]:
             sim_a_val = float(dots_a[neighbor_idx])
 
+        reg_id = nb_dict.get("region_id")
+        reg_name = ""
+        if reg_id is not None and catalog.regions:
+            for r_meta in catalog.regions:
+                if int(r_meta.get("region_id", -1)) == int(reg_id) or int(
+                    r_meta.get("id", -1)
+                ) == int(reg_id):
+                    reg_name = str(r_meta.get("name") or r_meta.get("label", ""))
+                    break
+
+        combined_sim_val = float(combined_sim[neighbor_idx])
+
         neighbors.append(
             {
                 "track_idx": neighbor_idx,
                 "track_id": catalog.get_id(neighbor_idx),
                 "title": nb_dict.get("title", ""),
                 "artist_name": nb_dict.get("artist_name", ""),
-                "region_id": nb_dict.get("region_id"),
-                "similarity_combined": float(combined_sim[neighbor_idx]),
+                "region_id": reg_id,
+                "region_name": reg_name,
+                "similarity_combined": combined_sim_val,
+                "original_cosine_sim": combined_sim_val,
                 "similarity_t": float(dots_t[neighbor_idx]),
                 "similarity_a": sim_a_val,
                 "shared_tags": shared,
@@ -276,17 +296,25 @@ def compute_region_3d_centroids(
     ]
 
     regions_info = catalog.regions
-    track_regions = np.array(
-        catalog._tracks_metadata.get("region_id", [0] * catalog.track_count),
-        dtype=np.int32,
-    )
+    raw_regions = catalog._tracks_metadata.get("region_id", [0] * catalog.track_count)
+    # Ensure every region ID is safely converted to integer, defaulting None or invalid to 0
+    int_regions = [
+        int(r)
+        if (r is not None and str(r).isdigit())
+        else (int(r) if isinstance(r, (int, float)) else 0)
+        for r in raw_regions
+    ]
+
+    # Bound track_regions strictly to the number of rows in layout3d
+    layout_len = len(catalog.layout3d)
+    track_regions = np.array(int_regions[:layout_len], dtype=np.int32)
     exposures = user_exposures or {}
 
     centroids: list[dict[str, Any]] = []
 
     for r_idx in range(len(regions_info)):
         r_meta = regions_info[r_idx]
-        reg_id = int(r_meta.get("region_id", r_idx))
+        reg_id = int(r_meta.get("region_id", r_meta.get("id", r_idx)))
         mask = track_regions == reg_id
         if not np.any(mask):
             c_3d = [0.0, 0.0, 0.0]
@@ -294,7 +322,7 @@ def compute_region_3d_centroids(
         else:
             mean_3d = np.mean(catalog.layout3d[mask], axis=0)
             c_3d = [round(float(x), 5) for x in mean_3d]
-            if catalog.layout2d is not None:
+            if catalog.layout2d is not None and len(catalog.layout2d) >= layout_len:
                 mean_2d = np.mean(catalog.layout2d[mask], axis=0)
                 c_2d = [round(float(x), 5) for x in mean_2d]
             else:
@@ -302,11 +330,14 @@ def compute_region_3d_centroids(
 
         color = palette_24[reg_id % len(palette_24)]
         exp_val = float(exposures.get(reg_id, 0.0))
+        r_label = str(r_meta.get("name") or r_meta.get("label", f"Region {reg_id}"))
 
         centroids.append(
             {
                 "id": reg_id,
-                "label": r_meta.get("name", f"Region {reg_id}"),
+                "region_id": reg_id,
+                "label": r_label,
+                "name": r_label,
                 "genre_focus": r_meta.get("genre_focus", ""),
                 "description": r_meta.get("description", ""),
                 "centroid_3d": c_3d,

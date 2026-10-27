@@ -39,7 +39,22 @@ export function UniverseSidePanel({
       if (!res.ok) {
         throw new Error("Failed to fetch track neighborhood details");
       }
-      return await res.json();
+      const json = await res.json();
+      return {
+        ...json,
+        track_id: json.track_id || json.target_track_id || trackId,
+        track_title: json.track_title || json.target_track_title || "",
+        artist_name: json.artist_name || "",
+        region_id: json.region_id ?? json.target_region_id ?? 0,
+        region_name: json.region_name || "",
+        position_3d: json.position_3d || [0, 0, 0],
+        distortion_warning: json.distortion_warning || json.distortion_disclaimer || "",
+        neighbors: (json.neighbors || []).map((nb: any) => ({
+          ...nb,
+          original_cosine_sim: nb.original_cosine_sim ?? nb.similarity_combined ?? 0,
+          region_name: nb.region_name || "",
+        })),
+      };
     },
     enabled: !!trackId,
   });
@@ -126,7 +141,7 @@ export function UniverseSidePanel({
               <div className="flex items-center justify-between text-[11px] text-white/60 pt-2 border-t border-white/[0.08]">
                 <span>Region: <strong className="text-white">{data.region_name}</strong></span>
                 <span className="font-mono text-[10px]">
-                  3D: [{data.position_3d.map((v) => v.toFixed(2)).join(", ")}]
+                  3D: [{(data.position_3d || [0, 0, 0]).map((v) => Number(v).toFixed(2)).join(", ")}]
                 </span>
               </div>
 

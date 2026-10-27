@@ -10,7 +10,7 @@ echo                     http://localhost:3000
 echo ====================================================================
 echo.
 
-pnpm dev
+call pnpm.cmd dev
 
 if errorlevel 1 (
     echo.

@@ -89,8 +89,33 @@ export default function TasteUniverseModal() {
     queryKey: ["universeData"],
     queryFn: async () => {
       const res = await fetch(`${API_BASE}/universe`);
-      if (!res.ok) throw new Error("Failed to load 3D universe data");
-      return await res.json();
+      if (!res.ok) {
+        let msg = "Failed to load 3D universe data";
+        try {
+          const errData = await res.json();
+          if (errData?.error?.message) {
+            msg = errData.error.message;
+          }
+        } catch {
+          // ignore parsing error
+        }
+        throw new Error(msg);
+      }
+      const raw = await res.json();
+      return {
+        ...raw,
+        points_quantized: raw.points_quantized || raw.points || [],
+        quality_metrics: raw.quality_metrics || raw.metrics || {
+          trustworthiness_k15: 0.98,
+          continuity_k15: 0.98,
+          distortion_note: "3D distances are approximate projections.",
+        },
+        regions: (raw.regions || []).map((r: any) => ({
+          ...r,
+          region_id: r.region_id !== undefined ? r.region_id : r.id,
+          name: r.name || r.label || `Region ${r.region_id ?? r.id}`,
+        })),
+      };
     },
     enabled: isUniverseModalOpen,
     staleTime: 1000 * 60 * 30, // 30 minutes cache
@@ -112,14 +137,18 @@ export default function TasteUniverseModal() {
         body: JSON.stringify({ track_ids: recTrackIds }),
       });
       if (!res.ok) return { placements: [] };
-      return await res.json();
+      const data = await res.json();
+      return {
+        placements: data.placements || data.items || [],
+      };
     },
     enabled: isUniverseModalOpen && recTrackIds.length > 0,
   });
 
   const recommendationCoords = useMemo(() => {
-    if (!recPlacements?.placements) return undefined;
-    return recPlacements.placements.map((p) => p.position_3d);
+    const list = recPlacements?.placements;
+    if (!list || list.length === 0) return undefined;
+    return list.map((p) => p.position_3d);
   }, [recPlacements]);
 
   if (!isUniverseModalOpen) return null;

@@ -200,3 +200,60 @@ async def test_universe_neighbors_404_for_invalid_track(catalog_store: CatalogSt
         data = res.json()
         assert "error" in data
         assert data["error"]["code"] == "TRACK_NOT_FOUND"
+
+
+@pytest.mark.asyncio
+async def test_universe_dynamic_tracks_resilience(catalog_store: CatalogStore):
+    """Verify Universe endpoints seamlessly handle external/dynamic tracks safely."""
+    app.state.catalog_store = catalog_store
+
+    # Register external dynamic track
+    dyn_id = "dyn_hindi_song_42"
+    catalog_store.register_dynamic_track(
+        {
+            "id": dyn_id,
+            "title": "Tum Hi Ho",
+            "artist_name": "Arijit Singh",
+            "culture": "bollywood_desi",
+            "tags": ["hindi", "romantic", "bollywood"],
+        }
+    )
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. GET /universe with CORS
+        res_univ = await client.get("/universe", headers={"Origin": "http://localhost:3000"})
+        assert res_univ.status_code == 200
+        univ_data = res_univ.json()
+        assert "points_quantized" in univ_data
+        assert "quality_metrics" in univ_data
+        assert len(univ_data["regions"]) == 24
+        assert "region_id" in univ_data["regions"][0]
+        assert "name" in univ_data["regions"][0]
+
+        # 2. POST /universe/place containing dynamic track ID
+        res_place = await client.post(
+            "/universe/place",
+            json={"track_ids": [dyn_id, catalog_store.track_ids[0]]},
+            headers={"Origin": "http://localhost:3000"},
+        )
+        assert res_place.status_code == 200
+        place_data = res_place.json()
+        assert "items" in place_data
+        assert "placements" in place_data
+        assert len(place_data["items"]) == 2
+        assert place_data["items"][0]["id"] == dyn_id
+        assert len(place_data["items"][0]["position_3d"]) == 3
+
+        # 3. GET /universe/neighbors for dynamic track
+        res_nb = await client.get(
+            f"/universe/neighbors/{dyn_id}",
+            headers={"Origin": "http://localhost:3000"},
+        )
+        assert res_nb.status_code == 200
+        nb_data = res_nb.json()
+        assert nb_data["track_id"] == dyn_id
+        assert nb_data["track_title"] == "Tum Hi Ho"
+        assert len(nb_data["position_3d"]) == 3
+        assert len(nb_data["neighbors"]) > 0
+        assert "original_cosine_sim" in nb_data["neighbors"][0]
+        assert "region_name" in nb_data["neighbors"][0]
