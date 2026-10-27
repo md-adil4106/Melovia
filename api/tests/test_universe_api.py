@@ -257,3 +257,8 @@ async def test_universe_dynamic_tracks_resilience(catalog_store: CatalogStore):
         assert len(nb_data["neighbors"]) > 0
         assert "original_cosine_sim" in nb_data["neighbors"][0]
         assert "region_name" in nb_data["neighbors"][0]
+
+        # 4. GET /universe/neighbors with "trk_1381" index prefix
+        res_trk_prefix = await client.get("/universe/neighbors/trk_1381")
+        assert res_trk_prefix.status_code == 200
+        assert res_trk_prefix.json()["target_track_id"] == catalog_store.get_id(1381)

@@ -15,6 +15,10 @@ import {
   Maximize2,
   Minimize2,
   ChevronDown,
+  Cloud,
+  Tag,
+  Share2,
+  Orbit,
 } from "lucide-react";
 import { useDiscoveryStore } from "../../store";
 import { UniverseData, QualityTier, UniversePlacement, REGION_PALETTE_HEX } from "./types";
@@ -56,6 +60,12 @@ export default function TasteUniverseModal() {
   const [fps, setFps] = useState<number>(60);
   const [isRegionDropdownOpen, setIsRegionDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // 3D Visual Layer Toggles
+  const [showNebulae, setShowNebulae] = useState(true);
+  const [showLabels, setShowLabels] = useState(true);
+  const [showConstellations, setShowConstellations] = useState(true);
+  const [autoRotate, setAutoRotate] = useState(true);
 
   // Detect WebGL capability on mount
   useEffect(() => {
@@ -266,7 +276,68 @@ export default function TasteUniverseModal() {
           </div>
 
           {/* Right Header Controls: Mode toggle, Quality Tier, Close */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* 3D Visual Layer Toggles */}
+            {renderMode === "3d" && (
+              <div className="hidden lg:flex items-center gap-1 bg-white/[0.04] p-1 rounded-lg border border-white/10">
+                <button
+                  type="button"
+                  title="Toggle Volumetric Nebulae"
+                  onClick={() => setShowNebulae(!showNebulae)}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                    showNebulae
+                      ? "bg-[#fa2d55]/20 text-[#fb7185] border border-[#fa2d55]/30 shadow-sm"
+                      : "text-white/50 hover:text-white hover:bg-white/[0.05]"
+                  }`}
+                >
+                  <Cloud className="w-3.5 h-3.5" />
+                  <span>Nebulae</span>
+                </button>
+
+                <button
+                  type="button"
+                  title="Toggle 3D Region Labels"
+                  onClick={() => setShowLabels(!showLabels)}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                    showLabels
+                      ? "bg-[#fa2d55]/20 text-[#fb7185] border border-[#fa2d55]/30 shadow-sm"
+                      : "text-white/50 hover:text-white hover:bg-white/[0.05]"
+                  }`}
+                >
+                  <Tag className="w-3.5 h-3.5" />
+                  <span>Labels</span>
+                </button>
+
+                <button
+                  type="button"
+                  title="Toggle Constellation Lines"
+                  onClick={() => setShowConstellations(!showConstellations)}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                    showConstellations
+                      ? "bg-[#fa2d55]/20 text-[#fb7185] border border-[#fa2d55]/30 shadow-sm"
+                      : "text-white/50 hover:text-white hover:bg-white/[0.05]"
+                  }`}
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Constellations</span>
+                </button>
+
+                <button
+                  type="button"
+                  title="Toggle Celestial Orbit"
+                  onClick={() => setAutoRotate(!autoRotate)}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                    autoRotate
+                      ? "bg-[#fa2d55]/20 text-[#fb7185] border border-[#fa2d55]/30 shadow-sm"
+                      : "text-white/50 hover:text-white hover:bg-white/[0.05]"
+                  }`}
+                >
+                  <Orbit className="w-3.5 h-3.5" />
+                  <span>Orbit</span>
+                </button>
+              </div>
+            )}
+
             {/* 3D / 2D Switcher */}
             {hasWebGL && (
               <div className="flex items-center bg-white/[0.05] p-0.5 rounded-lg border border-white/10">
@@ -374,8 +445,13 @@ export default function TasteUniverseModal() {
                     blindspotRegionId={exploringRegion?.id ?? null}
                     recommendationCoords={recommendationCoords}
                     onSelectTrack={(trkId) => setUniverseFocusedTrackId(trkId)}
+                    onSelectRegion={(regId) => setUniverseFocusedRegionId(regId)}
                     onFpsReport={(measuredFps) => setFps(measuredFps)}
                     onTierChange={(newTier) => setTier(newTier)}
+                    showNebulae={showNebulae}
+                    showLabels={showLabels}
+                    showConstellations={showConstellations}
+                    autoRotate={autoRotate}
                   />
                 </UniverseErrorBoundary>
               ) : (
@@ -385,6 +461,48 @@ export default function TasteUniverseModal() {
                   onSelectRegion={(regId) => setUniverseFocusedRegionId(regId)}
                   onSelectTrack={(trkId) => setUniverseFocusedTrackId(trkId)}
                 />
+              )}
+
+              {/* Bottom Quick-Jump Region Ribbon */}
+              {universeData?.regions && renderMode === "3d" && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 max-w-[95vw] sm:max-w-[85vw] flex items-center gap-1.5 p-1.5 rounded-full bg-[#080b12]/80 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-x-auto no-scrollbar pointer-events-auto">
+                  <button
+                    type="button"
+                    onClick={() => setUniverseFocusedRegionId(null)}
+                    className={`shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                      universeFocusedRegionId === null
+                        ? "bg-[#fa2d55] text-white shadow-[0_0_12px_rgba(250,45,85,0.5)]"
+                        : "bg-white/[0.05] hover:bg-white/[0.12] text-white/70 hover:text-white"
+                    }`}
+                  >
+                    <span>Overview</span>
+                  </button>
+
+                  <div className="w-px h-3.5 bg-white/15 shrink-0" />
+
+                  {universeData.regions.map((reg) => {
+                    const isSelected = universeFocusedRegionId === reg.region_id;
+                    const color = REGION_PALETTE_HEX[reg.region_id % REGION_PALETTE_HEX.length];
+                    return (
+                      <button
+                        key={reg.region_id}
+                        type="button"
+                        onClick={() => setUniverseFocusedRegionId(reg.region_id)}
+                        className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                          isSelected
+                            ? "bg-white/20 text-white border border-white/30 shadow-md font-semibold"
+                            : "bg-white/[0.04] hover:bg-white/[0.09] text-white/70 hover:text-white border border-white/5"
+                        }`}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0 shadow-sm"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="truncate max-w-[130px]">{reg.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
 
               {/* Side Inspector Drawer */}

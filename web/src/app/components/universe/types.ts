@@ -4,6 +4,9 @@ export interface Region3D {
   genre_focus: string;
   centroid_3d: [number, number, number];
   exposure: number;
+  track_count?: number;
+  color?: string;
+  description?: string;
 }
 
 export interface QualityMetrics {
@@ -18,6 +21,7 @@ export interface UniverseData {
   point_count: number;
   regions: Region3D[];
   quality_metrics: QualityMetrics;
+  track_ids?: string[];
 }
 
 export interface TrackNeighbor {

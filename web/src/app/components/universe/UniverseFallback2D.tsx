@@ -56,7 +56,7 @@ export function UniverseFallback2D({
       });
     }
     return pts;
-  }, [data.points_quantized]);
+  }, [data]);
 
   // Redraw canvas
   useEffect(() => {

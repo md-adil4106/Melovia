@@ -66,7 +66,7 @@ if not exist "api\melovia.db" (
 
 :: 6. Clean any zombie processes on port 8000 and 3000
 echo [INFO] Checking for lingering processes on ports 8000 and 3000...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ports = 8000, 3000; $pids = Get-NetTCPConnection -LocalPort $ports -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($pids) { foreach ($p in $pids) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue } } ; exit 0" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ports = 8000, 3000; $pids = Get-NetTCPConnection -LocalPort $ports -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($pids) { foreach ($p in $pids) { try { $children = Get-CimInstance Win32_Process -Filter ('ParentProcessId = ' + $p) -ErrorAction SilentlyContinue; if ($children) { foreach ($c in $children) { Stop-Process -Id $c.ProcessId -Force -ErrorAction SilentlyContinue } }; Stop-Process -Id $p -Force -ErrorAction SilentlyContinue } catch {} } } ; exit 0" >nul 2>&1
 
 :launch_servers
 echo.
@@ -122,7 +122,7 @@ goto menu
 :restart_servers
 echo.
 echo [INFO] Stopping running servers...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ports = 8000, 3000; $pids = Get-NetTCPConnection -LocalPort $ports -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($pids) { foreach ($p in $pids) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue } } ; exit 0" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ports = 8000, 3000; $pids = Get-NetTCPConnection -LocalPort $ports -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($pids) { foreach ($p in $pids) { try { $children = Get-CimInstance Win32_Process -Filter ('ParentProcessId = ' + $p) -ErrorAction SilentlyContinue; if ($children) { foreach ($c in $children) { Stop-Process -Id $c.ProcessId -Force -ErrorAction SilentlyContinue } }; Stop-Process -Id $p -Force -ErrorAction SilentlyContinue } catch {} } } ; exit 0" >nul 2>&1
 ping 127.0.0.1 -n 3 >nul 2>&1
 goto launch_servers
 

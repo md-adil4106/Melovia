@@ -51,6 +51,25 @@ def _get_catalog(request: Request) -> CatalogStore:
     return catalog
 
 
+def _resolve_track_id(track_id: str, catalog: CatalogStore) -> str:
+    """Resolve track identifier, supporting true IDs, numeric indices, or trk_<idx> prefixes."""
+    if catalog.contains_id(track_id):
+        return track_id
+    if track_id.startswith("trk_") and track_id[4:].isdigit():
+        idx = int(track_id[4:])
+        if 0 <= idx < catalog.track_count:
+            return catalog.get_id(idx)
+    elif track_id.startswith("track_") and track_id[6:].isdigit():
+        idx = int(track_id[6:])
+        if 0 <= idx < catalog.track_count:
+            return catalog.get_id(idx)
+    elif track_id.isdigit():
+        idx = int(track_id)
+        if 0 <= idx < catalog.track_count:
+            return catalog.get_id(idx)
+    return track_id
+
+
 @router.get(
     "",
     response_model=UniverseResponse,
@@ -129,10 +148,12 @@ async def get_universe(
         "sample_count": len(indices_to_render),
     }
     metrics = UniverseMetrics(**m_dict)
+    rendered_ids = [catalog.get_id(i) for i in indices_to_render]
 
     return UniverseResponse(
         points=flat_points,
         points_quantized=flat_points,
+        track_ids=rendered_ids,
         point_count=len(indices_to_render),
         scale=32767.0,
         regions=region_responses,
@@ -157,7 +178,8 @@ async def place_points(
 
     # 1. Place requested track IDs
     if payload.track_ids:
-        for tid in payload.track_ids:
+        for raw_tid in payload.track_ids:
+            tid = _resolve_track_id(raw_tid, catalog)
             if catalog.contains_id(tid):
                 idx = catalog.get_idx(tid)
                 if idx < len(catalog.layout3d):
@@ -175,7 +197,7 @@ async def place_points(
 
                 placed_items.append(
                     PlacedUniverseItem(
-                        id=tid,
+                        id=raw_tid,
                         type="track",
                         position_3d=p3,
                         position_2d=p2,
@@ -223,15 +245,16 @@ async def get_neighbors(
     request: Request = None,  # type: ignore
 ) -> UniverseNeighborsResponse:
     catalog = _get_catalog(request)
+    resolved_track_id = _resolve_track_id(track_id, catalog)
 
-    if not catalog.contains_id(track_id):
+    if not catalog.contains_id(resolved_track_id):
         raise AppException(
             code="TRACK_NOT_FOUND",
             message=f"Track ID '{track_id}' was not found in the catalog.",
             status_code=status.HTTP_404_NOT_FOUND,
         )
 
-    track_idx = catalog.get_idx(track_id)
+    track_idx = catalog.get_idx(resolved_track_id)
     target_dict = catalog.get_track_dict(track_idx)
 
     # Compute high-dimensional nearest neighbors in original space
@@ -243,7 +266,7 @@ async def get_neighbors(
         if track_idx < len(catalog.layout3d):
             pos_3d = [round(float(x), 5) for x in catalog.layout3d[track_idx]]
         else:
-            vec_t = catalog.get_vector_t(track_id)
+            vec_t = catalog.get_vector_t(resolved_track_id)
             interp = place_in_universe(vec_t.reshape(1, -1), catalog=catalog, k=5)
             if interp:
                 pos_3d = interp[0]["position_3d"]
@@ -277,8 +300,8 @@ async def get_neighbors(
     ]
 
     return UniverseNeighborsResponse(
-        target_track_id=track_id,
-        track_id=track_id,
+        target_track_id=resolved_track_id,
+        track_id=resolved_track_id,
         target_track_title=target_dict.get("title", ""),
         track_title=target_dict.get("title", ""),
         artist_name=target_dict.get("artist_name", ""),

@@ -52,6 +52,10 @@ class UniverseResponse(BaseModel):
         default_factory=list,
         description="Alias for points for web client compatibility",
     )
+    track_ids: list[str] = Field(
+        default_factory=list,
+        description="Track IDs corresponding to the rendered sample points",
+    )
     point_count: int = Field(..., description="Total number of points encoded in the points array")
     scale: float = Field(
         default=32767.0, description="Divisor used to dequantize Int16 values back to float [-1, 1]"
