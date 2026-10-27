@@ -15,6 +15,24 @@ export interface QualityMetrics {
   distortion_note: string;
 }
 
+export interface LandmarkTrack {
+  track_id: string;
+  track_idx: number;
+  title: string;
+  artist_name: string;
+  popularity_pct: number;
+  position_3d: [number, number, number];
+}
+
+export interface GenreConstellation {
+  region_id: number;
+  region_name: string;
+  genre_focus: string;
+  color: string;
+  landmark_tracks: LandmarkTrack[];
+  lines: Array<[[number, number, number], [number, number, number]]>;
+}
+
 export interface UniverseData {
   points_quantized: number[]; // Flat array: [x0, y0, z0, reg0, trk0, ...]
   scale: number;
@@ -22,6 +40,7 @@ export interface UniverseData {
   regions: Region3D[];
   quality_metrics: QualityMetrics;
   track_ids?: string[];
+  constellations?: GenreConstellation[];
 }
 
 export interface TrackNeighbor {

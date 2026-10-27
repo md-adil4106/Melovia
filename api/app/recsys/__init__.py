@@ -55,6 +55,7 @@ from app.recsys.sequencing import (
 )
 from app.recsys.taste import Modes, RecsysError, SeedNotFoundError, build_modes
 from app.recsys.universe import (
+    compute_genre_constellations,
     compute_region_3d_centroids,
     dequantize_points,
     find_original_neighbors,
@@ -114,4 +115,5 @@ __all__ = [
     "place_in_universe",
     "find_original_neighbors",
     "compute_region_3d_centroids",
+    "compute_genre_constellations",
 ]

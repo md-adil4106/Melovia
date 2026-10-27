@@ -350,3 +350,124 @@ def compute_region_3d_centroids(
         )
 
     return centroids
+
+
+def compute_genre_constellations(
+    catalog: CatalogStore,
+    top_n_stars: int = 5,
+) -> list[dict[str, Any]]:
+    """Compute genre constellations connecting landmark/famous songs for each region."""
+    if catalog.layout3d is None:
+        return []
+
+    palette_24 = [
+        "#38bdf8",  # 0: Sky Blue
+        "#a78bfa",  # 1: Purple
+        "#34d399",  # 2: Emerald
+        "#fbbf24",  # 3: Amber
+        "#f472b6",  # 4: Pink
+        "#f97316",  # 5: Orange
+        "#4ade80",  # 6: Green
+        "#818cf8",  # 7: Indigo
+        "#a3e635",  # 8: Lime
+        "#06b6d4",  # 9: Cyan
+        "#e879f9",  # 10: Fuchsia
+        "#64748b",  # 11: Slate
+        "#2dd4bf",  # 12: Teal
+        "#fb7185",  # 13: Rose
+        "#ef4444",  # 14: Red
+        "#d97706",  # 15: Warm Amber
+        "#0284c7",  # 16: Deep Sky
+        "#c084fc",  # 17: Violet
+        "#f59e0b",  # 18: Honey
+        "#94a3b8",  # 19: Gray
+        "#e11d48",  # 20: Crimson
+        "#ec4899",  # 21: Hot Pink
+        "#6366f1",  # 22: Electric Indigo
+        "#84cc16",  # 23: Olive Lime
+    ]
+
+    regions_info = catalog.regions
+    raw_regions = catalog._tracks_metadata.get("region_id", [0] * catalog.track_count)
+    int_regions = [
+        int(r)
+        if (r is not None and str(r).isdigit())
+        else (int(r) if isinstance(r, (int, float)) else 0)
+        for r in raw_regions
+    ]
+    layout_len = len(catalog.layout3d)
+    track_regions = np.array(int_regions[:layout_len], dtype=np.int32)
+    pops = catalog._tracks_metadata.get("popularity_pct", [50.0] * catalog.track_count)
+    titles = catalog._tracks_metadata.get("title", [""] * catalog.track_count)
+    artists = catalog._tracks_metadata.get("artist_name", [""] * catalog.track_count)
+
+    constellations: list[dict[str, Any]] = []
+
+    for r_idx in range(len(regions_info)):
+        r_meta = regions_info[r_idx]
+        reg_id = int(r_meta.get("region_id", r_meta.get("id", r_idx)))
+        mask = np.where(track_regions == reg_id)[0]
+        if len(mask) == 0:
+            continue
+
+        # Sort tracks in this region by popularity descending (famous tracks first)
+        sorted_indices = sorted(
+            mask,
+            key=lambda idx: float(pops[idx]) if idx < len(pops) else 0.0,
+            reverse=True,
+        )
+        top_indices = sorted_indices[:top_n_stars]
+
+        landmark_tracks: list[dict[str, Any]] = []
+        positions: list[list[float]] = []
+        for idx in top_indices:
+            pos_3d = [round(float(x), 5) for x in catalog.layout3d[idx]]
+            positions.append(pos_3d)
+            pop_val = float(pops[idx]) if idx < len(pops) else 50.0
+            t_title = str(titles[idx]) if idx < len(titles) else f"Track {idx}"
+            a_name = str(artists[idx]) if idx < len(artists) else "Unknown Artist"
+            landmark_tracks.append(
+                {
+                    "track_id": catalog.get_id(idx),
+                    "track_idx": int(idx),
+                    "title": t_title,
+                    "artist_name": a_name,
+                    "popularity_pct": round(pop_val, 1),
+                    "position_3d": pos_3d,
+                }
+            )
+
+        # Connect landmark stars into celestial constellation lines (nearest neighbor chain)
+        lines: list[list[list[float]]] = []
+        if len(positions) > 1:
+            unvisited = list(range(1, len(positions)))
+            curr = 0
+            while unvisited:
+                curr_pos = np.array(positions[curr], dtype=np.float32)
+                best_dist = float("inf")
+                best_idx = unvisited[0]
+                for u in unvisited:
+                    u_pos = np.array(positions[u], dtype=np.float32)
+                    d = float(np.linalg.norm(curr_pos - u_pos))
+                    if d < best_dist:
+                        best_dist = d
+                        best_idx = u
+                lines.append([positions[curr], positions[best_idx]])
+                unvisited.remove(best_idx)
+                curr = best_idx
+
+        color = palette_24[reg_id % len(palette_24)]
+        r_name = str(r_meta.get("name") or r_meta.get("label", f"Region {reg_id}"))
+
+        constellations.append(
+            {
+                "region_id": reg_id,
+                "region_name": r_name,
+                "genre_focus": r_meta.get("genre_focus", ""),
+                "color": color,
+                "landmark_tracks": landmark_tracks,
+                "lines": lines,
+            }
+        )
+
+    return constellations

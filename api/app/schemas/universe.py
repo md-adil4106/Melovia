@@ -38,6 +38,33 @@ class UniverseRegionResponse(BaseModel):
     track_count: int = Field(..., description="Number of tracks in this region")
 
 
+class LandmarkTrack(BaseModel):
+    """Famous or landmark track in a specific genre region."""
+
+    track_id: str = Field(..., description="Track UUID")
+    track_idx: int = Field(..., description="Catalog row index")
+    title: str = Field(..., description="Track title")
+    artist_name: str = Field(..., description="Artist name")
+    popularity_pct: float = Field(..., description="Popularity percentage [0-100]")
+    position_3d: list[float] = Field(..., description="[x, y, z] coordinate in 3D universe")
+
+
+class GenreConstellation(BaseModel):
+    """Constellation connecting famous landmark tracks within a musical genre."""
+
+    region_id: int = Field(..., description="Region ID (0..23)")
+    region_name: str = Field(..., description="Region name")
+    genre_focus: str = Field(..., description="Genre focus description")
+    color: str = Field(..., description="Hex color")
+    landmark_tracks: list[LandmarkTrack] = Field(
+        default_factory=list, description="Top famous tracks in this genre"
+    )
+    lines: list[list[list[float]]] = Field(
+        default_factory=list,
+        description="Constellation line segments connecting landmark tracks: [[[x,y,z], ...]]",
+    )
+
+
 class UniverseResponse(BaseModel):
     """Complete 3D and 2D catalog universe dataset for the client render sample."""
 
@@ -62,6 +89,10 @@ class UniverseResponse(BaseModel):
     )
     regions: list[UniverseRegionResponse] = Field(
         ..., description="All 24 region centroids and visual metadata"
+    )
+    constellations: list[GenreConstellation] = Field(
+        default_factory=list,
+        description="Genre constellations connecting famous landmark tracks across the cosmos",
     )
     metrics: UniverseMetrics = Field(..., description="Neighborhood preservation quality metrics")
     quality_metrics: UniverseMetrics | None = Field(

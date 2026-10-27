@@ -113,6 +113,12 @@ async def test_get_universe_endpoint(catalog_store: CatalogStore):
         assert data["point_count"] == len(data["points"]) // 5
         assert len(data["regions"]) == 24
         assert "metrics" in data
+        assert "constellations" in data
+        assert len(data["constellations"]) == 24
+        first_c = data["constellations"][0]
+        assert "landmark_tracks" in first_c
+        assert len(first_c["landmark_tracks"]) > 0
+        assert "lines" in first_c
 
         metrics = data["metrics"]
         assert metrics["trustworthiness_k15"] >= 0.70

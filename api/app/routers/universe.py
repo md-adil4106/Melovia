@@ -10,6 +10,7 @@ from app.db.session import get_db_session
 from app.errors import AppException
 from app.recsys import (
     CatalogStore,
+    compute_genre_constellations,
     compute_region_3d_centroids,
     find_original_neighbors,
     place_in_universe,
@@ -17,6 +18,7 @@ from app.recsys import (
 )
 from app.routers.cookies import get_or_create_device_id, get_or_create_session_id
 from app.schemas.universe import (
+    GenreConstellation,
     PlacedUniverseItem,
     UniverseMetrics,
     UniverseNeighborItem,
@@ -149,6 +151,8 @@ async def get_universe(
     }
     metrics = UniverseMetrics(**m_dict)
     rendered_ids = [catalog.get_id(i) for i in indices_to_render]
+    constellations_raw = compute_genre_constellations(catalog, top_n_stars=5)
+    constellations_data = [GenreConstellation(**c) for c in constellations_raw]
 
     return UniverseResponse(
         points=flat_points,
@@ -157,6 +161,7 @@ async def get_universe(
         point_count=len(indices_to_render),
         scale=32767.0,
         regions=region_responses,
+        constellations=constellations_data,
         metrics=metrics,
         quality_metrics=metrics,
     )
