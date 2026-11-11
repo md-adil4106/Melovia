@@ -13,7 +13,8 @@ import { GlassThemeSelector } from "./GlassThemeSelector";
 import { AudioWaveVisualizer } from "./AudioWaveVisualizer";
 import { RefractionAura } from "./RefractionAura";
 import { ShortcutsModal } from "./ShortcutsModal";
-import { useDiscoveryStore } from "../../store";
+import { AudioPlayerDock } from "./AudioPlayerDock";
+import { useDiscoveryStore, Track } from "../../store";
 
 describe("Design System UI Primitives (Phase 15)", () => {
   it("renders Button with variants and handles click events", () => {
@@ -195,5 +196,56 @@ describe("Design System UI Primitives (Phase 15)", () => {
     const closeBtn = screen.getByRole("button", { name: "Close keyboard shortcuts" });
     fireEvent.click(closeBtn);
     expect(handleClose).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders AudioPlayerDock with track details, scrubber, and playback triggers", () => {
+    const handleToggle = vi.fn();
+    const handleClose = vi.fn();
+    const sampleTrack: Track = {
+      id: "track-dock-1",
+      track_idx: 1,
+      title: "Starman",
+      artist_id: "art-1",
+      artist_name: "David Bowie",
+      popularity_pct: 88,
+      has_a: true,
+      has_t: true,
+      preview_url: "https://example.com/starman.mp3",
+    };
+
+    const { rerender } = render(
+      <AudioPlayerDock
+        track={null}
+        isPlaying={false}
+        audioElement={null}
+        onTogglePlay={handleToggle}
+        onClose={handleClose}
+      />
+    );
+    expect(screen.queryByTestId("audio-player-dock")).toBeNull();
+
+    rerender(
+      <AudioPlayerDock
+        track={sampleTrack}
+        isPlaying={true}
+        audioElement={null}
+        onTogglePlay={handleToggle}
+        onClose={handleClose}
+      />
+    );
+    expect(screen.getByTestId("audio-player-dock")).toBeDefined();
+    expect(screen.getByText("Starman")).toBeDefined();
+    expect(screen.getByText("David Bowie")).toBeDefined();
+    expect(screen.getByLabelText("Audio preview scrubber")).toBeDefined();
+
+    // Trigger play/pause button
+    const playBtn = screen.getByRole("button", { name: "Pause" });
+    fireEvent.click(playBtn);
+    expect(handleToggle).toHaveBeenCalledWith(sampleTrack);
+
+    // Trigger close button
+    const closeBtn = screen.getByRole("button", { name: "Close preview player" });
+    fireEvent.click(closeBtn);
+    expect(handleClose).toHaveBeenCalledTimes(1);
   });
 });

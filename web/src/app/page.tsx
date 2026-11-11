@@ -44,6 +44,7 @@ import { RefractionAura } from "./components/ui/RefractionAura";
 import { AudioWaveVisualizer } from "./components/ui/AudioWaveVisualizer";
 import { GlassThemeSelector } from "./components/ui/GlassThemeSelector";
 import { ShortcutsModal } from "./components/ui/ShortcutsModal";
+import { AudioPlayerDock } from "./components/ui/AudioPlayerDock";
 import { Button } from "./components/ui/Button";
 import { Card } from "./components/ui/Card";
 import { Chip } from "./components/ui/Chip";
@@ -216,6 +217,7 @@ export default function DiscoveryHome() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(true);
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const [activePreviewTrack, setActivePreviewTrack] = useState<Track | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleTogglePlay = (track: Track) => {
@@ -242,7 +244,17 @@ export default function DiscoveryHome() {
         setPlayingTrackId(null);
       };
       setPlayingTrackId(track.id);
+      setActivePreviewTrack(track);
     }
+  };
+
+  const handleClosePlayerDock = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setPlayingTrackId(null);
+    setActivePreviewTrack(null);
   };
 
   useEffect(() => {
@@ -1778,6 +1790,15 @@ export default function DiscoveryHome() {
       <ShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      {/* Persistent Audio Mini-Player Dock */}
+      <AudioPlayerDock
+        track={activePreviewTrack}
+        isPlaying={playingTrackId !== null && playingTrackId === activePreviewTrack?.id}
+        audioElement={audioRef.current}
+        onTogglePlay={handleTogglePlay}
+        onClose={handleClosePlayerDock}
       />
     </main>
   );
