@@ -840,4 +840,31 @@ describe("Discovery Home Page (Phase 4 & Phase 5)", () => {
       expect(screen.queryByText("Taste Profile & Privacy")).toBeNull();
     });
   });
+
+  it("opens Keyboard Shortcuts modal on button click or '?' key and closes on Escape", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "ok", catalog: null }),
+    });
+
+    renderWithClient(<DiscoveryHome />);
+
+    // Click shortcuts button
+    const shortcutsBtn = screen.getByTestId("shortcuts-btn");
+    expect(shortcutsBtn).toBeDefined();
+    fireEvent.click(shortcutsBtn);
+
+    expect(screen.getByTestId("shortcuts-modal")).toBeDefined();
+    expect(screen.getByText("Keyboard Shortcuts")).toBeDefined();
+
+    // Close on Escape
+    fireEvent.keyDown(window, { key: "Escape" });
+    await waitFor(() => {
+      expect(screen.queryByTestId("shortcuts-modal")).toBeNull();
+    });
+
+    // Open via '?' key
+    fireEvent.keyDown(window, { key: "?" });
+    expect(screen.getByTestId("shortcuts-modal")).toBeDefined();
+  });
 });

@@ -43,6 +43,7 @@ import { HeroParticleField } from "./components/HeroParticleField";
 import { RefractionAura } from "./components/ui/RefractionAura";
 import { AudioWaveVisualizer } from "./components/ui/AudioWaveVisualizer";
 import { GlassThemeSelector } from "./components/ui/GlassThemeSelector";
+import { ShortcutsModal } from "./components/ui/ShortcutsModal";
 import { Button } from "./components/ui/Button";
 import { Card } from "./components/ui/Card";
 import { Chip } from "./components/ui/Chip";
@@ -212,6 +213,7 @@ export default function DiscoveryHome() {
   const [selectedTrackForWhy, setSelectedTrackForWhy] = useState<Track | null>(null);
   const [isWhyDrawerOpen, setIsWhyDrawerOpen] = useState(false);
   const [isMainExportOpen, setIsMainExportOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(true);
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -612,6 +614,78 @@ export default function DiscoveryHome() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Global Keyboard Shortcuts Listener
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isInput =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (isInput) return;
+
+      if (e.key === "?" || (e.shiftKey && e.key === "/")) {
+        e.preventDefault();
+        setIsShortcutsOpen((prev) => !prev);
+        return;
+      }
+
+      if (e.key === "/") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      if (e.key === "1") {
+        setActiveTab("discover");
+        return;
+      }
+
+      if (e.key === "2") {
+        setActiveTab("profile");
+        return;
+      }
+
+      if (e.key === "u" || e.key === "U") {
+        setUniverseModalOpen(true);
+        return;
+      }
+
+      if (e.key === "c" || e.key === "C") {
+        setChatDrawerOpen(true);
+        return;
+      }
+
+      if (e.key === "p" || e.key === "P") {
+        setPlaylistBuilderOpen(true);
+        return;
+      }
+
+      if (e.key === "g" || e.key === "G") {
+        const current = useDiscoveryStore.getState().glassTheme;
+        useDiscoveryStore.getState().setGlassTheme(current === "clear" ? "frosted" : "clear");
+        return;
+      }
+
+      if (e.key === " " && playingTrackId) {
+        e.preventDefault();
+        if (audioRef.current) {
+          if (audioRef.current.paused) {
+            audioRef.current.play().catch(() => {});
+          } else {
+            audioRef.current.pause();
+          }
+        }
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [playingTrackId, setActiveTab, setUniverseModalOpen, setChatDrawerOpen, setPlaylistBuilderOpen]);
+
   const isAnyLoading = recommendMutation.isPending || rerankMutation.isPending;
 
   return (
@@ -715,6 +789,18 @@ export default function DiscoveryHome() {
 
             {/* Glass Theme Mode Switcher (Clear vs Frosted Glass) */}
             <GlassThemeSelector variant="compact" className="hidden lg:inline-flex" />
+
+            {/* Keyboard Shortcuts Helper Button */}
+            <button
+              type="button"
+              onClick={() => setIsShortcutsOpen(true)}
+              aria-label="Open keyboard shortcuts helper (?)"
+              data-testid="shortcuts-btn"
+              className="glass-pill flex items-center justify-center w-7 h-7 rounded-full text-xs font-mono font-bold text-white/70 hover:text-white hover:border-[#fa2d55]/40 transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
+              title="Keyboard Shortcuts (?)"
+            >
+              ?
+            </button>
 
             {/* Anonymous Taste Profile & Settings Button */}
             <button
@@ -1686,6 +1772,12 @@ export default function DiscoveryHome() {
         tracks={recommendations}
         playlistName="Melovia Recommended Tracks"
         apiBase={API_BASE}
+      />
+
+      {/* Keyboard Shortcuts Helper Overlay (?) */}
+      <ShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
       />
     </main>
   );

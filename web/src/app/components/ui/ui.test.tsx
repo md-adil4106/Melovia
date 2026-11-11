@@ -12,6 +12,7 @@ import { ErrorState } from "./ErrorState";
 import { GlassThemeSelector } from "./GlassThemeSelector";
 import { AudioWaveVisualizer } from "./AudioWaveVisualizer";
 import { RefractionAura } from "./RefractionAura";
+import { ShortcutsModal } from "./ShortcutsModal";
 import { useDiscoveryStore } from "../../store";
 
 describe("Design System UI Primitives (Phase 15)", () => {
@@ -172,5 +173,27 @@ describe("Design System UI Primitives (Phase 15)", () => {
   it("renders RefractionAura safely without errors", () => {
     const { container } = render(<RefractionAura />);
     expect(container).toBeDefined();
+  });
+
+  it("renders ShortcutsModal and handles escape dismissal", () => {
+    const handleClose = vi.fn();
+    const { rerender } = render(<ShortcutsModal isOpen={false} onClose={handleClose} />);
+    expect(screen.queryByTestId("shortcuts-modal")).toBeNull();
+
+    rerender(<ShortcutsModal isOpen={true} onClose={handleClose} />);
+    expect(screen.getByTestId("shortcuts-modal")).toBeDefined();
+    expect(screen.getByText("Keyboard Shortcuts")).toBeDefined();
+    expect(screen.getByText("Search Seeds")).toBeDefined();
+    expect(screen.getByText("Tune Discovery")).toBeDefined();
+    expect(screen.getByText("3D Universe")).toBeDefined();
+
+    // Trigger close via Escape key
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(handleClose).toHaveBeenCalledTimes(1);
+
+    // Trigger close via close button
+    const closeBtn = screen.getByRole("button", { name: "Close keyboard shortcuts" });
+    fireEvent.click(closeBtn);
+    expect(handleClose).toHaveBeenCalledTimes(2);
   });
 });
