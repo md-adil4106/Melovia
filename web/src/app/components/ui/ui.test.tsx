@@ -163,7 +163,8 @@ describe("Design System UI Primitives (Phase 15)", () => {
     const { rerender } = render(<AudioWaveVisualizer isPlaying={false} />);
     expect(screen.queryByLabelText("Audio playing indicator")).toBeNull();
 
-    rerender(<AudioWaveVisualizer isPlaying={true} />);
+    const mockAudio = { currentTime: 14 } as HTMLAudioElement;
+    rerender(<AudioWaveVisualizer isPlaying={true} audioElement={mockAudio} />);
     expect(screen.getByLabelText("Audio playing indicator")).toBeDefined();
     expect(screen.getByText(/playing/i)).toBeDefined();
   });

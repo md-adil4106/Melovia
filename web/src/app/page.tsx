@@ -1505,7 +1505,10 @@ export default function DiscoveryHome() {
                       </div>
 
                       {/* Live Audio Preview Equalizer Visualizer */}
-                      <AudioWaveVisualizer isPlaying={playingTrackId === item.track.id} />
+                      <AudioWaveVisualizer
+                        isPlaying={playingTrackId === item.track.id}
+                        audioElement={playingTrackId === item.track.id ? audioRef.current : null}
+                      />
 
                       {/* Preview Button */}
                       {item.track.preview_url ? (
