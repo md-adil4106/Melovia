@@ -260,11 +260,13 @@ export default function DiscoveryHome() {
 
   const handleVolumeChange = useCallback((newVol: number) => {
     setVolume(newVol);
+    volumeRef.current = newVol;
     if (newVol > 0 && isMutedRef.current) {
       setIsMuted(false);
       isMutedRef.current = false;
     }
     if (audioRef.current) {
+      audioRef.current.muted = isMutedRef.current;
       audioRef.current.volume = isMutedRef.current ? 0 : newVol;
     }
     try {
@@ -279,6 +281,7 @@ export default function DiscoveryHome() {
       const next = !prev;
       isMutedRef.current = next;
       if (audioRef.current) {
+        audioRef.current.muted = next;
         audioRef.current.volume = next ? 0 : volumeRef.current;
       }
       return next;
@@ -302,12 +305,13 @@ export default function DiscoveryHome() {
   const playPreviewTrack = useCallback((track: Track) => {
     if (!track.preview_url) return;
 
-    const useCrossfade = crossfadeRef.current;
     const prevAudio = audioRef.current;
+    const isTransitioning = Boolean(prevAudio && !prevAudio.paused);
+    const shouldCrossfade = isTransitioning && crossfadeRef.current;
 
-    // 500ms equal-power cosine fade-out for previous audio if crossfade enabled
+    // 500ms equal-power cosine fade-out for previous audio if crossfading between tracks
     if (prevAudio && !prevAudio.paused) {
-      if (useCrossfade) {
+      if (shouldCrossfade) {
         const fadeOutDuration = 500;
         const startVol = prevAudio.volume;
         const startTime = performance.now();
@@ -323,6 +327,10 @@ export default function DiscoveryHome() {
           }
         };
         requestAnimationFrame(stepFadeOut);
+        // Failsafe pause if background tab throttles rAF
+        setTimeout(() => {
+          if (!prevAudio.paused) prevAudio.pause();
+        }, fadeOutDuration + 50);
       } else {
         prevAudio.pause();
       }
@@ -330,14 +338,16 @@ export default function DiscoveryHome() {
       prevAudio.pause();
     }
 
-    // Instantiate new audio element and ramp volume up smoothly
+    // Instantiate new audio element directly connected to OS audio output
     const audio = new Audio(track.preview_url);
+    audio.preload = "auto";
     audioRef.current = audio;
     const initialVol = isMutedRef.current ? 0 : volumeRef.current;
-    audio.volume = useCrossfade ? 0 : initialVol;
+    audio.muted = isMutedRef.current;
+    audio.volume = shouldCrossfade ? 0 : initialVol;
 
     audio.play().then(() => {
-      if (!useCrossfade) {
+      if (!shouldCrossfade) {
         audio.volume = isMutedRef.current ? 0 : volumeRef.current;
         return;
       }
@@ -357,6 +367,12 @@ export default function DiscoveryHome() {
         }
       };
       requestAnimationFrame(stepFadeIn);
+      // Failsafe volume restoration if background tab throttles rAF
+      setTimeout(() => {
+        if (audioRef.current === audio) {
+          audio.volume = isMutedRef.current ? 0 : volumeRef.current;
+        }
+      }, fadeInDuration + 50);
     }).catch(() => {
       setPlayingTrackId(null);
     });

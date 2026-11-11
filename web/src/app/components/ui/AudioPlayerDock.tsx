@@ -88,6 +88,7 @@ export function AudioPlayerDock({
       }
     };
 
+    updateTimes();
     audioElement.addEventListener("timeupdate", updateTimes);
     audioElement.addEventListener("loadedmetadata", updateTimes);
 

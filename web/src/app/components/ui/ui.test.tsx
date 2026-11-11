@@ -161,14 +161,35 @@ describe("Design System UI Primitives (Phase 15)", () => {
     expect(screen.getByText("Frosted Matte")).toBeDefined();
   });
 
-  it("renders AudioWaveVisualizer when playing and hides when paused", () => {
-    const { rerender } = render(<AudioWaveVisualizer isPlaying={false} />);
-    expect(screen.queryByLabelText("Audio playing indicator")).toBeNull();
+  it("renders AudioWaveVisualizer when playing without hijacking AudioContext", () => {
+    const createMediaElementSourceMock = vi.fn();
+    const audioContextSpy = vi.fn().mockImplementation(() => ({
+      createMediaElementSource: createMediaElementSourceMock,
+      createAnalyser: vi.fn(),
+      close: vi.fn(),
+    }));
+    const originalAudioContext = window.AudioContext;
+    Object.defineProperty(window, "AudioContext", {
+      value: audioContextSpy,
+      configurable: true,
+    });
 
-    const mockAudio = { currentTime: 14 } as HTMLAudioElement;
-    rerender(<AudioWaveVisualizer isPlaying={true} audioElement={mockAudio} />);
-    expect(screen.getByLabelText("Audio playing indicator")).toBeDefined();
-    expect(screen.getByText(/playing/i)).toBeDefined();
+    try {
+      const { rerender } = render(<AudioWaveVisualizer isPlaying={false} />);
+      expect(screen.queryByLabelText("Audio playing indicator")).toBeNull();
+
+      const mockAudio = { currentTime: 14 } as HTMLAudioElement;
+      rerender(<AudioWaveVisualizer isPlaying={true} audioElement={mockAudio} />);
+      expect(screen.getByLabelText("Audio playing indicator")).toBeDefined();
+      expect(screen.getByText(/playing/i)).toBeDefined();
+      expect(audioContextSpy).not.toHaveBeenCalled();
+      expect(createMediaElementSourceMock).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(window, "AudioContext", {
+        value: originalAudioContext,
+        configurable: true,
+      });
+    }
   });
 
   it("renders RefractionAura safely without errors", () => {
