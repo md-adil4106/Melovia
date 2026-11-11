@@ -219,12 +219,71 @@ export default function DiscoveryHome() {
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
   const [activePreviewTrack, setActivePreviewTrack] = useState<Track | null>(null);
   const [autoAdvance, setAutoAdvance] = useState(true);
+  const [crossfadeEnabled, setCrossfadeEnabled] = useState(true);
+  const [volume, setVolume] = useState(0.8);
+  const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const autoAdvanceRef = useRef(autoAdvance);
   useEffect(() => {
     autoAdvanceRef.current = autoAdvance;
   }, [autoAdvance]);
+
+  const crossfadeRef = useRef(crossfadeEnabled);
+  useEffect(() => {
+    crossfadeRef.current = crossfadeEnabled;
+  }, [crossfadeEnabled]);
+
+  const volumeRef = useRef(volume);
+  useEffect(() => {
+    volumeRef.current = volume;
+  }, [volume]);
+
+  const isMutedRef = useRef(isMuted);
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+
+  useEffect(() => {
+    try {
+      const savedVol = localStorage.getItem("melovia_preview_volume");
+      if (savedVol !== null) {
+        const parsed = parseFloat(savedVol);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) {
+          setVolume(parsed);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleVolumeChange = useCallback((newVol: number) => {
+    setVolume(newVol);
+    if (newVol > 0 && isMutedRef.current) {
+      setIsMuted(false);
+      isMutedRef.current = false;
+    }
+    if (audioRef.current) {
+      audioRef.current.volume = isMutedRef.current ? 0 : newVol;
+    }
+    try {
+      localStorage.setItem("melovia_preview_volume", newVol.toString());
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleToggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      isMutedRef.current = next;
+      if (audioRef.current) {
+        audioRef.current.volume = next ? 0 : volumeRef.current;
+      }
+      return next;
+    });
+  }, []);
 
   // Queue of tracks in the active recommendations feed that have preview URLs
   const playableTracks = recommendations
@@ -242,14 +301,66 @@ export default function DiscoveryHome() {
 
   const playPreviewTrack = useCallback((track: Track) => {
     if (!track.preview_url) return;
-    if (audioRef.current) {
-      audioRef.current.pause();
+
+    const useCrossfade = crossfadeRef.current;
+    const prevAudio = audioRef.current;
+
+    // 500ms equal-power cosine fade-out for previous audio if crossfade enabled
+    if (prevAudio && !prevAudio.paused) {
+      if (useCrossfade) {
+        const fadeOutDuration = 500;
+        const startVol = prevAudio.volume;
+        const startTime = performance.now();
+        const stepFadeOut = () => {
+          const elapsed = performance.now() - startTime;
+          const progress = Math.min(1, elapsed / fadeOutDuration);
+          const curve = Math.cos(progress * (Math.PI / 2));
+          prevAudio.volume = Math.max(0, startVol * curve);
+          if (progress < 1) {
+            requestAnimationFrame(stepFadeOut);
+          } else {
+            prevAudio.pause();
+          }
+        };
+        requestAnimationFrame(stepFadeOut);
+      } else {
+        prevAudio.pause();
+      }
+    } else if (prevAudio) {
+      prevAudio.pause();
     }
+
+    // Instantiate new audio element and ramp volume up smoothly
     const audio = new Audio(track.preview_url);
     audioRef.current = audio;
-    audio.play().catch(() => {
+    const initialVol = isMutedRef.current ? 0 : volumeRef.current;
+    audio.volume = useCrossfade ? 0 : initialVol;
+
+    audio.play().then(() => {
+      if (!useCrossfade) {
+        audio.volume = isMutedRef.current ? 0 : volumeRef.current;
+        return;
+      }
+      const fadeInDuration = 500;
+      const startTime = performance.now();
+      const stepFadeIn = () => {
+        if (audioRef.current !== audio) return;
+        const target = isMutedRef.current ? 0 : volumeRef.current;
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(1, elapsed / fadeInDuration);
+        const curve = Math.sin(progress * (Math.PI / 2));
+        audio.volume = Math.min(1, Math.max(0, target * curve));
+        if (progress < 1) {
+          requestAnimationFrame(stepFadeIn);
+        } else {
+          audio.volume = target;
+        }
+      };
+      requestAnimationFrame(stepFadeIn);
+    }).catch(() => {
       setPlayingTrackId(null);
     });
+
     audio.onended = () => {
       if (autoAdvanceRef.current) {
         const queue = playableTracksRef.current;
@@ -262,6 +373,7 @@ export default function DiscoveryHome() {
       }
       setPlayingTrackId(null);
     };
+
     audio.onerror = () => {
       if (autoAdvanceRef.current) {
         const queue = playableTracksRef.current;
@@ -274,11 +386,12 @@ export default function DiscoveryHome() {
       }
       setPlayingTrackId(null);
     };
+
     setPlayingTrackId(track.id);
     setActivePreviewTrack(track);
   }, []);
 
-  const handleTogglePlay = (track: Track) => {
+  const handleTogglePlay = useCallback((track: Track) => {
     if (!track.preview_url) return;
 
     if (playingTrackId === track.id) {
@@ -286,10 +399,21 @@ export default function DiscoveryHome() {
         audioRef.current.pause();
       }
       setPlayingTrackId(null);
+    } else if (
+      activeTrackRef.current?.id === track.id &&
+      audioRef.current &&
+      audioRef.current.paused &&
+      !audioRef.current.ended
+    ) {
+      audioRef.current.volume = isMutedRef.current ? 0 : volumeRef.current;
+      audioRef.current.play().catch(() => {
+        setPlayingTrackId(null);
+      });
+      setPlayingTrackId(track.id);
     } else {
       playPreviewTrack(track);
     }
-  };
+  }, [playingTrackId, playPreviewTrack]);
 
   const currentPlayableIndex = activePreviewTrack
     ? playableTracks.findIndex((t) => t.id === activePreviewTrack.id)
@@ -748,15 +872,15 @@ export default function DiscoveryHome() {
         return;
       }
 
-      if (e.key === " " && playingTrackId) {
+      if (e.key === " " && activePreviewTrack) {
         e.preventDefault();
-        if (audioRef.current) {
-          if (audioRef.current.paused) {
-            audioRef.current.play().catch(() => {});
-          } else {
-            audioRef.current.pause();
-          }
-        }
+        handleTogglePlay(activePreviewTrack);
+        return;
+      }
+
+      if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        handleToggleMute();
         return;
       }
 
@@ -775,7 +899,7 @@ export default function DiscoveryHome() {
 
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [playingTrackId, hasNextTrack, hasPrevTrack, handleNextTrack, handlePrevTrack, setActiveTab, setUniverseModalOpen, setChatDrawerOpen, setPlaylistBuilderOpen]);
+  }, [activePreviewTrack, handleTogglePlay, handleToggleMute, hasNextTrack, hasPrevTrack, handleNextTrack, handlePrevTrack, setActiveTab, setUniverseModalOpen, setChatDrawerOpen, setPlaylistBuilderOpen]);
 
   const isAnyLoading = recommendMutation.isPending || rerankMutation.isPending;
 
@@ -1876,6 +2000,10 @@ export default function DiscoveryHome() {
         track={activePreviewTrack}
         isPlaying={playingTrackId !== null && playingTrackId === activePreviewTrack?.id}
         audioElement={audioRef.current}
+        volume={volume}
+        isMuted={isMuted}
+        onVolumeChange={handleVolumeChange}
+        onToggleMute={handleToggleMute}
         onTogglePlay={handleTogglePlay}
         onNextTrack={handleNextTrack}
         onPrevTrack={handlePrevTrack}
@@ -1883,6 +2011,8 @@ export default function DiscoveryHome() {
         hasPrevTrack={hasPrevTrack}
         autoAdvance={autoAdvance}
         onToggleAutoAdvance={() => setAutoAdvance((prev) => !prev)}
+        crossfadeEnabled={crossfadeEnabled}
+        onToggleCrossfade={() => setCrossfadeEnabled((prev) => !prev)}
         onClose={handleClosePlayerDock}
       />
     </main>

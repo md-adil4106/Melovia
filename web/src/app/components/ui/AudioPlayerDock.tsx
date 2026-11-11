@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Music, Play, Pause, X, SkipBack, SkipForward, Repeat } from "lucide-react";
+import { Music, Play, Pause, X, SkipBack, SkipForward, Repeat, Volume2, Volume1, VolumeX, AudioLines } from "lucide-react";
 import { Track } from "../../store";
 import { AudioWaveVisualizer } from "./AudioWaveVisualizer";
 
@@ -9,6 +9,10 @@ interface AudioPlayerDockProps {
   track: Track | null;
   isPlaying: boolean;
   audioElement: HTMLAudioElement | null;
+  volume?: number;
+  isMuted?: boolean;
+  onVolumeChange?: (volume: number) => void;
+  onToggleMute?: () => void;
   onTogglePlay: (track: Track) => void;
   onNextTrack?: () => void;
   onPrevTrack?: () => void;
@@ -16,6 +20,8 @@ interface AudioPlayerDockProps {
   hasPrevTrack?: boolean;
   autoAdvance?: boolean;
   onToggleAutoAdvance?: () => void;
+  crossfadeEnabled?: boolean;
+  onToggleCrossfade?: () => void;
   onClose: () => void;
   className?: string;
 }
@@ -23,12 +29,17 @@ interface AudioPlayerDockProps {
 /**
  * AudioPlayerDock: Persistent liquid glass floating mini-player.
  * Anchored at the bottom of the screen to provide continuous playback controls,
- * queue auto-advancement, real-time waveform visualization, and scrubbable progress across feed scrolling.
+ * volume & mute calibration, optional 500ms crossfade, queue auto-advancement,
+ * real-time waveform visualization, and scrubbable progress across feed scrolling.
  */
 export function AudioPlayerDock({
   track,
   isPlaying,
   audioElement,
+  volume,
+  isMuted,
+  onVolumeChange,
+  onToggleMute,
   onTogglePlay,
   onNextTrack,
   onPrevTrack,
@@ -36,11 +47,31 @@ export function AudioPlayerDock({
   hasPrevTrack = false,
   autoAdvance = true,
   onToggleAutoAdvance,
+  crossfadeEnabled = true,
+  onToggleCrossfade,
   onClose,
   className = "",
 }: AudioPlayerDockProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(30);
+  const [internalVolume, setInternalVolume] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("melovia_preview_volume");
+        if (saved !== null) {
+          const parsed = parseFloat(saved);
+          if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) return parsed;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return 0.8;
+  });
+  const [internalMuted, setInternalMuted] = useState(false);
+
+  const effectiveVolume = volume !== undefined ? volume : internalVolume;
+  const effectiveMuted = isMuted !== undefined ? isMuted : internalMuted;
 
   useEffect(() => {
     if (!audioElement) {
@@ -82,14 +113,44 @@ export function AudioPlayerDock({
     }
   };
 
+  const handleVolumeInput = (val: number) => {
+    if (onVolumeChange) {
+      onVolumeChange(val);
+    } else {
+      setInternalVolume(val);
+      if (audioElement) {
+        audioElement.volume = effectiveMuted ? 0 : val;
+      }
+    }
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("melovia_preview_volume", val.toString());
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  const handleToggleMuteClick = () => {
+    if (onToggleMute) {
+      onToggleMute();
+    } else {
+      setInternalMuted((prev) => !prev);
+      if (audioElement) {
+        audioElement.volume = !internalMuted ? 0 : internalVolume;
+      }
+    }
+  };
+
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const volPct = Math.round((effectiveMuted ? 0 : effectiveVolume) * 100);
 
   return (
     <div
       role="region"
       aria-label="Audio preview mini-player"
       data-testid="audio-player-dock"
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-xl glass-panel-elevated rounded-full p-2 pl-2.5 pr-4 shadow-[0_24px_64px_rgba(0,0,0,0.85)] border border-white/[0.14] backdrop-blur-3xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${className}`}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-3xl glass-panel-elevated rounded-full p-2 pl-2.5 pr-4 shadow-[0_24px_64px_rgba(0,0,0,0.85)] border border-white/[0.14] backdrop-blur-3xl animate-in fade-in slide-in-from-bottom-5 duration-300 ${className}`}
     >
       <div className="flex items-center justify-between gap-3 min-w-0">
         {/* Track Artwork & Play Trigger */}
@@ -166,8 +227,68 @@ export function AudioPlayerDock({
           <AudioWaveVisualizer
             isPlaying={isPlaying}
             audioElement={audioElement}
-            className="hidden md:inline-flex"
+            className="hidden lg:inline-flex"
           />
+
+          {/* Volume Control & Mute Button */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleToggleMuteClick}
+              aria-label={effectiveMuted ? "Unmute audio" : "Mute audio"}
+              data-testid="mute-toggle-btn"
+              title={effectiveMuted ? "Unmute (M)" : "Mute (M)"}
+              className={`p-1.5 rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-[#fa2d55] ${
+                effectiveMuted || effectiveVolume === 0
+                  ? "text-[#fa2d55] hover:text-[#fb7185] bg-[#fa2d55]/10"
+                  : "text-white/60 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              {effectiveMuted || effectiveVolume === 0 ? (
+                <VolumeX className="w-3.5 h-3.5 text-[#fa2d55]" />
+              ) : effectiveVolume < 0.5 ? (
+                <Volume1 className="w-3.5 h-3.5" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            <div className="hidden sm:flex items-center w-14 sm:w-16">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={effectiveMuted ? 0 : effectiveVolume}
+                onChange={(e) => handleVolumeInput(parseFloat(e.target.value))}
+                aria-label="Volume slider"
+                data-testid="volume-slider"
+                title={`Volume: ${volPct}%`}
+                className="w-full h-1 bg-white/15 rounded-full appearance-none cursor-pointer accent-[#fa2d55] focus:outline-none focus:ring-1 focus:ring-[#fa2d55]"
+                style={{
+                  background: `linear-gradient(to right, #fa2d55 0%, #fa2d55 ${volPct}%, rgba(255,255,255,0.15) ${volPct}%, rgba(255,255,255,0.15) 100%)`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Crossfade 500ms Toggle Button */}
+          {onToggleCrossfade && (
+            <button
+              type="button"
+              onClick={onToggleCrossfade}
+              aria-label={crossfadeEnabled ? "Disable 500ms audio crossfade" : "Enable 500ms audio crossfade"}
+              data-testid="crossfade-toggle"
+              title={crossfadeEnabled ? "Crossfade: 500ms smooth transition" : "Crossfade: Off"}
+              className={`hidden sm:flex p-1.5 rounded-full transition-all focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] ${
+                crossfadeEnabled
+                  ? "bg-[#8b5cf6]/20 text-[#c084fc] border border-[#8b5cf6]/40 shadow-[0_0_10px_rgba(139,92,246,0.3)]"
+                  : "text-white/40 hover:text-white/70 hover:bg-white/5 border border-transparent"
+              }`}
+            >
+              <AudioLines className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           {/* Auto-Advance Toggle Button */}
           {onToggleAutoAdvance && (

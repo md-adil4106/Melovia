@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { Command, X, Search, Sparkles, Sliders, Volume2, Globe, MessageSquare, ListMusic, Layers, Eye, SkipForward, SkipBack } from "lucide-react";
+import { Command, X, Search, Sparkles, Sliders, Volume2, VolumeX, Globe, MessageSquare, ListMusic, Layers, Eye, SkipForward, SkipBack } from "lucide-react";
 
 interface ShortcutsModalProps {
   isOpen: boolean;
@@ -65,6 +65,12 @@ const SHORTCUT_GROUPS: Array<{ title: string; shortcuts: ShortcutItem[] }> = [
         label: "Play / Pause",
         description: "Toggle 30s audio preview for the active track",
         icon: <Volume2 className="w-3.5 h-3.5 text-[#e879f9]" />,
+      },
+      {
+        keys: ["M"],
+        label: "Mute / Unmute",
+        description: "Toggle audio output volume on preview player",
+        icon: <VolumeX className="w-3.5 h-3.5 text-amber-400" />,
       },
       {
         keys: ["J"],

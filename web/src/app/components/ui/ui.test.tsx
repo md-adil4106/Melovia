@@ -186,6 +186,7 @@ describe("Design System UI Primitives (Phase 15)", () => {
     expect(screen.getByText("Keyboard Shortcuts")).toBeDefined();
     expect(screen.getByText("Search Seeds")).toBeDefined();
     expect(screen.getByText("Tune Discovery")).toBeDefined();
+    expect(screen.getByText("Mute / Unmute")).toBeDefined();
     expect(screen.getByText("3D Universe")).toBeDefined();
 
     // Trigger close via Escape key
@@ -248,16 +249,23 @@ describe("Design System UI Primitives (Phase 15)", () => {
     fireEvent.click(closeBtn);
     expect(handleClose).toHaveBeenCalledTimes(1);
 
-    // Test Next, Prev, and Auto-Advance controls
+    // Test Next, Prev, Auto-Advance, Crossfade, Volume & Mute controls
     const handleNext = vi.fn();
     const handlePrev = vi.fn();
     const handleToggleAuto = vi.fn();
+    const handleToggleCrossfade = vi.fn();
+    const handleVolumeChange = vi.fn();
+    const handleToggleMute = vi.fn();
 
     rerender(
       <AudioPlayerDock
         track={sampleTrack}
         isPlaying={true}
         audioElement={null}
+        volume={0.75}
+        isMuted={false}
+        onVolumeChange={handleVolumeChange}
+        onToggleMute={handleToggleMute}
         onTogglePlay={handleToggle}
         onNextTrack={handleNext}
         onPrevTrack={handlePrev}
@@ -265,6 +273,8 @@ describe("Design System UI Primitives (Phase 15)", () => {
         hasPrevTrack={true}
         autoAdvance={true}
         onToggleAutoAdvance={handleToggleAuto}
+        crossfadeEnabled={true}
+        onToggleCrossfade={handleToggleCrossfade}
         onClose={handleClose}
       />
     );
@@ -280,5 +290,36 @@ describe("Design System UI Primitives (Phase 15)", () => {
     const autoAdvBtn = screen.getByTestId("auto-advance-toggle");
     fireEvent.click(autoAdvBtn);
     expect(handleToggleAuto).toHaveBeenCalledTimes(1);
+
+    const crossfadeBtn = screen.getByTestId("crossfade-toggle");
+    fireEvent.click(crossfadeBtn);
+    expect(handleToggleCrossfade).toHaveBeenCalledTimes(1);
+
+    const muteBtn = screen.getByTestId("mute-toggle-btn");
+    expect(muteBtn.getAttribute("aria-label")).toBe("Mute audio");
+    fireEvent.click(muteBtn);
+    expect(handleToggleMute).toHaveBeenCalledTimes(1);
+
+    const volSlider = screen.getByTestId("volume-slider") as HTMLInputElement;
+    expect(volSlider.value).toBe("0.75");
+    fireEvent.change(volSlider, { target: { value: "0.4" } });
+    expect(handleVolumeChange).toHaveBeenCalledWith(0.4);
+
+    // Verify muted visual ARIA state
+    rerender(
+      <AudioPlayerDock
+        track={sampleTrack}
+        isPlaying={true}
+        audioElement={null}
+        volume={0.75}
+        isMuted={true}
+        onVolumeChange={handleVolumeChange}
+        onToggleMute={handleToggleMute}
+        onTogglePlay={handleToggle}
+        onClose={handleClose}
+      />
+    );
+    expect(screen.getByTestId("mute-toggle-btn").getAttribute("aria-label")).toBe("Unmute audio");
+    expect((screen.getByTestId("volume-slider") as HTMLInputElement).value).toBe("0");
   });
 });
