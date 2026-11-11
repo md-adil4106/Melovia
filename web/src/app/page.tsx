@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Bookmark,
@@ -218,7 +218,65 @@ export default function DiscoveryHome() {
   const [onboardingDismissed, setOnboardingDismissed] = useState(true);
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
   const [activePreviewTrack, setActivePreviewTrack] = useState<Track | null>(null);
+  const [autoAdvance, setAutoAdvance] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const autoAdvanceRef = useRef(autoAdvance);
+  useEffect(() => {
+    autoAdvanceRef.current = autoAdvance;
+  }, [autoAdvance]);
+
+  // Queue of tracks in the active recommendations feed that have preview URLs
+  const playableTracks = recommendations
+    .map((item) => item.track)
+    .filter((t) => Boolean(t.preview_url));
+  const playableTracksRef = useRef(playableTracks);
+  useEffect(() => {
+    playableTracksRef.current = playableTracks;
+  }, [playableTracks]);
+
+  const activeTrackRef = useRef(activePreviewTrack);
+  useEffect(() => {
+    activeTrackRef.current = activePreviewTrack;
+  }, [activePreviewTrack]);
+
+  const playPreviewTrack = useCallback((track: Track) => {
+    if (!track.preview_url) return;
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    const audio = new Audio(track.preview_url);
+    audioRef.current = audio;
+    audio.play().catch(() => {
+      setPlayingTrackId(null);
+    });
+    audio.onended = () => {
+      if (autoAdvanceRef.current) {
+        const queue = playableTracksRef.current;
+        const current = activeTrackRef.current;
+        const curIdx = current ? queue.findIndex((t) => t.id === current.id) : -1;
+        if (curIdx >= 0 && curIdx < queue.length - 1) {
+          playPreviewTrack(queue[curIdx + 1]);
+          return;
+        }
+      }
+      setPlayingTrackId(null);
+    };
+    audio.onerror = () => {
+      if (autoAdvanceRef.current) {
+        const queue = playableTracksRef.current;
+        const current = activeTrackRef.current;
+        const curIdx = current ? queue.findIndex((t) => t.id === current.id) : -1;
+        if (curIdx >= 0 && curIdx < queue.length - 1) {
+          playPreviewTrack(queue[curIdx + 1]);
+          return;
+        }
+      }
+      setPlayingTrackId(null);
+    };
+    setPlayingTrackId(track.id);
+    setActivePreviewTrack(track);
+  }, []);
 
   const handleTogglePlay = (track: Track) => {
     if (!track.preview_url) return;
@@ -229,24 +287,33 @@ export default function DiscoveryHome() {
       }
       setPlayingTrackId(null);
     } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      const audio = new Audio(track.preview_url);
-      audioRef.current = audio;
-      audio.play().catch(() => {
-        setPlayingTrackId(null);
-      });
-      audio.onended = () => {
-        setPlayingTrackId(null);
-      };
-      audio.onerror = () => {
-        setPlayingTrackId(null);
-      };
-      setPlayingTrackId(track.id);
-      setActivePreviewTrack(track);
+      playPreviewTrack(track);
     }
   };
+
+  const currentPlayableIndex = activePreviewTrack
+    ? playableTracks.findIndex((t) => t.id === activePreviewTrack.id)
+    : -1;
+  const hasNextTrack = currentPlayableIndex >= 0 && currentPlayableIndex < playableTracks.length - 1;
+  const hasPrevTrack = currentPlayableIndex > 0;
+
+  const handleNextTrack = useCallback(() => {
+    const queue = playableTracksRef.current;
+    const current = activeTrackRef.current;
+    const curIdx = current ? queue.findIndex((t) => t.id === current.id) : -1;
+    if (curIdx >= 0 && curIdx < queue.length - 1) {
+      playPreviewTrack(queue[curIdx + 1]);
+    }
+  }, [playPreviewTrack]);
+
+  const handlePrevTrack = useCallback(() => {
+    const queue = playableTracksRef.current;
+    const current = activeTrackRef.current;
+    const curIdx = current ? queue.findIndex((t) => t.id === current.id) : -1;
+    if (curIdx > 0) {
+      playPreviewTrack(queue[curIdx - 1]);
+    }
+  }, [playPreviewTrack]);
 
   const handleClosePlayerDock = () => {
     if (audioRef.current) {
@@ -692,11 +759,23 @@ export default function DiscoveryHome() {
         }
         return;
       }
+
+      if ((e.key === "j" || e.key === "J") && hasNextTrack) {
+        e.preventDefault();
+        handleNextTrack();
+        return;
+      }
+
+      if ((e.key === "k" || e.key === "K") && hasPrevTrack) {
+        e.preventDefault();
+        handlePrevTrack();
+        return;
+      }
     };
 
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [playingTrackId, setActiveTab, setUniverseModalOpen, setChatDrawerOpen, setPlaylistBuilderOpen]);
+  }, [playingTrackId, hasNextTrack, hasPrevTrack, handleNextTrack, handlePrevTrack, setActiveTab, setUniverseModalOpen, setChatDrawerOpen, setPlaylistBuilderOpen]);
 
   const isAnyLoading = recommendMutation.isPending || rerankMutation.isPending;
 
@@ -1798,6 +1877,12 @@ export default function DiscoveryHome() {
         isPlaying={playingTrackId !== null && playingTrackId === activePreviewTrack?.id}
         audioElement={audioRef.current}
         onTogglePlay={handleTogglePlay}
+        onNextTrack={handleNextTrack}
+        onPrevTrack={handlePrevTrack}
+        hasNextTrack={hasNextTrack}
+        hasPrevTrack={hasPrevTrack}
+        autoAdvance={autoAdvance}
+        onToggleAutoAdvance={() => setAutoAdvance((prev) => !prev)}
         onClose={handleClosePlayerDock}
       />
     </main>

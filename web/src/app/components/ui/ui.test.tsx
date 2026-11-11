@@ -247,5 +247,38 @@ describe("Design System UI Primitives (Phase 15)", () => {
     const closeBtn = screen.getByRole("button", { name: "Close preview player" });
     fireEvent.click(closeBtn);
     expect(handleClose).toHaveBeenCalledTimes(1);
+
+    // Test Next, Prev, and Auto-Advance controls
+    const handleNext = vi.fn();
+    const handlePrev = vi.fn();
+    const handleToggleAuto = vi.fn();
+
+    rerender(
+      <AudioPlayerDock
+        track={sampleTrack}
+        isPlaying={true}
+        audioElement={null}
+        onTogglePlay={handleToggle}
+        onNextTrack={handleNext}
+        onPrevTrack={handlePrev}
+        hasNextTrack={true}
+        hasPrevTrack={true}
+        autoAdvance={true}
+        onToggleAutoAdvance={handleToggleAuto}
+        onClose={handleClose}
+      />
+    );
+
+    const nextBtn = screen.getByTestId("next-track-btn");
+    fireEvent.click(nextBtn);
+    expect(handleNext).toHaveBeenCalledTimes(1);
+
+    const prevBtn = screen.getByTestId("prev-track-btn");
+    fireEvent.click(prevBtn);
+    expect(handlePrev).toHaveBeenCalledTimes(1);
+
+    const autoAdvBtn = screen.getByTestId("auto-advance-toggle");
+    fireEvent.click(autoAdvBtn);
+    expect(handleToggleAuto).toHaveBeenCalledTimes(1);
   });
 });

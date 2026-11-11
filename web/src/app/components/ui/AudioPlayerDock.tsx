@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Music, Play, Pause, X, Volume2 } from "lucide-react";
+import { Music, Play, Pause, X, SkipBack, SkipForward, Repeat } from "lucide-react";
 import { Track } from "../../store";
 import { AudioWaveVisualizer } from "./AudioWaveVisualizer";
 
@@ -10,6 +10,12 @@ interface AudioPlayerDockProps {
   isPlaying: boolean;
   audioElement: HTMLAudioElement | null;
   onTogglePlay: (track: Track) => void;
+  onNextTrack?: () => void;
+  onPrevTrack?: () => void;
+  hasNextTrack?: boolean;
+  hasPrevTrack?: boolean;
+  autoAdvance?: boolean;
+  onToggleAutoAdvance?: () => void;
   onClose: () => void;
   className?: string;
 }
@@ -17,13 +23,19 @@ interface AudioPlayerDockProps {
 /**
  * AudioPlayerDock: Persistent liquid glass floating mini-player.
  * Anchored at the bottom of the screen to provide continuous playback controls,
- * real-time waveform visualization, and scrubbable progress across feed scrolling.
+ * queue auto-advancement, real-time waveform visualization, and scrubbable progress across feed scrolling.
  */
 export function AudioPlayerDock({
   track,
   isPlaying,
   audioElement,
   onTogglePlay,
+  onNextTrack,
+  onPrevTrack,
+  hasNextTrack = false,
+  hasPrevTrack = false,
+  autoAdvance = true,
+  onToggleAutoAdvance,
   onClose,
   className = "",
 }: AudioPlayerDockProps) {
@@ -81,7 +93,7 @@ export function AudioPlayerDock({
     >
       <div className="flex items-center justify-between gap-3 min-w-0">
         {/* Track Artwork & Play Trigger */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="relative w-11 h-11 rounded-full bg-white/[0.08] border border-white/15 flex items-center justify-center text-[#fa2d55] flex-shrink-0 overflow-hidden shadow-md group">
             <Music className="w-5 h-5 text-[#fa2d55]/80" />
             {track.artwork_url ? (
@@ -149,14 +161,47 @@ export function AudioPlayerDock({
           </div>
         </div>
 
-        {/* Live FFT Visualizer & Controls */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Live FFT Visualizer & Queue Controls */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           <AudioWaveVisualizer
             isPlaying={isPlaying}
             audioElement={audioElement}
-            className="hidden sm:inline-flex"
+            className="hidden md:inline-flex"
           />
 
+          {/* Auto-Advance Toggle Button */}
+          {onToggleAutoAdvance && (
+            <button
+              type="button"
+              onClick={onToggleAutoAdvance}
+              aria-label={autoAdvance ? "Disable queue auto-play" : "Enable queue auto-play"}
+              data-testid="auto-advance-toggle"
+              title={autoAdvance ? "Auto-Play: Automatically advances to next preview" : "Auto-Play: Off"}
+              className={`p-1.5 rounded-full transition-all focus:outline-none focus:ring-1 focus:ring-[#fa2d55] ${
+                autoAdvance
+                  ? "bg-[#fa2d55]/20 text-[#fa2d55] border border-[#fa2d55]/40 shadow-[0_0_10px_rgba(250,45,85,0.3)]"
+                  : "text-white/40 hover:text-white/70 hover:bg-white/5 border border-transparent"
+              }`}
+            >
+              <Repeat className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Previous Track */}
+          {onPrevTrack && (
+            <button
+              type="button"
+              onClick={onPrevTrack}
+              disabled={!hasPrevTrack}
+              aria-label="Previous track"
+              data-testid="prev-track-btn"
+              className="p-1.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-white/40"
+            >
+              <SkipBack className="w-4 h-4 fill-current" />
+            </button>
+          )}
+
+          {/* Main Play / Pause Trigger */}
           <button
             type="button"
             onClick={() => onTogglePlay(track)}
@@ -170,11 +215,26 @@ export function AudioPlayerDock({
             )}
           </button>
 
+          {/* Next Track */}
+          {onNextTrack && (
+            <button
+              type="button"
+              onClick={onNextTrack}
+              disabled={!hasNextTrack}
+              aria-label="Next track"
+              data-testid="next-track-btn"
+              className="p-1.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-white/40"
+            >
+              <SkipForward className="w-4 h-4 fill-current" />
+            </button>
+          )}
+
+          {/* Dismiss Player Button */}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close preview player"
-            className="w-7 h-7 rounded-full text-white/50 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors focus:outline-none focus:ring-1 focus:ring-white/40"
+            className="w-7 h-7 rounded-full text-white/50 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors focus:outline-none focus:ring-1 focus:ring-white/40 ml-0.5"
           >
             <X className="w-4 h-4" />
           </button>
