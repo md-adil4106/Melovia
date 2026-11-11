@@ -201,13 +201,15 @@ export function PlaylistBuilder({
         role="dialog"
         aria-modal="true"
         aria-label="Playlist Builder"
-        className="fixed inset-y-0 right-0 z-50 w-full max-w-xl bg-[#07080b]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300"
+        className="fixed inset-y-0 right-0 z-50 w-full max-w-xl bg-[#06070a]/92 backdrop-blur-3xl border-l border-white/[0.12] shadow-[0_0_80px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/[0.02]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08] bg-white/[0.02]">
           <div className="flex items-center gap-2.5">
-            <ListMusic className="w-5 h-5 text-[#fa2d55]" />
-            <h2 className="text-base font-bold text-white font-sans tracking-tight">
+            <div className="w-8 h-8 rounded-xl bg-[#fa2d55]/15 border border-[#fa2d55]/30 flex items-center justify-center text-[#fa2d55] shadow-ruby-glow">
+              <ListMusic className="w-4 h-4 text-[#fa2d55]" />
+            </div>
+            <h2 className="text-base font-bold text-white apple-heading tracking-tight">
               Playlist Builder
             </h2>
           </div>

@@ -176,12 +176,23 @@ async def get_spotify_auth_url(
     session_data = SPOTIFY_SESSIONS.setdefault(session_id, {})
 
     settings = get_settings()
-    configured_cid = (
-        (client_id.strip() if client_id else None)
-        or session_data.get("client_id")
-        or settings.PLATFORM.spotify_client_id
-        or settings.PLATFORM.client_id
-    )
+    configured_cid = None
+    for candidate in [
+        client_id.strip() if client_id else None,
+        session_data.get("client_id"),
+        settings.PLATFORM.spotify_client_id,
+        settings.PLATFORM.client_id,
+    ]:
+        if candidate and candidate.strip().lower() not in (
+            "",
+            "your-spotify-client-id",
+            "your-spotify-client-id-here",
+            "none",
+            "null",
+        ):
+            configured_cid = candidate.strip()
+            break
+
     if not configured_cid:
         raise HTTPException(
             status_code=400,
@@ -320,11 +331,21 @@ async def get_spotify_status(
     session_id = get_or_create_session_id(request, response)
     session_data = SPOTIFY_SESSIONS.get(session_id, {})
     settings = get_settings()
-    has_cid = bool(
-        session_data.get("client_id")
-        or settings.PLATFORM.spotify_client_id
-        or settings.PLATFORM.client_id
-    )
+    has_cid = False
+    for candidate in [
+        session_data.get("client_id"),
+        settings.PLATFORM.spotify_client_id,
+        settings.PLATFORM.client_id,
+    ]:
+        if candidate and candidate.strip().lower() not in (
+            "",
+            "your-spotify-client-id",
+            "your-spotify-client-id-here",
+            "none",
+            "null",
+        ):
+            has_cid = True
+            break
 
     if not session_data or not session_data.get("access_token"):
         return SpotifyStatusResponse(connected=False, client_id_configured=has_cid)

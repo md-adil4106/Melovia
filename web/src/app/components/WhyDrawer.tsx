@@ -113,13 +113,13 @@ export function WhyDrawer({
     >
       <div
         ref={drawerRef}
-        className="w-full max-w-lg bg-[#07080b]/95 backdrop-blur-2xl border-l border-white/10 h-full overflow-y-auto shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-300"
+        className="w-full max-w-lg bg-[#06070a]/92 backdrop-blur-3xl border-l border-white/[0.12] h-full overflow-y-auto shadow-[0_0_80px_rgba(0,0,0,0.85)] flex flex-col justify-between animate-in slide-in-from-right duration-300"
       >
         {/* Drawer Header */}
-        <div className="p-6 border-b border-white/10 bg-white/[0.03] sticky top-0 z-10 backdrop-blur-xl">
+        <div className="p-6 border-b border-white/[0.08] bg-white/[0.02] sticky top-0 z-10 backdrop-blur-2xl">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="relative w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#fa2d55] flex-shrink-0 overflow-hidden shadow-md">
+              <div className="relative w-12 h-12 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-[#fa2d55] flex-shrink-0 overflow-hidden shadow-lg">
                 <Music className="w-5 h-5 text-[#fa2d55]/70" />
                 {track.artwork_url ? (
                   <img
@@ -191,9 +191,9 @@ export function WhyDrawer({
                   {(data.reasons || []).map((reason, idx) => (
                     <div
                       key={reason.id || idx}
-                      className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3.5 flex items-start gap-3 hover:border-white/15 transition-colors"
+                      className="glass-card rounded-2xl p-4 flex items-start gap-3.5 hover:border-white/20 transition-all shadow-sm"
                     >
-                      <div className="p-1.5 rounded-lg bg-[#fa2d55]/15 text-[#fa2d55] flex-shrink-0 mt-0.5">
+                      <div className="p-2 rounded-xl bg-gradient-to-tr from-[#fa2d55]/20 to-[#8b5cf6]/20 border border-[#fa2d55]/30 text-[#fa2d55] flex-shrink-0 mt-0.5 shadow-sm">
                         {reason.id.includes("TAG") ? (
                           <Tag className="w-3.5 h-3.5" />
                         ) : reason.id.includes("ACOUSTIC") ? (

@@ -254,28 +254,33 @@ async def test_export_playlist_flow():
 @pytest.mark.asyncio
 async def test_spotify_custom_client_id_config():
     """Verify POST /export/spotify/config sets client ID in session and enables auth-url."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        # 1. Without credentials or config, auth-url returns 400
-        res_fail = await client.get("/export/spotify/auth-url")
-        assert res_fail.status_code == 400
+    with patch("app.config.Settings.PLATFORM", create=True) as mock_plat:
+        mock_plat.spotify_client_id = ""
+        mock_plat.client_id = ""
+        mock_plat.spotify_redirect_uri = "http://127.0.0.1:8000/export/spotify/callback"
 
-        # 2. Configure client_id
-        res_cfg = await client.post(
-            "/export/spotify/config",
-            json={"client_id": "test_custom_client_id_12345678"},
-        )
-        assert res_cfg.status_code == 200
-        assert res_cfg.json()["configured"] is True
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            # 1. Without credentials or config, auth-url returns 400
+            res_fail = await client.get("/export/spotify/auth-url")
+            assert res_fail.status_code == 400
 
-        # 3. Check status shows client_id_configured
-        res_st = await client.get("/export/spotify/status")
-        assert res_st.status_code == 200
-        assert res_st.json()["client_id_configured"] is True
+            # 2. Configure client_id
+            res_cfg = await client.post(
+                "/export/spotify/config",
+                json={"client_id": "test_custom_client_id_12345678"},
+            )
+            assert res_cfg.status_code == 200
+            assert res_cfg.json()["configured"] is True
 
-        # 4. Now auth-url succeeds with configured client ID
-        res_auth = await client.get("/export/spotify/auth-url")
-        assert res_auth.status_code == 200
-        assert "test_custom_client_id_12345678" in res_auth.json()["auth_url"]
+            # 3. Check status shows client_id_configured
+            res_st = await client.get("/export/spotify/status")
+            assert res_st.status_code == 200
+            assert res_st.json()["client_id_configured"] is True
+
+            # 4. Now auth-url succeeds with configured client ID
+            res_auth = await client.get("/export/spotify/auth-url")
+            assert res_auth.status_code == 200
+            assert "test_custom_client_id_12345678" in res_auth.json()["auth_url"]
 
 
 @pytest.mark.asyncio

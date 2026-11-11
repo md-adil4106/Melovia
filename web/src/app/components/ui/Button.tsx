@@ -30,15 +30,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary:
-        "bg-gradient-to-r from-[#fa2d55] via-[#e11d48] to-[#be123c] hover:from-[#ff375f] hover:to-[#d01344] text-white font-semibold shadow-ruby hover:shadow-ruby-lg",
+        "btn-ruby font-semibold shadow-ruby hover:shadow-ruby-lg",
       secondary:
-        "bg-white/[0.06] hover:bg-white/[0.12] text-white border border-white/10 hover:border-white/20 backdrop-blur-md",
+        "glass-pill text-white hover:text-white backdrop-blur-md",
       outline:
-        "bg-transparent hover:bg-white/[0.06] text-white border border-white/15 hover:border-[#fa2d55]/60",
+        "bg-transparent hover:bg-white/[0.08] text-white border border-white/20 hover:border-[#fa2d55]/60",
       ghost:
-        "bg-transparent hover:bg-white/[0.06] text-white/70 hover:text-white",
+        "bg-transparent hover:bg-white/[0.08] text-white/70 hover:text-white rounded-lg",
       danger:
-        "bg-rose-950/50 hover:bg-rose-900/70 text-rose-200 border border-rose-500/30",
+        "bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 border border-rose-500/40 shadow-sm",
     };
 
     const sizeStyles = {

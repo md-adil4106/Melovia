@@ -613,32 +613,33 @@ export default function DiscoveryHome() {
 
   return (
     <main className="min-h-screen aurora-bg text-white font-sans pb-24 selection:bg-[#fa2d55]/30 selection:text-white">
-      {/* Top Header */}
-      <header className="border-b border-white/[0.08] bg-[#07080b]/75 backdrop-blur-2xl sticky top-0 z-40 transition-all">
-        <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#fa2d55] via-[#fb7185] to-[#8b5cf6] flex items-center justify-center text-white font-bold shadow-[0_0_20px_rgba(250,45,85,0.4)]">
+      {/* Top Header - Floating Glass Bar */}
+      <header className="sticky top-0 z-40 transition-all border-b border-white/[0.08] bg-[#06070a]/80 backdrop-blur-3xl shadow-[0_4px_30px_rgba(0,0,0,0.6)]">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          {/* Brand Signature */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#fa2d55] via-[#fb7185] to-[#8b5cf6] flex items-center justify-center text-white font-bold shadow-[0_0_24px_rgba(250,45,85,0.5)] border border-white/20">
               <Compass className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-white font-sans">
+              <h1 className="text-xl font-black apple-heading tracking-tight text-white font-display">
                 MELOVIA
               </h1>
-              <p className="text-xs text-white/50 tracking-wide font-medium">Explainable Music Discovery</p>
+              <p className="text-[10px] text-white/50 tracking-wider uppercase font-medium">Explainable Music Discovery</p>
             </div>
           </div>
 
-          {/* Navigation Tabs (Discover vs Taste Profile) */}
-          <nav className="flex items-center bg-white/[0.06] p-1 rounded-lg border border-white/10 backdrop-blur-md" role="tablist">
+          {/* Center Navigation Tabs (Discover vs Taste Profile) - Floating Glass Island */}
+          <nav className="flex items-center bg-white/[0.04] p-1 rounded-full border border-white/10 backdrop-blur-2xl shadow-inner" role="tablist">
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === "discover"}
               aria-label="Discover"
               onClick={() => setActiveTab("discover")}
-              className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
                 activeTab === "discover"
-                  ? "bg-white/[0.14] text-white shadow-sm"
+                  ? "bg-white/[0.16] text-white shadow-[0_2px_12px_rgba(255,255,255,0.12)] border border-white/20"
                   : "text-white/60 hover:text-white"
               }`}
             >
@@ -650,9 +651,9 @@ export default function DiscoveryHome() {
               aria-selected={activeTab === "profile"}
               aria-label="Taste DNA"
               onClick={() => setActiveTab("profile")}
-              className={`px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all duration-200 ${
                 activeTab === "profile"
-                  ? "bg-white/[0.14] text-white shadow-sm"
+                  ? "bg-white/[0.16] text-white shadow-[0_2px_12px_rgba(255,255,255,0.12)] border border-white/20"
                   : "text-white/60 hover:text-white"
               }`}
             >
@@ -662,16 +663,27 @@ export default function DiscoveryHome() {
           </nav>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2 text-xs flex-wrap justify-end">
+            {/* 3D Taste Universe Map Button */}
+            <button
+              type="button"
+              onClick={() => setUniverseModalOpen(true)}
+              aria-label="Open 3D Taste Universe interactive starfield map"
+              className="flex items-center gap-1.5 text-xs text-white bg-gradient-to-r from-[#fa2d55]/20 to-[#8b5cf6]/20 hover:from-[#fa2d55]/30 hover:to-[#8b5cf6]/30 border border-[#fa2d55]/35 hover:border-[#fa2d55]/60 px-3 py-1.5 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#fa2d55] shadow-[0_0_16px_rgba(250,45,85,0.25)] hover:shadow-[0_0_24px_rgba(250,45,85,0.45)] hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Globe className="w-3.5 h-3.5 text-[#fa2d55]" />
+              <span className="font-bold hidden sm:inline">3D Universe</span>
+            </button>
+
             {/* Conversational Steering Chat Button */}
             <button
               type="button"
               onClick={() => setChatDrawerOpen(true)}
               aria-label="Open Conversational Refinement"
-              className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 px-3 py-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
+              className="glass-pill flex items-center gap-1.5 text-xs text-white/80 hover:text-white px-3 py-1.5 rounded-full focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
             >
               <MessageSquare className="w-3.5 h-3.5 text-[#fa2d55]" />
-              <span className="hidden sm:inline">Chat Refine</span>
+              <span className="hidden sm:inline font-medium">Chat Refine</span>
             </button>
 
             {/* Playlist Builder Button */}
@@ -679,28 +691,17 @@ export default function DiscoveryHome() {
               type="button"
               onClick={() => setPlaylistBuilderOpen(true)}
               aria-label="Open Playlist Sequencing"
-              className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 px-3 py-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
+              className="glass-pill flex items-center gap-1.5 text-xs text-white/80 hover:text-white px-3 py-1.5 rounded-full focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
             >
               <ListMusic className="w-3.5 h-3.5 text-[#fb7185]" />
-              <span className="hidden sm:inline">Playlist Arcs</span>
+              <span className="hidden sm:inline font-medium">Playlist Arcs</span>
             </button>
 
-            {/* 3D Taste Universe Map Button (Phase 12) */}
-            <button
-              type="button"
-              onClick={() => setUniverseModalOpen(true)}
-              aria-label="Open 3D Taste Universe interactive starfield map"
-              className="flex items-center gap-1.5 text-xs text-white bg-gradient-to-r from-[#fa2d55]/15 to-[#8b5cf6]/15 hover:from-[#fa2d55]/25 hover:to-[#8b5cf6]/25 border border-[#fa2d55]/30 px-3 py-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55] shadow-sm"
-            >
-              <Globe className="w-3.5 h-3.5 text-[#fa2d55]" />
-              <span className="font-semibold hidden sm:inline">3D Universe</span>
-            </button>
-
-            {/* Study Mode Button (Phase 15) */}
+            {/* Study Mode Button */}
             <a
               href="/study"
               aria-label="Open blind A/B evaluation study mode"
-              className="flex items-center gap-1.5 text-xs text-sky-200 hover:text-white bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 px-3 py-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-sky-400"
+              className="flex items-center gap-1.5 text-xs text-sky-200 hover:text-white bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 px-3 py-1.5 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-sky-400"
             >
               <FlaskConical className="w-3.5 h-3.5 text-sky-300" />
               <span className="font-semibold hidden sm:inline">Study Mode</span>
@@ -711,10 +712,10 @@ export default function DiscoveryHome() {
               type="button"
               onClick={() => setSettingsDrawerOpen(true)}
               aria-label="Open anonymous taste profile and device settings"
-              className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 px-3 py-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
+              className="glass-pill flex items-center gap-1.5 text-xs text-white/80 hover:text-white px-3 py-1.5 rounded-full focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
             >
               <Shield className="w-3.5 h-3.5 text-[#fb7185]" />
-              <span className="hidden md:inline">Privacy & Sync</span>
+              <span className="hidden md:inline font-medium">Privacy & Sync</span>
               {hasPersistentProfile && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Profile saved" />
               )}
@@ -722,12 +723,12 @@ export default function DiscoveryHome() {
 
             {/* Backend Status Indicator */}
             {healthData ? (
-              <span className="flex items-center gap-1.5 text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-medium">
+              <span className="flex items-center gap-1.5 text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-full text-[11px] font-medium backdrop-blur-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Catalog {healthData.catalog?.version || "ready"} ({healthData.catalog?.track_count?.toLocaleString() || 0} tracks)
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg text-xs">
+              <span className="flex items-center gap-1.5 text-amber-300 bg-amber-500/10 border border-amber-500/25 px-2.5 py-1 rounded-full text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                 Connecting...
               </span>
@@ -778,18 +779,22 @@ export default function DiscoveryHome() {
                 </button>
               </div>
             )}
-        {/* Hero Section with Ambient Particle Field */}
-        <section className="relative overflow-hidden rounded-2xl p-7 sm:p-9 mb-8 border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-white/[0.015] backdrop-blur-2xl text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+        {/* Hero Section with Ambient Liquid Glass Centerpiece */}
+        <section className="glass-panel relative overflow-hidden rounded-3xl p-8 sm:p-12 mb-8 text-center transition-all shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
+          <div
+            className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-gradient-to-b from-[#fa2d55]/20 via-[#8b5cf6]/10 to-transparent blur-3xl pointer-events-none"
+            aria-hidden="true"
+          />
           <HeroParticleField />
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/[0.06] border border-white/10 text-xs text-[#fa2d55] mb-3 backdrop-blur-md shadow-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/15 text-xs text-[#fa2d55] mb-4 backdrop-blur-xl shadow-[0_2px_12px_rgba(250,45,85,0.25)] font-semibold">
               <Sparkles className="w-3.5 h-3.5 text-[#fa2d55]" />
-              <span>Interactive Discovery Control (WOW #1)</span>
+              <span>Interactive Discovery Control</span>
             </div>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight mb-3">
+            <h2 className="text-3xl sm:text-5xl font-black apple-heading tracking-tight mb-3.5 text-white">
               Steerable Discovery from Seed Tracks
             </h2>
-            <p className="text-sm sm:text-base text-white/60 max-w-xl mx-auto mb-6 leading-relaxed">
+            <p className="text-sm sm:text-base text-white/70 max-w-xl mx-auto mb-7 leading-relaxed font-normal">
               Choose 1 to 10 seed tracks, then dynamically tune the Familiarity ↔ Discovery slider to traverse from familiar sounds to exploratory musical horizons.
             </p>
 
@@ -803,7 +808,7 @@ export default function DiscoveryHome() {
                   key={preset.id}
                   type="button"
                   onClick={() => handleApplyPreset(preset)}
-                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 hover:border-[#fa2d55]/50 text-white transition-all transform active:scale-95 shadow-sm backdrop-blur-md"
+                  className="glass-pill inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white/90 hover:text-white hover:border-[#fa2d55]/50 hover:shadow-[0_0_20px_rgba(250,45,85,0.25)] transition-all transform active:scale-95"
                   title={preset.description}
                 >
                   {preset.id === "night-drive" && <Moon className="w-3.5 h-3.5 text-[#fb7185]" />}
@@ -818,46 +823,46 @@ export default function DiscoveryHome() {
 
         {/* 3-Step First-Run Hint Banner (Dismissible + Remembered) */}
         {!onboardingDismissed && (
-          <div className="mb-6 p-5 bg-white/[0.035] border border-white/10 rounded-xl relative shadow-xl backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="mb-6 p-6 glass-card rounded-2xl relative shadow-xl backdrop-blur-2xl animate-in fade-in duration-300">
             <button
               type="button"
               onClick={handleDismissOnboarding}
               aria-label="Dismiss quick start guide"
-              className="absolute top-3.5 right-3.5 text-white/60 hover:text-white p-1 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
+              className="absolute top-4 right-4 text-white/60 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
             >
               <X className="w-4 h-4" />
             </button>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3.5">
               <Sparkles className="w-4 h-4 text-[#fa2d55]" />
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">
                 Quick Start Guide (3 Simple Steps)
               </h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-white/70">
-              <div className="p-3.5 bg-white/[0.04] rounded-lg border border-white/[0.06]">
-                <strong className="text-white block mb-1">1. Pick Seeds</strong>
+              <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.08] backdrop-blur-md">
+                <strong className="text-white block mb-1 font-semibold">1. Pick Seeds</strong>
                 Search tracks or click a Quick Preset above to establish your initial taste beacon.
               </div>
-              <div className="p-3.5 bg-white/[0.04] rounded-lg border border-white/[0.06]">
-                <strong className="text-[#fb7185] block mb-1">2. Set Discovery</strong>
+              <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.08] backdrop-blur-md">
+                <strong className="text-[#fb7185] block mb-1 font-semibold">2. Set Discovery</strong>
                 Slide from Familiarity (0%) toward adventurous musical Discovery (100%).
               </div>
-              <div className="p-3.5 bg-white/[0.04] rounded-lg border border-white/[0.06]">
-                <strong className="text-[#38bdf8] block mb-1">3. Steer with Vibe</strong>
+              <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.08] backdrop-blur-md">
+                <strong className="text-[#38bdf8] block mb-1 font-semibold">3. Steer with Vibe</strong>
                 Like, dislike, or use Conversational Refine to guide your path in real-time.
               </div>
             </div>
           </div>
         )}
 
-        {/* Seed Search & Input Box */}
-        <section className={`bg-white/[0.035] backdrop-blur-2xl border border-white/[0.08] rounded-xl p-5 sm:p-6 mb-8 shadow-[0_16px_40px_rgba(0,0,0,0.5)] transition-all ${isDropdownOpen && debouncedQuery.length >= 2 ? "relative z-40" : "relative z-20"}`}>
-          <div className="flex items-center justify-between mb-3">
-            <label htmlFor="seed-search" className="text-sm font-semibold text-white/90 flex items-center gap-2">
+        {/* Seed Search & Input Box - Clear Liquid Glass Console */}
+        <section className={`glass-panel rounded-3xl p-6 sm:p-8 mb-8 transition-all duration-300 ${isDropdownOpen && debouncedQuery.length >= 2 ? "relative z-40" : "relative z-20"}`}>
+          <div className="flex items-center justify-between mb-3.5">
+            <label htmlFor="seed-search" className="text-sm font-bold text-white/95 flex items-center gap-2">
               <Search className="w-4 h-4 text-[#fa2d55]" />
-              Search Seed Tracks
+              <span>Search Seed Tracks</span>
             </label>
-            <span className="text-xs text-white/60">
+            <span className="text-xs text-white/60 font-medium">
               <strong className="text-[#fa2d55] font-bold">{seeds.length}</strong> / 10 seeds selected
             </span>
           </div>
@@ -881,7 +886,7 @@ export default function DiscoveryHome() {
               }}
               onFocus={() => setIsDropdownOpen(true)}
               onKeyDown={handleKeyDown}
-              className="w-full bg-black/40 border border-white/10 hover:border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#fa2d55] focus:ring-4 focus:ring-[#fa2d55]/20 transition-all shadow-inner backdrop-blur-md disabled:opacity-50"
+              className="w-full liquid-glass-input rounded-2xl px-4 py-3.5 text-sm text-white placeholder-white/40 focus:outline-none transition-all disabled:opacity-50"
             />
 
             {isSearchLoading && (
@@ -894,7 +899,7 @@ export default function DiscoveryHome() {
             {isDropdownOpen && debouncedQuery.length >= 2 && (
               <div
                 ref={dropdownRef}
-                className="absolute left-0 right-0 top-full mt-2 glass-dropdown rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] z-50 overflow-hidden max-h-88 overflow-y-auto"
+                className="absolute left-0 right-0 top-full mt-2.5 glass-dropdown rounded-2xl shadow-[0_28px_64px_rgba(0,0,0,0.95)] z-50 overflow-hidden max-h-88 overflow-y-auto border border-white/15 backdrop-blur-3xl animate-in fade-in slide-in-from-top-2 duration-200"
               >
                 {searchResults && searchResults.length > 0 ? (
                   <div className="p-2 divide-y divide-white/[0.06]">
@@ -907,18 +912,18 @@ export default function DiscoveryHome() {
                           type="button"
                           onClick={() => handleSelectTrack(t)}
                           disabled={isAlreadySeed}
-                          className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center justify-between gap-3.5 transition-all ${
-                            isHighlighted ? "bg-white/[0.1]" : "hover:bg-white/[0.06]"
+                          className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center justify-between gap-3.5 transition-all duration-150 ${
+                            isHighlighted ? "bg-white/[0.12]" : "hover:bg-white/[0.06]"
                           } ${isAlreadySeed ? "opacity-40 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center gap-3.5 min-w-0 pr-2">
-                            <div className="relative w-10 h-10 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center flex-shrink-0 text-[#fa2d55] overflow-hidden shadow-md">
+                            <div className="relative w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center flex-shrink-0 text-[#fa2d55] overflow-hidden shadow-md">
                               <Music className="w-4 h-4 text-[#fa2d55]/60" />
                               {t.artwork_url ? (
                                 <img
                                   src={t.artwork_url}
                                   alt=""
-                                  className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                                  className="absolute inset-0 w-full h-full object-cover rounded-xl"
                                   onError={(e) => {
                                     e.currentTarget.style.display = "none";
                                   }}
@@ -942,7 +947,7 @@ export default function DiscoveryHome() {
                             {isAlreadySeed ? (
                               <span className="text-white/40 text-xs font-medium">Selected</span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-xs bg-white/[0.08] hover:bg-[#fa2d55] hover:text-white px-2.5 py-1 rounded-md text-white/90 transition-all font-semibold active:scale-95 shadow-sm">
+                              <span className="inline-flex items-center gap-1 text-xs bg-white/[0.08] hover:bg-[#fa2d55] hover:text-white px-3 py-1 rounded-full text-white/90 transition-all font-semibold active:scale-95 shadow-sm">
                                 <Plus className="w-3.5 h-3.5 text-[#fa2d55]" /> Add
                               </span>
                             )}
@@ -971,7 +976,7 @@ export default function DiscoveryHome() {
                 {seeds.map((s) => (
                   <div
                     key={s.id}
-                    className="inline-flex items-center gap-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white shadow-sm backdrop-blur-md animate-in fade-in duration-200"
+                    className="glass-pill inline-flex items-center gap-2.5 px-3 py-1.5 text-xs text-white shadow-sm border border-white/15 animate-in fade-in duration-200"
                   >
                     <div className="relative w-5 h-5 rounded-md bg-white/10 flex items-center justify-center flex-shrink-0 text-[#fa2d55] overflow-hidden">
                       <Music className="w-3 h-3 text-[#fa2d55]/80" />
@@ -986,13 +991,13 @@ export default function DiscoveryHome() {
                         />
                       ) : null}
                     </div>
-                    <span className="font-medium max-w-[160px] truncate">{s.title}</span>
+                    <span className="font-semibold max-w-[160px] truncate">{s.title}</span>
                     <span className="text-white/60 max-w-[100px] truncate">({s.artist_name})</span>
                     <button
                       type="button"
                       onClick={() => removeSeed(s.id)}
                       aria-label={`Remove ${s.title} by ${s.artist_name}`}
-                      className="text-white/60 hover:text-rose-400 p-0.5 rounded-md transition-colors focus:outline-none focus:ring-1 focus:ring-rose-400"
+                      className="text-white/60 hover:text-rose-400 p-0.5 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-1 focus:ring-rose-400"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1002,7 +1007,7 @@ export default function DiscoveryHome() {
                 <button
                   type="button"
                   onClick={clearSeeds}
-                  className="text-xs text-white/50 hover:text-rose-400 ml-auto transition-colors underline"
+                  className="text-xs text-white/50 hover:text-rose-400 ml-auto transition-colors underline font-medium"
                 >
                   Clear all
                 </button>
@@ -1011,19 +1016,19 @@ export default function DiscoveryHome() {
           </div>
 
           {/* Recommendation Size & Listening Duration Selector */}
-          <div className="mt-5 pt-4 border-t border-white/[0.08] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/[0.03] p-3.5 rounded-xl border border-white/[0.06] shadow-sm backdrop-blur-md">
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="mt-5 pt-4 border-t border-white/[0.08] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.08] shadow-sm backdrop-blur-xl">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-white/90">
                 <Clock className="w-3.5 h-3.5 text-[#fa2d55]" />
                 <span>Length:</span>
               </div>
-              <div className="inline-flex items-center bg-black/40 border border-white/10 rounded-lg p-0.5 text-xs">
+              <div className="inline-flex items-center bg-black/50 border border-white/10 rounded-full p-1 text-xs backdrop-blur-md">
                 <button
                   type="button"
                   onClick={() => setRecommendationLengthMode("count")}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                     recommendationLengthMode === "count"
-                      ? "bg-white/[0.15] text-white font-semibold shadow-sm"
+                      ? "bg-white/[0.18] text-white shadow-sm border border-white/20"
                       : "text-white/50 hover:text-white"
                   }`}
                 >
@@ -1032,9 +1037,9 @@ export default function DiscoveryHome() {
                 <button
                   type="button"
                   onClick={() => setRecommendationLengthMode("duration")}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                     recommendationLengthMode === "duration"
-                      ? "bg-white/[0.15] text-white font-semibold shadow-sm"
+                      ? "bg-white/[0.18] text-white shadow-sm border border-white/20"
                       : "text-white/50 hover:text-white"
                   }`}
                 >
@@ -1051,10 +1056,10 @@ export default function DiscoveryHome() {
                       key={cnt}
                       type="button"
                       onClick={() => setTargetCount(cnt)}
-                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                         targetCount === cnt
-                          ? "bg-gradient-to-r from-[#fa2d55] to-[#fb7185] text-white shadow-[0_2px_10px_rgba(250,45,85,0.35)]"
-                          : "bg-white/[0.05] hover:bg-white/[0.1] text-white/70 hover:text-white border border-white/5"
+                          ? "bg-gradient-to-r from-[#fa2d55] to-[#fb7185] text-white shadow-[0_2px_12px_rgba(250,45,85,0.4)] border border-white/20"
+                          : "glass-pill text-white/70 hover:text-white"
                       }`}
                     >
                       {cnt} songs
@@ -1075,10 +1080,10 @@ export default function DiscoveryHome() {
                       key={dur.mins}
                       type="button"
                       onClick={() => setTargetDurationMinutes(dur.mins)}
-                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                         targetDurationMinutes === dur.mins
-                          ? "bg-gradient-to-r from-[#fa2d55] to-[#fb7185] text-white shadow-[0_2px_10px_rgba(250,45,85,0.35)]"
-                          : "bg-white/[0.05] hover:bg-white/[0.1] text-white/70 hover:text-white border border-white/5"
+                          ? "bg-gradient-to-r from-[#fa2d55] to-[#fb7185] text-white shadow-[0_2px_12px_rgba(250,45,85,0.4)] border border-white/20"
+                          : "glass-pill text-white/70 hover:text-white"
                       }`}
                     >
                       {dur.label}
@@ -1091,9 +1096,9 @@ export default function DiscoveryHome() {
 
           {/* Action Row */}
           <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
-            <div className="text-xs text-white/60 flex items-center gap-1.5">
+            <div className="text-xs text-white/60 flex items-center gap-1.5 font-medium">
               <Sliders className="w-3.5 h-3.5 text-[#fa2d55]" />
-              Dual-Channel + MMR Diversity
+              <span>Dual-Channel + MMR Diversity</span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -1109,7 +1114,7 @@ export default function DiscoveryHome() {
                   }
                   disabled={recommendMutation.isPending}
                   aria-label="Start discovery using saved persistent taste"
-                  className="inline-flex items-center gap-2 bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 hover:border-white/20 text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55] disabled:opacity-40"
+                  className="glass-pill inline-flex items-center gap-2 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55] disabled:opacity-40"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-[#fb7185]" />
                   <span>Start from Saved Taste</span>
@@ -1120,7 +1125,7 @@ export default function DiscoveryHome() {
                 type="button"
                 onClick={handleDiscover}
                 disabled={seeds.length === 0 || recommendMutation.isPending}
-                className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#fa2d55] via-[#e11d48] to-[#be123c] hover:from-[#ff375f] hover:to-[#d01344] text-white font-bold px-6 py-2.5 rounded-lg shadow-[0_4px_24px_rgba(250,45,85,0.45)] hover:shadow-[0_6px_32px_rgba(250,45,85,0.65)] transition-all transform active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+                className="btn-ruby inline-flex items-center gap-2.5 font-bold px-7 py-2.5 rounded-xl shadow-[0_4px_28px_rgba(250,45,85,0.5)] hover:shadow-[0_8px_36px_rgba(250,45,85,0.7)] text-sm transition-all transform active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none select-none"
               >
                 {recommendMutation.isPending ? (
                   <>
@@ -1155,10 +1160,10 @@ export default function DiscoveryHome() {
           </div>
         )}
 
-        {/* Sticky Discovery Control Slider Bar (Above Results) */}
+        {/* Sticky Discovery Control Slider Bar - Liquid Glass Floating Island */}
         {recommendations.length > 0 && (
-          <div className="sticky top-[61px] z-30 bg-[#0c0f17]/90 backdrop-blur-2xl border border-white/10 rounded-xl p-4 sm:p-5 mb-8 shadow-[0_16px_40px_rgba(0,0,0,0.6)] transition-all">
-            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="sticky top-[69px] z-30 glass-panel-elevated rounded-3xl p-5 sm:p-6 mb-8 shadow-[0_24px_60px_rgba(0,0,0,0.75)] transition-all">
+            <div className="flex items-center justify-between mb-3.5 flex-wrap gap-2.5">
               <div className="flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-[#fa2d55]" />
                 <span className="text-xs font-bold text-white uppercase tracking-wider">
@@ -1179,7 +1184,7 @@ export default function DiscoveryHome() {
                   onClick={() => rememberMutation.mutate()}
                   disabled={rememberMutation.isPending}
                   aria-label="Remember this vibe to persistent device profile"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/[0.05] border border-white/10 hover:border-white/20 text-white/80 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
+                  className="glass-pill inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
                 >
                   <BookmarkPlus className="w-3.5 h-3.5 text-[#fb7185]" />
                   <span>{rememberMutation.isPending ? "Saving..." : "Remember Vibe"}</span>
@@ -1190,7 +1195,7 @@ export default function DiscoveryHome() {
                   type="button"
                   onClick={() => setPlaylistBuilderOpen(true)}
                   aria-label="Open playlist builder to sequence tracks into a listening journey"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 >
                   <ListMusic className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Build Playlist</span>
@@ -1201,16 +1206,16 @@ export default function DiscoveryHome() {
                   type="button"
                   onClick={() => setUniverseModalOpen(true)}
                   aria-label="Open interactive 3D Taste Universe"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/15 border border-sky-500/30 text-sky-200 hover:bg-sky-500/25 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-[#fa2d55]/20 to-[#8b5cf6]/20 border border-[#fa2d55]/30 text-white hover:border-[#fa2d55]/60 transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
                 >
-                  <Globe className="w-3.5 h-3.5 text-sky-400" />
+                  <Globe className="w-3.5 h-3.5 text-[#fa2d55]" />
                   <span>3D Map</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setChatDrawerOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-200 hover:bg-purple-500/25 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-200 hover:bg-purple-500/25 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400"
                   aria-label="Open steer discovery chat drawer"
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
@@ -1222,10 +1227,10 @@ export default function DiscoveryHome() {
                   )}
                 </button>
 
-                <span className="text-xs text-white/60">Discovery:</span>
+                <span className="text-xs text-white/60 font-medium">Discovery:</span>
                 <span
                   data-testid="discovery-pct-badge"
-                  className="font-mono text-xs font-bold text-[#fa2d55] bg-[#fa2d55]/15 border border-[#fa2d55]/30 px-2 py-0.5 rounded-md shadow-[0_0_10px_rgba(250,45,85,0.2)]"
+                  className="font-mono text-xs font-bold text-[#fa2d55] bg-[#fa2d55]/15 border border-[#fa2d55]/30 px-2.5 py-0.5 rounded-full shadow-[0_0_14px_rgba(250,45,85,0.3)]"
                 >
                   {Math.round(sliderValue * 100)}%
                 </span>
@@ -1233,7 +1238,7 @@ export default function DiscoveryHome() {
             </div>
 
             {/* Slider Input */}
-            <div className="space-y-2">
+            <div className="space-y-2.5 mt-2">
               <input
                 type="range"
                 id="discovery-slider"
@@ -1252,13 +1257,13 @@ export default function DiscoveryHome() {
                 aria-valuemax={100}
                 aria-valuenow={Math.round(sliderValue * 100)}
                 aria-valuetext={`Discovery level ${Math.round(sliderValue * 100)}%`}
-                className="w-full h-2.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#fa2d55] focus:outline-none focus:ring-2 focus:ring-[#fa2d55]/60"
+                className="w-full h-2.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#fa2d55] focus:outline-none focus:ring-2 focus:ring-[#fa2d55]/60 shadow-inner"
                 style={{
                   background: `linear-gradient(to right, #10b981 0%, #fa2d55 ${sliderValue * 100}%, #6366f1 100%)`,
                 }}
               />
 
-              <div className="flex justify-between items-center text-[11px] text-white/60">
+              <div className="flex justify-between items-center text-[11px] text-white/60 font-medium">
                 <span className="flex items-center gap-1 text-emerald-400 font-semibold">
                   ← Familiarity (0%)
                 </span>
@@ -1310,24 +1315,24 @@ export default function DiscoveryHome() {
         {/* Results Section */}
         <section className="mb-20">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2.5 font-sans tracking-tight">
-              <div className="w-7 h-7 rounded-lg bg-[#fa2d55]/20 border border-[#fa2d55]/40 flex items-center justify-center">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2.5 apple-heading tracking-tight">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#fa2d55]/20 to-[#8b5cf6]/20 border border-[#fa2d55]/40 flex items-center justify-center shadow-ruby-glow">
                 <Headphones className="w-4 h-4 text-[#fa2d55]" />
               </div>
-              Recommended Tracks
+              <span>Recommended Tracks</span>
             </h3>
             {recommendations.length > 0 && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsMainExportOpen(true)}
                   aria-label="Export recommended tracks"
-                  className="flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 px-3.5 py-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
+                  className="glass-pill flex items-center gap-1.5 text-xs font-semibold text-white/90 hover:text-white px-4 py-1.5 rounded-full hover:border-[#fa2d55]/40 transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3.5 h-3.5 text-[#fb7185]" />
                   <span>Export</span>
                 </button>
-                <span className="text-xs text-white/70 bg-white/[0.04] px-2.5 py-1.5 rounded-md border border-white/10 flex items-center gap-1.5">
+                <span className="glass-pill text-xs text-white/70 px-3 py-1.5 rounded-full flex items-center gap-1.5 font-medium">
                   <Clock className="w-3.5 h-3.5 text-[#fb7185]" />
                   <span>
                     {recommendations.length} {recommendations.length === 1 ? "track" : "tracks"}
@@ -1344,16 +1349,16 @@ export default function DiscoveryHome() {
               {[...Array(5)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 flex items-center justify-between animate-pulse"
+                  className="glass-card rounded-2xl p-4 flex items-center justify-between animate-pulse border border-white/[0.06]"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-white/[0.08]" />
+                    <div className="w-12 h-12 rounded-xl bg-white/[0.08]" />
                     <div className="space-y-2">
-                      <div className="w-48 h-4 bg-white/[0.08] rounded" />
-                      <div className="w-32 h-3 bg-white/[0.05] rounded" />
+                      <div className="w-48 h-4 bg-white/[0.08] rounded-md" />
+                      <div className="w-32 h-3 bg-white/[0.05] rounded-md" />
                     </div>
                   </div>
-                  <div className="w-16 h-6 bg-white/[0.08] rounded-md" />
+                  <div className="w-16 h-6 bg-white/[0.08] rounded-full" />
                 </div>
               ))}
             </div>
@@ -1361,12 +1366,12 @@ export default function DiscoveryHome() {
 
           {/* Empty State */}
           {!recommendMutation.isPending && recommendations.length === 0 && (
-            <div className="border border-dashed border-white/15 rounded-xl p-10 text-center bg-white/[0.02] backdrop-blur-md">
-              <div className="w-14 h-14 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center mx-auto mb-4 text-[#fa2d55]">
-                <Compass className="w-7 h-7" />
+            <div className="glass-card border border-white/[0.08] rounded-3xl p-12 text-center bg-white/[0.02] backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] relative overflow-hidden">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#fa2d55]/15 to-[#8b5cf6]/15 border border-[#fa2d55]/30 flex items-center justify-center mx-auto mb-4 text-[#fa2d55] shadow-[0_0_24px_rgba(250,45,85,0.2)]">
+                <Compass className="w-8 h-8" />
               </div>
-              <h4 className="text-lg font-bold text-white mb-1.5">Your discovery feed is empty</h4>
-              <p className="text-xs sm:text-sm text-white/60 max-w-sm mx-auto leading-relaxed">
+              <h4 className="text-lg font-bold text-white mb-2 apple-heading tracking-tight">Your discovery feed is empty</h4>
+              <p className="text-xs sm:text-sm text-white/60 max-w-sm mx-auto leading-relaxed font-normal">
                 Search and select at least one seed track above, then click &quot;Discover Tracks&quot; to compute relevance-ranked music.
               </p>
             </div>
@@ -1384,21 +1389,21 @@ export default function DiscoveryHome() {
                 return (
                   <article
                     key={item.track.id}
-                    className="bg-white/[0.025] border border-white/[0.06] hover:border-white/[0.16] rounded-xl p-3.5 sm:p-4 transition-all duration-250 ease-out motion-reduce:transition-none hover:bg-white/[0.065] hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                    className="glass-card rounded-2xl p-4 sm:p-4.5 transition-all duration-300 ease-out hover:border-white/20 hover:bg-white/[0.055] flex flex-col sm:flex-row sm:items-center justify-between gap-4 group relative overflow-hidden"
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
-                      <span className="w-7 text-center font-mono text-xs font-semibold text-white/40 group-hover:text-white/70">
+                      <span className="w-7 text-center font-mono text-xs font-semibold text-white/35 group-hover:text-white/70 transition-colors">
                         #{idx + 1}
                       </span>
-                      <div className={`relative w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#fa2d55] flex-shrink-0 overflow-hidden group/art shadow-[0_4px_16px_rgba(0,0,0,0.5)] group-hover:scale-105 transition-all duration-300 ${
-                        playingTrackId === item.track.id ? "ring-2 ring-[#fa2d55] shadow-[0_0_20px_rgba(250,45,85,0.6)]" : ""
+                      <div className={`relative w-12 h-12 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-[#fa2d55] flex-shrink-0 overflow-hidden group/art shadow-[0_4px_16px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-all duration-300 ${
+                        playingTrackId === item.track.id ? "ring-2 ring-[#fa2d55] shadow-[0_0_24px_rgba(250,45,85,0.65)]" : ""
                       }`}>
-                        <Music className="w-5 h-5 text-[#fa2d55]/60" />
+                        <Music className="w-5 h-5 text-[#fa2d55]/70" />
                         {item.track.artwork_url ? (
                           <img
                             src={item.track.artwork_url}
                             alt=""
-                            className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                            className="absolute inset-0 w-full h-full object-cover rounded-xl"
                             onError={(e) => {
                               e.currentTarget.style.display = "none";
                             }}
@@ -1435,10 +1440,10 @@ export default function DiscoveryHome() {
                         ) : null}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-sm sm:text-base font-semibold text-white truncate group-hover:text-[#fa2d55] transition-colors">
+                        <h4 className="text-sm sm:text-base font-semibold text-white truncate group-hover:text-[#fa2d55] transition-colors apple-heading tracking-tight">
                           {item.track.title}
                         </h4>
-                        <p className="text-xs text-white/60 truncate mt-0.5">
+                        <p className="text-xs text-white/50 truncate mt-0.5 font-normal">
                           {item.track.artist_name} {item.track.year ? `• ${item.track.year}` : ""}
                         </p>
                       </div>
@@ -1448,19 +1453,19 @@ export default function DiscoveryHome() {
                       {/* Subtle Familiarity <-> Discovery Tick Indicator */}
                       {novPct !== null && (
                         <div
-                          className="flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/10"
+                          className="flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/10 shadow-sm"
                           title={`Novelty: ${novPct}% | Familiarity: ${100 - novPct}%`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
                               isHighNovelty
-                                ? "bg-[#fa2d55] shadow-[0_0_8px_rgba(250,45,85,0.6)]"
+                                ? "bg-[#fa2d55] shadow-[0_0_8px_rgba(250,45,85,0.8)]"
                                 : isModerateNovelty
-                                ? "bg-[#38bdf8]"
-                                : "bg-[#10b981]"
+                                ? "bg-[#38bdf8] shadow-[0_0_6px_rgba(56,189,248,0.6)]"
+                                : "bg-[#10b981] shadow-[0_0_6px_rgba(16,185,129,0.6)]"
                             }`}
                           />
-                          <span className="text-white/70">
+                          <span className="text-white/70 font-medium">
                             {isHighNovelty ? "Discovery" : isModerateNovelty ? "Balanced" : "Familiar"}
                           </span>
                           <span className="text-white/40">{novPct}%</span>
@@ -1469,21 +1474,21 @@ export default function DiscoveryHome() {
 
                       {/* Audio channel badge */}
                       {item.track.has_a ? (
-                        <span className="text-[10px] text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-md font-mono">
+                        <span className="text-[10px] text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full font-mono font-medium shadow-[0_0_12px_rgba(16,185,129,0.15)]">
                           Audio
                         </span>
                       ) : (
-                        <span className="text-[10px] text-white/40 bg-white/[0.04] border border-white/10 px-2 py-0.5 rounded-md font-mono">
+                        <span className="text-[10px] text-white/40 bg-white/[0.04] border border-white/10 px-2.5 py-1 rounded-full font-mono font-medium">
                           No Audio
                         </span>
                       )}
 
                       {/* Match Score Badge */}
-                      <div className="flex items-center gap-1.5 bg-gradient-to-r from-[#fa2d55]/15 to-[#8b5cf6]/15 border border-[#fa2d55]/30 px-2.5 py-1 rounded-lg shadow-sm">
+                      <div className="flex items-center gap-1.5 bg-gradient-to-r from-[#fa2d55]/15 to-[#8b5cf6]/15 border border-[#fa2d55]/30 px-3 py-1 rounded-full shadow-sm">
                         <span className="text-xs font-mono font-bold text-white">
                           {matchPct}%
                         </span>
-                        <span className="text-[10px] text-white/60">match</span>
+                        <span className="text-[10px] text-white/60 uppercase tracking-wider font-semibold">match</span>
                       </div>
 
                       {/* Preview Button */}
@@ -1496,10 +1501,10 @@ export default function DiscoveryHome() {
                               ? `Pause 30s preview for ${item.track.title}`
                               : `Play 30s preview for ${item.track.title}`
                           }
-                          className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55] ${
+                          className={`inline-flex items-center gap-1.5 text-xs px-3.5 py-1 rounded-full border transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55] ${
                             playingTrackId === item.track.id
                               ? "bg-[#fa2d55] border-[#fa2d55] text-white font-medium shadow-[0_0_16px_rgba(250,45,85,0.5)]"
-                              : "bg-white/[0.05] border-white/10 hover:border-white/20 text-white/80 hover:text-white"
+                              : "glass-pill text-white/80 hover:text-white hover:border-[#fa2d55]/40"
                           }`}
                         >
                           {playingTrackId === item.track.id ? (
@@ -1517,7 +1522,7 @@ export default function DiscoveryHome() {
                       ) : null}
 
                       {/* Interactive Feedback Controls (Phase 9) */}
-                      <div className="flex items-center gap-1 bg-white/[0.04] border border-white/10 rounded-lg p-0.5 backdrop-blur-md">
+                      <div className="flex items-center gap-1 bg-white/[0.04] border border-white/10 rounded-full p-1 backdrop-blur-xl shadow-inner">
                         {/* Like button */}
                         <button
                           type="button"
@@ -1526,7 +1531,7 @@ export default function DiscoveryHome() {
                           }
                           data-testid={`like-button-${item.track.id}`}
                           aria-label={`Like ${item.track.title}`}
-                          className={`p-1.5 rounded-md transition-all focus:outline-none focus:ring-1 focus:ring-[#fa2d55] ${
+                          className={`p-1.5 rounded-full transition-all focus:outline-none focus:ring-1 focus:ring-[#fa2d55] ${
                             likedTrackIds.includes(item.track.id)
                               ? "bg-[#fa2d55] text-white shadow-[0_0_12px_rgba(250,45,85,0.5)]"
                               : "text-white/60 hover:text-white hover:bg-white/10"
@@ -1543,7 +1548,7 @@ export default function DiscoveryHome() {
                           }
                           data-testid={`dislike-button-${item.track.id}`}
                           aria-label={`Dislike and exclude ${item.track.title}`}
-                          className={`p-1.5 rounded-md transition-all focus:outline-none focus:ring-1 focus:ring-red-400 ${
+                          className={`p-1.5 rounded-full transition-all focus:outline-none focus:ring-1 focus:ring-red-400 ${
                             dislikedTrackIds.includes(item.track.id)
                               ? "bg-rose-900/70 text-rose-200"
                               : "text-white/60 hover:text-red-400 hover:bg-white/10"
@@ -1560,7 +1565,7 @@ export default function DiscoveryHome() {
                           }
                           data-testid={`skip-button-${item.track.id}`}
                           aria-label={`Skip ${item.track.title}`}
-                          className="p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus:ring-1 focus:ring-white/40"
+                          className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus:ring-1 focus:ring-white/40"
                         >
                           <SkipForward className="w-3.5 h-3.5" />
                         </button>
@@ -1573,7 +1578,7 @@ export default function DiscoveryHome() {
                           }
                           data-testid={`save-button-${item.track.id}`}
                           aria-label={`Save ${item.track.title}`}
-                          className={`p-1.5 rounded-md transition-all focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] ${
+                          className={`p-1.5 rounded-full transition-all focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] ${
                             savedTrackIds.includes(item.track.id)
                               ? "bg-[#8b5cf6] text-white shadow-[0_0_12px_rgba(139,92,246,0.5)]"
                               : "text-white/60 hover:text-white hover:bg-white/10"
@@ -1593,10 +1598,10 @@ export default function DiscoveryHome() {
                         onClick={() => handleOpenWhy(item.track)}
                         data-testid={`why-button-${item.track.id}`}
                         aria-label={`Why was ${item.track.title} recommended?`}
-                        className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.12] border border-white/10 text-white/80 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
+                        className="glass-pill inline-flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-full text-white/85 hover:text-white hover:border-[#fa2d55]/40 transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
                       >
                         <HelpCircle className="w-3.5 h-3.5 text-[#fb7185]" />
-                        <span>Why?</span>
+                        <span className="font-semibold">Why?</span>
                       </button>
                     </div>
                   </article>

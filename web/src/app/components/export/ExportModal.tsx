@@ -357,15 +357,15 @@ export function ExportModal({
       tabIndex={-1}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-[#07080b]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden focus:outline-none focus:ring-1 focus:ring-[#fa2d55]">
+      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col glass-panel-elevated rounded-3xl border border-white/[0.14] shadow-[0_28px_80px_rgba(0,0,0,0.9)] overflow-hidden focus:outline-none focus:ring-1 focus:ring-[#fa2d55]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/[0.02]">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#fa2d55]/15 border border-[#fa2d55]/30 flex items-center justify-center text-[#fa2d55]">
-              <Download className="w-4 h-4" />
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-white/[0.08] bg-white/[0.02]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#fa2d55]/15 border border-[#fa2d55]/30 flex items-center justify-center text-[#fa2d55] shadow-ruby-glow">
+              <Download className="w-4.5 h-4.5" />
             </div>
             <div>
-              <h2 id="export-modal-title" className="text-base font-semibold text-white">
+              <h2 id="export-modal-title" className="text-base font-semibold text-white apple-heading tracking-tight">
                 Export Playlist
               </h2>
               <p className="text-xs text-white/50">

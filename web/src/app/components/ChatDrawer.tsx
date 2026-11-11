@@ -236,19 +236,19 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
       <div
         ref={drawerRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative flex h-full w-full max-w-md flex-col bg-[#0d1017]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl overflow-hidden transition-transform duration-200 ease-out sm:max-w-lg font-sans text-white"
+        className="relative flex h-full w-full max-w-md flex-col bg-[#06070a]/92 backdrop-blur-3xl border-l border-white/[0.12] shadow-[0_0_80px_rgba(0,0,0,0.85)] overflow-hidden transition-transform duration-200 ease-out sm:max-w-lg font-sans text-white"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.08] bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-tr from-[#fa2d55] to-[#8b5cf6] text-white shadow-ruby">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[#fa2d55] to-[#8b5cf6] text-white shadow-ruby-glow">
               <MessageSquare className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 id="chat-drawer-title" className="text-base font-semibold text-white flex items-center gap-2">
+              <h2 id="chat-drawer-title" className="text-base font-semibold text-white flex items-center gap-2 apple-heading tracking-tight">
                 Steer Discovery
-                <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-[#fa2d55]/15 text-[#fb7185] border border-[#fa2d55]/30">
-                  WOW #4
+                <span className="text-[11px] px-2.5 py-0.5 rounded-full font-semibold bg-[#fa2d55]/15 text-[#fb7185] border border-[#fa2d55]/30">
+                  AI Steering
                 </span>
               </h2>
               <p className="text-xs text-white/50">
@@ -259,7 +259,7 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="rounded-lg p-2 text-white/60 hover:bg-white/[0.08] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
+            className="rounded-full p-2 text-white/60 hover:bg-white/[0.08] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#fa2d55]"
             aria-label="Close chat drawer"
           >
             <X className="h-5 w-5" />
@@ -411,7 +411,7 @@ export function ChatDrawer({ isOpen, onClose, apiBase }: ChatDrawerProps) {
                 }
                 disabled={!candidateSetId || refineMutation.isPending}
                 rows={2}
-                className="w-full resize-none rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-sm text-white placeholder-white/40 shadow-inner focus:border-[#fa2d55] focus:outline-none focus:ring-2 focus:ring-[#fa2d55]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full resize-none rounded-2xl border border-white/10 liquid-glass-input px-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none transition-all disabled:cursor-not-allowed disabled:opacity-50"
               />
               <div className="absolute right-2.5 bottom-2.5 flex items-center gap-2">
                 <span

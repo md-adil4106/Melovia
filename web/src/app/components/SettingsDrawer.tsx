@@ -171,12 +171,12 @@ export function SettingsDrawer({ isOpen, onClose, apiBase }: SettingsDrawerProps
       {/* Drawer Body */}
       <div
         ref={drawerRef}
-        className="relative w-full max-w-md bg-[#07080b]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl h-full flex flex-col z-10 animate-in slide-in-from-right duration-300 motion-reduce:transition-none"
+        className="relative w-full max-w-md bg-[#06070a]/92 backdrop-blur-3xl border-l border-white/[0.12] shadow-[0_0_80px_rgba(0,0,0,0.85)] h-full flex flex-col z-10 animate-in slide-in-from-right duration-300 motion-reduce:transition-none"
       >
         {/* Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+        <div className="p-5 border-b border-white/[0.08] flex items-center justify-between bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#fa2d55]/15 border border-[#fa2d55]/30 flex items-center justify-center text-[#fa2d55]">
+            <div className="w-9 h-9 rounded-xl bg-[#fa2d55]/15 border border-[#fa2d55]/30 flex items-center justify-center text-[#fa2d55] shadow-ruby-glow">
               <ShieldCheck className="w-5 h-5 text-[#fa2d55]" />
             </div>
             <div>
