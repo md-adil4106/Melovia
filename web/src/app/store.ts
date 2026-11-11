@@ -221,6 +221,9 @@ interface DiscoveryStore {
   setTotalDurationSeconds: (sec: number) => void;
   totalDurationFormatted: string;
   setTotalDurationFormatted: (fmt: string) => void;
+  // Glass Theme Customization ("clear" | "frosted")
+  glassTheme: "clear" | "frosted";
+  setGlassTheme: (theme: "clear" | "frosted") => void;
 }
 
 export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
@@ -344,4 +347,17 @@ export const useDiscoveryStore = create<DiscoveryStore>((set) => ({
   setUniverseFocusedRegionId: (id) => set({ universeFocusedRegionId: id }),
   universeFocusedTrackId: null,
   setUniverseFocusedTrackId: (id) => set({ universeFocusedTrackId: id }),
+  // Glass Theme Customization
+  glassTheme: "clear",
+  setGlassTheme: (theme) => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("melovia_glass_theme", theme);
+        document.documentElement.setAttribute("data-glass-theme", theme);
+      } catch {
+        // Ignore localStorage errors
+      }
+    }
+    set({ glassTheme: theme });
+  },
 }));

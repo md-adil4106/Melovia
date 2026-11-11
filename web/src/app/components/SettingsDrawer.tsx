@@ -15,6 +15,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { GlassThemeSelector } from "./ui/GlassThemeSelector";
 import { useDiscoveryStore } from "../store";
 
 interface SettingsDrawerProps {
@@ -206,6 +207,11 @@ export function SettingsDrawer({ isOpen, onClose, apiBase }: SettingsDrawerProps
               <span>{statusMessage}</span>
             </div>
           )}
+
+          {/* Glass Material Style Customization */}
+          <section className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4 shadow-md">
+            <GlassThemeSelector variant="detailed" />
+          </section>
 
           {/* Anonymous Device Identity Card */}
           <section className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4 space-y-3 shadow-md">

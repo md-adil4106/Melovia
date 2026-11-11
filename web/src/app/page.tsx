@@ -40,6 +40,9 @@ import { PlaylistBuilder } from "./components/PlaylistBuilder";
 import { ProfileView } from "./components/ProfileView";
 import { ExportModal } from "./components/export/ExportModal";
 import { HeroParticleField } from "./components/HeroParticleField";
+import { RefractionAura } from "./components/ui/RefractionAura";
+import { AudioWaveVisualizer } from "./components/ui/AudioWaveVisualizer";
+import { GlassThemeSelector } from "./components/ui/GlassThemeSelector";
 import { Button } from "./components/ui/Button";
 import { Card } from "./components/ui/Card";
 import { Chip } from "./components/ui/Chip";
@@ -612,7 +615,10 @@ export default function DiscoveryHome() {
   const isAnyLoading = recommendMutation.isPending || rerankMutation.isPending;
 
   return (
-    <main className="min-h-screen aurora-bg text-white font-sans pb-24 selection:bg-[#fa2d55]/30 selection:text-white">
+    <main className="min-h-screen aurora-bg text-white font-sans pb-24 selection:bg-[#fa2d55]/30 selection:text-white relative">
+      {/* Subtle Cursor-Following Liquid Refraction Aura */}
+      <RefractionAura />
+
       {/* Top Header - Floating Glass Bar */}
       <header className="sticky top-0 z-40 transition-all border-b border-white/[0.08] bg-[#06070a]/80 backdrop-blur-3xl shadow-[0_4px_30px_rgba(0,0,0,0.6)]">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
@@ -706,6 +712,9 @@ export default function DiscoveryHome() {
               <FlaskConical className="w-3.5 h-3.5 text-sky-300" />
               <span className="font-semibold hidden sm:inline">Study Mode</span>
             </a>
+
+            {/* Glass Theme Mode Switcher (Clear vs Frosted Glass) */}
+            <GlassThemeSelector variant="compact" className="hidden lg:inline-flex" />
 
             {/* Anonymous Taste Profile & Settings Button */}
             <button
@@ -1389,7 +1398,11 @@ export default function DiscoveryHome() {
                 return (
                   <article
                     key={item.track.id}
-                    className="glass-card rounded-2xl p-4 sm:p-4.5 transition-all duration-300 ease-out hover:border-white/20 hover:bg-white/[0.055] flex flex-col sm:flex-row sm:items-center justify-between gap-4 group relative overflow-hidden"
+                    className={`glass-card rounded-2xl p-4 sm:p-4.5 transition-all duration-300 ease-out hover:border-white/20 hover:bg-white/[0.055] flex flex-col sm:flex-row sm:items-center justify-between gap-4 group relative overflow-hidden ${
+                      playingTrackId === item.track.id
+                        ? "border-[#fa2d55]/50 bg-white/[0.07] shadow-[0_0_32px_rgba(250,45,85,0.25)]"
+                        : ""
+                    }`}
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
                       <span className="w-7 text-center font-mono text-xs font-semibold text-white/35 group-hover:text-white/70 transition-colors">
@@ -1490,6 +1503,9 @@ export default function DiscoveryHome() {
                         </span>
                         <span className="text-[10px] text-white/60 uppercase tracking-wider font-semibold">match</span>
                       </div>
+
+                      {/* Live Audio Preview Equalizer Visualizer */}
+                      <AudioWaveVisualizer isPlaying={playingTrackId === item.track.id} />
 
                       {/* Preview Button */}
                       {item.track.preview_url ? (

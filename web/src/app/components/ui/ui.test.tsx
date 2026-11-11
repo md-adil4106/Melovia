@@ -9,6 +9,10 @@ import { Toast } from "./Toast";
 import { Skeleton, TrackItemSkeleton } from "./Skeleton";
 import { EmptyState } from "./EmptyState";
 import { ErrorState } from "./ErrorState";
+import { GlassThemeSelector } from "./GlassThemeSelector";
+import { AudioWaveVisualizer } from "./AudioWaveVisualizer";
+import { RefractionAura } from "./RefractionAura";
+import { useDiscoveryStore } from "../../store";
 
 describe("Design System UI Primitives (Phase 15)", () => {
   it("renders Button with variants and handles click events", () => {
@@ -128,5 +132,44 @@ describe("Design System UI Primitives (Phase 15)", () => {
     const retryBtn = screen.getByRole("button", { name: "Retry" });
     fireEvent.click(retryBtn);
     expect(handleRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders GlassThemeSelector and toggles between clear and frosted glass effects", () => {
+    render(<GlassThemeSelector variant="compact" />);
+    const clearBtn = screen.getByTestId("glass-theme-clear");
+    const frostedBtn = screen.getByTestId("glass-theme-frosted");
+    expect(clearBtn).toBeDefined();
+    expect(frostedBtn).toBeDefined();
+
+    // Click frosted
+    fireEvent.click(frostedBtn);
+    expect(useDiscoveryStore.getState().glassTheme).toBe("frosted");
+    expect(document.documentElement.getAttribute("data-glass-theme")).toBe("frosted");
+
+    // Click clear
+    fireEvent.click(clearBtn);
+    expect(useDiscoveryStore.getState().glassTheme).toBe("clear");
+    expect(document.documentElement.getAttribute("data-glass-theme")).toBe("clear");
+  });
+
+  it("renders GlassThemeSelector detailed variant", () => {
+    render(<GlassThemeSelector variant="detailed" />);
+    expect(screen.getByText("Glass Material Style")).toBeDefined();
+    expect(screen.getByText("Clear Liquid")).toBeDefined();
+    expect(screen.getByText("Frosted Matte")).toBeDefined();
+  });
+
+  it("renders AudioWaveVisualizer when playing and hides when paused", () => {
+    const { rerender } = render(<AudioWaveVisualizer isPlaying={false} />);
+    expect(screen.queryByLabelText("Audio playing indicator")).toBeNull();
+
+    rerender(<AudioWaveVisualizer isPlaying={true} />);
+    expect(screen.getByLabelText("Audio playing indicator")).toBeDefined();
+    expect(screen.getByText(/playing/i)).toBeDefined();
+  });
+
+  it("renders RefractionAura safely without errors", () => {
+    const { container } = render(<RefractionAura />);
+    expect(container).toBeDefined();
   });
 });
