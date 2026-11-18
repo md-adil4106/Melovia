@@ -13,6 +13,7 @@ import {
   Headphones,
   HelpCircle,
   ListMusic,
+  Loader2,
   MessageSquare,
   Moon,
   Music,
@@ -218,6 +219,7 @@ export default function DiscoveryHome() {
   const [onboardingDismissed, setOnboardingDismissed] = useState(true);
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
   const [activePreviewTrack, setActivePreviewTrack] = useState<Track | null>(null);
+  const [isAudioBuffering, setIsAudioBuffering] = useState(false);
   const [autoAdvance, setAutoAdvance] = useState(true);
   const [crossfadeEnabled, setCrossfadeEnabled] = useState(true);
   const [volume, setVolume] = useState(0.8);
@@ -346,7 +348,14 @@ export default function DiscoveryHome() {
     audio.muted = isMutedRef.current;
     audio.volume = shouldCrossfade ? 0 : initialVol;
 
+    setIsAudioBuffering(true);
+    audio.addEventListener("waiting", () => setIsAudioBuffering(true));
+    audio.addEventListener("playing", () => setIsAudioBuffering(false));
+    audio.addEventListener("canplay", () => setIsAudioBuffering(false));
+    audio.addEventListener("canplaythrough", () => setIsAudioBuffering(false));
+
     audio.play().then(() => {
+      setIsAudioBuffering(false);
       if (!shouldCrossfade) {
         audio.volume = isMutedRef.current ? 0 : volumeRef.current;
         return;
@@ -374,10 +383,12 @@ export default function DiscoveryHome() {
         }
       }, fadeInDuration + 50);
     }).catch(() => {
+      setIsAudioBuffering(false);
       setPlayingTrackId(null);
     });
 
     audio.onended = () => {
+      setIsAudioBuffering(false);
       if (autoAdvanceRef.current) {
         const queue = playableTracksRef.current;
         const current = activeTrackRef.current;
@@ -391,6 +402,7 @@ export default function DiscoveryHome() {
     };
 
     audio.onerror = () => {
+      setIsAudioBuffering(false);
       if (autoAdvanceRef.current) {
         const queue = playableTracksRef.current;
         const current = activeTrackRef.current;
@@ -414,6 +426,7 @@ export default function DiscoveryHome() {
       if (audioRef.current) {
         audioRef.current.pause();
       }
+      setIsAudioBuffering(false);
       setPlayingTrackId(null);
     } else if (
       activeTrackRef.current?.id === track.id &&
@@ -422,7 +435,9 @@ export default function DiscoveryHome() {
       !audioRef.current.ended
     ) {
       audioRef.current.volume = isMutedRef.current ? 0 : volumeRef.current;
+      setIsAudioBuffering(audioRef.current.readyState < 3);
       audioRef.current.play().catch(() => {
+        setIsAudioBuffering(false);
         setPlayingTrackId(null);
       });
       setPlayingTrackId(track.id);
@@ -1748,7 +1763,9 @@ export default function DiscoveryHome() {
                             }}
                             aria-label={
                               playingTrackId === item.track.id
-                                ? `Pause preview for ${item.track.title}`
+                                ? isAudioBuffering
+                                  ? `Buffering preview for ${item.track.title}`
+                                  : `Pause preview for ${item.track.title}`
                                 : `Play 30s preview for ${item.track.title}`
                             }
                             className={`absolute inset-0 flex items-center justify-center bg-black/60 transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55] ${
@@ -1758,11 +1775,15 @@ export default function DiscoveryHome() {
                             }`}
                           >
                             {playingTrackId === item.track.id ? (
-                              <div className="flex items-center gap-0.5">
-                                <span className="w-1 h-3.5 bg-[#fa2d55] rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                <span className="w-1 h-4.5 bg-[#fa2d55] rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                <span className="w-1 h-3.5 bg-[#fa2d55] rounded-full animate-bounce" />
-                              </div>
+                              isAudioBuffering ? (
+                                <Loader2 className="w-4 h-4 animate-spin text-[#fa2d55]" />
+                              ) : (
+                                <div className="flex items-center gap-0.5">
+                                  <span className="w-1 h-3.5 bg-[#fa2d55] rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                  <span className="w-1 h-4.5 bg-[#fa2d55] rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                  <span className="w-1 h-3.5 bg-[#fa2d55] rounded-full animate-bounce" />
+                                </div>
+                              )
                             ) : (
                               <Play className="w-4 h-4 fill-current translate-x-0.5" />
                             )}
@@ -1834,7 +1855,9 @@ export default function DiscoveryHome() {
                           onClick={() => handleTogglePlay(item.track)}
                           aria-label={
                             playingTrackId === item.track.id
-                              ? `Pause 30s preview for ${item.track.title}`
+                              ? isAudioBuffering
+                                ? `Buffering preview for ${item.track.title}`
+                                : `Pause 30s preview for ${item.track.title}`
                               : `Play 30s preview for ${item.track.title}`
                           }
                           className={`inline-flex items-center gap-1.5 text-xs px-3.5 py-1 rounded-full border transition-all focus:outline-none focus:ring-2 focus:ring-[#fa2d55] ${
@@ -1844,10 +1867,17 @@ export default function DiscoveryHome() {
                           }`}
                         >
                           {playingTrackId === item.track.id ? (
-                            <>
-                              <Pause className="w-3.5 h-3.5 fill-current" />
-                              <span>Pause</span>
-                            </>
+                            isAudioBuffering ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Buffering...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Pause className="w-3.5 h-3.5 fill-current" />
+                                <span>Pause</span>
+                              </>
+                            )
                           ) : (
                             <>
                               <Play className="w-3.5 h-3.5 fill-current" />
@@ -2015,6 +2045,7 @@ export default function DiscoveryHome() {
       <AudioPlayerDock
         track={activePreviewTrack}
         isPlaying={playingTrackId !== null && playingTrackId === activePreviewTrack?.id}
+        isBuffering={isAudioBuffering}
         audioElement={audioRef.current}
         volume={volume}
         isMuted={isMuted}

@@ -342,5 +342,72 @@ describe("Design System UI Primitives (Phase 15)", () => {
     );
     expect(screen.getByTestId("mute-toggle-btn").getAttribute("aria-label")).toBe("Unmute audio");
     expect((screen.getByTestId("volume-slider") as HTMLInputElement).value).toBe("0");
+
+    // Test buffering indicator on play buttons
+    rerender(
+      <AudioPlayerDock
+        track={sampleTrack}
+        isPlaying={true}
+        isBuffering={true}
+        audioElement={null}
+        volume={0.75}
+        isMuted={false}
+        onTogglePlay={handleToggle}
+        onClose={handleClose}
+      />
+    );
+    expect(screen.getByTestId("dock-main-play-btn").getAttribute("aria-label")).toBe("Buffering");
+    expect(screen.getByTestId("dock-artwork-play-btn").getAttribute("aria-label")).toBe("Buffering preview...");
+
+    // Test timeline hover tooltip and buffered progress
+    const mockAudioWithBuffer = {
+      currentTime: 10,
+      duration: 30,
+      buffered: {
+        length: 1,
+        start: () => 0,
+        end: () => 18,
+      },
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    } as unknown as HTMLAudioElement;
+
+    rerender(
+      <AudioPlayerDock
+        track={sampleTrack}
+        isPlaying={true}
+        audioElement={mockAudioWithBuffer}
+        volume={0.75}
+        isMuted={false}
+        onTogglePlay={handleToggle}
+        onClose={handleClose}
+      />
+    );
+
+    expect(screen.getByTestId("buffered-range-bar")).toBeDefined();
+    const scrubberContainer = screen.getByLabelText("Audio preview scrubber").parentElement;
+    expect(scrubberContainer).toBeDefined();
+
+    if (scrubberContainer) {
+      // Mock getBoundingClientRect
+      vi.spyOn(scrubberContainer, "getBoundingClientRect").mockReturnValue({
+        left: 0,
+        top: 0,
+        width: 300,
+        height: 20,
+        right: 300,
+        bottom: 20,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      });
+
+      fireEvent.mouseMove(scrubberContainer, { clientX: 150 });
+      expect(screen.getByTestId("scrubber-hover-tooltip")).toBeDefined();
+      expect(screen.getByText("0:15")).toBeDefined();
+
+      fireEvent.mouseLeave(scrubberContainer);
+      expect(screen.queryByTestId("scrubber-hover-tooltip")).toBeNull();
+    }
   });
 });

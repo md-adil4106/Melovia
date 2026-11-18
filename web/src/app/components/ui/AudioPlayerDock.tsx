@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Music, Play, Pause, X, SkipBack, SkipForward, Repeat, Volume2, Volume1, VolumeX, AudioLines } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Music, Play, Pause, X, SkipBack, SkipForward, Repeat, Volume2, Volume1, VolumeX, AudioLines, Loader2 } from "lucide-react";
 import { Track } from "../../store";
 import { AudioWaveVisualizer } from "./AudioWaveVisualizer";
 
 interface AudioPlayerDockProps {
   track: Track | null;
   isPlaying: boolean;
+  isBuffering?: boolean;
   audioElement: HTMLAudioElement | null;
   volume?: number;
   isMuted?: boolean;
@@ -35,6 +36,7 @@ interface AudioPlayerDockProps {
 export function AudioPlayerDock({
   track,
   isPlaying,
+  isBuffering = false,
   audioElement,
   volume,
   isMuted,
@@ -54,6 +56,11 @@ export function AudioPlayerDock({
 }: AudioPlayerDockProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(30);
+  const [internalBuffering, setInternalBuffering] = useState(false);
+  const [bufferedPct, setBufferedPct] = useState(0);
+  const [hoverPosition, setHoverPosition] = useState<{ x: number; time: number; pct: number } | null>(null);
+  const scrubberContainerRef = useRef<HTMLDivElement>(null);
+
   const [internalVolume, setInternalVolume] = useState(() => {
     if (typeof window !== "undefined") {
       try {
@@ -72,10 +79,13 @@ export function AudioPlayerDock({
 
   const effectiveVolume = volume !== undefined ? volume : internalVolume;
   const effectiveMuted = isMuted !== undefined ? isMuted : internalMuted;
+  const effectiveBuffering = isBuffering || internalBuffering;
 
   useEffect(() => {
     if (!audioElement) {
       setCurrentTime(0);
+      setInternalBuffering(false);
+      setBufferedPct(0);
       return;
     }
 
@@ -86,17 +96,46 @@ export function AudioPlayerDock({
       if (!isNaN(audioElement.duration) && audioElement.duration > 0) {
         setDuration(audioElement.duration);
       }
+      if (audioElement.buffered.length > 0) {
+        try {
+          const end = audioElement.buffered.end(audioElement.buffered.length - 1);
+          const dur = audioElement.duration || 30;
+          setBufferedPct(Math.min(100, Math.max(0, (end / dur) * 100)));
+        } catch {
+          // ignore
+        }
+      }
     };
 
+    const handleWaiting = () => setInternalBuffering(true);
+    const handlePlaying = () => setInternalBuffering(false);
+    const handleCanPlay = () => setInternalBuffering(false);
+
     updateTimes();
+    if (isPlaying && audioElement.readyState < 3) {
+      setInternalBuffering(true);
+    } else {
+      setInternalBuffering(false);
+    }
+
     audioElement.addEventListener("timeupdate", updateTimes);
     audioElement.addEventListener("loadedmetadata", updateTimes);
+    audioElement.addEventListener("progress", updateTimes);
+    audioElement.addEventListener("waiting", handleWaiting);
+    audioElement.addEventListener("playing", handlePlaying);
+    audioElement.addEventListener("canplay", handleCanPlay);
+    audioElement.addEventListener("canplaythrough", handleCanPlay);
 
     return () => {
       audioElement.removeEventListener("timeupdate", updateTimes);
       audioElement.removeEventListener("loadedmetadata", updateTimes);
+      audioElement.removeEventListener("progress", updateTimes);
+      audioElement.removeEventListener("waiting", handleWaiting);
+      audioElement.removeEventListener("playing", handlePlaying);
+      audioElement.removeEventListener("canplay", handleCanPlay);
+      audioElement.removeEventListener("canplaythrough", handleCanPlay);
     };
-  }, [audioElement]);
+  }, [audioElement, isPlaying]);
 
   if (!track) return null;
 
@@ -112,6 +151,19 @@ export function AudioPlayerDock({
     if (audioElement) {
       audioElement.currentTime = newTime;
     }
+  };
+
+  const handleScrubberMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!scrubberContainerRef.current) return;
+    const rect = scrubberContainerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const p = rect.width > 0 ? x / rect.width : 0;
+    const time = p * (duration || 30);
+    setHoverPosition({ x, time, pct: p * 100 });
+  };
+
+  const handleScrubberMouseLeave = () => {
+    setHoverPosition(null);
   };
 
   const handleVolumeInput = (val: number) => {
@@ -171,12 +223,23 @@ export function AudioPlayerDock({
             <button
               type="button"
               onClick={() => onTogglePlay(track)}
-              aria-label={isPlaying ? `Pause preview for ${track.title}` : `Play preview for ${track.title}`}
+              aria-label={
+                effectiveBuffering
+                  ? "Buffering preview..."
+                  : isPlaying
+                  ? `Pause preview for ${track.title}`
+                  : `Play preview for ${track.title}`
+              }
+              data-testid="dock-artwork-play-btn"
               className={`absolute inset-0 flex items-center justify-center bg-black/60 transition-all ${
-                isPlaying ? "opacity-100 text-[#fa2d55]" : "opacity-0 group-hover:opacity-100 text-white"
+                isPlaying || effectiveBuffering
+                  ? "opacity-100 text-[#fa2d55]"
+                  : "opacity-0 group-hover:opacity-100 text-white"
               }`}
             >
-              {isPlaying ? (
+              {effectiveBuffering ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[#fa2d55]" />
+              ) : isPlaying ? (
                 <Pause className="w-4 h-4 fill-current" />
               ) : (
                 <Play className="w-4 h-4 fill-current translate-x-0.5" />
@@ -201,7 +264,61 @@ export function AudioPlayerDock({
               <span className="text-[10px] font-mono font-medium text-white/50 w-7 text-right">
                 {formatTime(currentTime)}
               </span>
-              <div className="relative flex-1 flex items-center">
+              <div
+                ref={scrubberContainerRef}
+                onMouseMove={handleScrubberMouseMove}
+                onMouseLeave={handleScrubberMouseLeave}
+                className="relative flex-1 flex items-center group/scrubber h-5"
+              >
+                {/* Floating Liquid Glass Timestamp Tooltip on Hover */}
+                {hoverPosition && (
+                  <div
+                    data-testid="scrubber-hover-tooltip"
+                    className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded-md glass-panel text-[10px] font-mono font-bold text-white shadow-lg pointer-events-none border border-white/20 z-50 flex items-center gap-1 animate-in fade-in zoom-in-95 duration-100"
+                    style={{ left: `${hoverPosition.pct}%` }}
+                  >
+                    <span>{formatTime(hoverPosition.time)}</span>
+                  </div>
+                )}
+
+                {/* Subtle Decorative Waveform Spectrum Track behind progress slider */}
+                <div
+                  className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2.5 flex items-center justify-between px-0.5 opacity-25 group-hover/scrubber:opacity-45 pointer-events-none transition-opacity overflow-hidden"
+                  aria-hidden="true"
+                >
+                  {Array.from({ length: 28 }).map((_, idx) => {
+                    const barPct = (idx / 28) * 100;
+                    const isPassed = barPct <= pct;
+                    const isBuffered = barPct <= bufferedPct;
+                    const heights = [3, 5, 8, 4, 9, 6, 10, 5, 7, 9, 4, 8, 10, 6, 7, 5, 9, 8, 4, 10, 6, 8, 5, 7, 9, 4, 6, 3];
+                    const h = heights[idx % heights.length];
+                    return (
+                      <span
+                        key={idx}
+                        className={`w-0.5 rounded-full transition-all duration-150 ${
+                          isPassed
+                            ? "bg-[#fa2d55]"
+                            : isBuffered
+                            ? "bg-white/40"
+                            : "bg-white/15"
+                        }`}
+                        style={{ height: `${h}px` }}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Network Buffer Range Bar */}
+                {bufferedPct > 0 && (
+                  <div
+                    data-testid="buffered-range-bar"
+                    aria-hidden="true"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-white/20 rounded-full pointer-events-none transition-[width] duration-300"
+                    style={{ width: `${bufferedPct}%` }}
+                  />
+                )}
+
+                {/* Interactive Scrubber Range Slider */}
                 <input
                   type="range"
                   min="0"
@@ -210,9 +327,9 @@ export function AudioPlayerDock({
                   value={currentTime}
                   onChange={handleSeek}
                   aria-label="Audio preview scrubber"
-                  className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#fa2d55] focus:outline-none focus:ring-1 focus:ring-[#fa2d55]"
+                  className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#fa2d55] focus:outline-none focus:ring-1 focus:ring-[#fa2d55] relative z-10"
                   style={{
-                    background: `linear-gradient(to right, #fa2d55 0%, #fb7185 ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`,
+                    background: `linear-gradient(to right, #fa2d55 0%, #fb7185 ${pct}%, transparent ${pct}%, transparent 100%)`,
                   }}
                 />
               </div>
@@ -327,10 +444,13 @@ export function AudioPlayerDock({
           <button
             type="button"
             onClick={() => onTogglePlay(track)}
-            aria-label={isPlaying ? "Pause" : "Play"}
+            aria-label={effectiveBuffering ? "Buffering" : isPlaying ? "Pause" : "Play"}
+            data-testid="dock-main-play-btn"
             className="w-9 h-9 rounded-full btn-ruby flex items-center justify-center shadow-md active:scale-95 transition-transform"
           >
-            {isPlaying ? (
+            {effectiveBuffering ? (
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+            ) : isPlaying ? (
               <Pause className="w-4 h-4 fill-current text-white" />
             ) : (
               <Play className="w-4 h-4 fill-current text-white translate-x-0.5" />
