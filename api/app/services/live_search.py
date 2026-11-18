@@ -1,15 +1,19 @@
-"""Live Public Music Search Service using the iTunes Search API.
+"""Live Public Music Search Service using iTunes Search and JioSaavn APIs.
 
-Provides free, public, real-time access to commercial and independent music releases
-up to today's date with zero authentication keys required.
+Provides free, public, real-time access to commercial, independent, and regional music releases
+(Western, Bollywood, Punjabi Hip-Hop, Indie, International) with zero authentication keys required.
 """
 
+import asyncio
+import base64
+import html
 import logging
 import uuid
 from datetime import datetime, timedelta
 from typing import Any
 
 import httpx
+from Crypto.Cipher import DES
 
 from app.recsys.mood import (
     MOOD_PARTY,
@@ -19,6 +23,27 @@ from app.recsys.mood import (
 )
 
 logger = logging.getLogger(__name__)
+
+# JioSaavn media encryption DES key (fixed standard 8-byte key)
+JIOSAAVN_DES_KEY = b"38346591"
+
+
+def decrypt_jiosaavn_media_url(encrypted_url: str | None) -> str | None:
+    """Decrypt JioSaavn DES-ECB encrypted media URL and upgrade to high bitrate."""
+    if not encrypted_url:
+        return None
+    try:
+        cipher = DES.new(JIOSAAVN_DES_KEY, DES.MODE_ECB)
+        decrypted = cipher.decrypt(base64.b64decode(encrypted_url))
+        pad_len = decrypted[-1]
+        raw_url = decrypted[:-pad_len].decode("utf-8")
+        # Upgrade standard 96kbps streams to 160kbps if applicable
+        if "_96.mp4" in raw_url:
+            return raw_url.replace("_96.mp4", "_160.mp4")
+        return raw_url
+    except Exception as exc:
+        logger.debug("Failed to decrypt JioSaavn media URL: %s", exc)
+        return None
 
 # Genre-to-heuristic scalars mapping for dynamic tracks
 GENRE_SCALARS: dict[str, dict[str, float]] = {
@@ -155,10 +180,399 @@ GENRE_SCALARS: dict[str, dict[str, float]] = {
         "danceability": 0.85,
         "acousticness": 0.12,
     },
+    "punjabi": {
+        "bpm": 128.0,
+        "energy": 0.82,
+        "valence": 0.70,
+        "danceability": 0.85,
+        "acousticness": 0.18,
+    },
+    "punjabi-pop": {
+        "bpm": 126.0,
+        "energy": 0.80,
+        "valence": 0.72,
+        "danceability": 0.85,
+        "acousticness": 0.20,
+    },
+    "punjabi-hip-hop": {
+        "bpm": 132.0,
+        "energy": 0.84,
+        "valence": 0.65,
+        "danceability": 0.84,
+        "acousticness": 0.14,
+    },
+    "bhangra": {
+        "bpm": 130.0,
+        "energy": 0.88,
+        "valence": 0.80,
+        "danceability": 0.88,
+        "acousticness": 0.15,
+    },
 }
+
+# Regional and cultural artist rosters for bulletproof cross-market classification
+PUNJABI_ARTISTS: frozenset[str] = frozenset(
+    {
+        "karan aujla",
+        "sidhu moose wala",
+        "diljit dosanjh",
+        "ap dhillon",
+        "shubh",
+        "sukha",
+        "baggh-e smg",
+        "big kay smg",
+        "farmaan smg",
+        "jxggi",
+        "dishant",
+        "sickboi",
+        "jerry",
+        "tegi pannu",
+        "chani nattan",
+        "inderpal moga",
+        "ikky",
+        "mxrci",
+        "gurinder gill",
+        "shinda kahlon",
+        "arjan dhillon",
+        "amrit maan",
+        "prem dhillon",
+        "jordan sandhu",
+        "amrinder gill",
+        "garry sandhu",
+        "b praak",
+        "jaani",
+        "wazir patar",
+        "raf-saperra",
+        "jasmine sandlas",
+        "nimrat khaira",
+        "sunanda sharma",
+        "kulwinder billa",
+        "tarsem jassar",
+        "mankirt aulakh",
+        "jass manak",
+        "gurnam bhullar",
+        "prabh gill",
+        "gippy grewal",
+        "babbu maan",
+        "gurdas maan",
+        "bohemia",
+        "imran khan",
+        "prophec",
+        "mickey singh",
+        "pav dharia",
+        "intense",
+        "deep jandu",
+        "snappy",
+        "byg byrd",
+        "sunny malton",
+        "the kidd",
+        "proof",
+        "tru-skool",
+        "hustinder",
+        "cheema y",
+        "gur sidhu",
+        "nirvair pannu",
+        "korala maan",
+        "r nait",
+        "gulab sidhu",
+        "varinder brar",
+        "chetan",
+        "shree brar",
+        "parmish verma",
+        "dilpreet dhillon",
+        "kulbir jhinjer",
+        "ammy virk",
+        "hardy sandhu",
+        "harrdy sandhu",
+        "guru randhawa",
+        "jassi gill",
+        "yo yo honey singh",
+        "badshah",
+        "raftaar",
+        "kr$na",
+        "seedhe maut",
+        "divine",
+        "emiway bantai",
+    }
+)
+
+BOLLYWOOD_ARTISTS: frozenset[str] = frozenset(
+    {
+        "arijit singh",
+        "pritam",
+        "shreya ghoshal",
+        "atif aslam",
+        "mohit chauhan",
+        "kk",
+        "sonu nigam",
+        "javed ali",
+        "faheem abdullah",
+        "huzaif nazar",
+        "navjot ahuja",
+        "anuv jain",
+        "prateek kuhad",
+        "jasleen royal",
+        "the local train",
+        "when chai met toast",
+        "armaan malik",
+        "darshan raval",
+        "jubin nautiyal",
+        "sachin-jigar",
+        "vishal-shekhar",
+        "a.r. rahman",
+        "ar rahman",
+        "amit trivedi",
+        "shankar mahadevan",
+        "kailash kher",
+        "sunidhi chauhan",
+        "alka yagnik",
+        "udit narayan",
+        "kumar sanu",
+        "lucky ali",
+        "mithoon",
+    }
+)
+
+KPOP_ARTISTS: frozenset[str] = frozenset(
+    {
+        "bts",
+        "blackpink",
+        "newjeans",
+        "stray kids",
+        "twice",
+        "le sserafim",
+        "ive",
+        "aespa",
+        "illit",
+        "seventeen",
+        "txt",
+        "enhypen",
+        "jungkook",
+        "jimin",
+        "agust d",
+        "suga",
+        "jennie",
+        "rose",
+        "lisa",
+    }
+)
+
+LATIN_ARTISTS: frozenset[str] = frozenset(
+    {
+        "bad bunny",
+        "peso pluma",
+        "karol g",
+        "j balvin",
+        "rauw alejandro",
+        "feid",
+        "tainy",
+        "maluma",
+        "ozuna",
+        "anuel aa",
+        "daddy yankee",
+        "junior h",
+        "natanael cano",
+        "fuerza regida",
+    }
+)
 
 # Collaborative and stylistic peer graph modeled after Spotify/YouTube Music co-listening graphs
 ARTIST_COLLABORATOR_GRAPH: dict[str, list[str]] = {
+    # Punjabi & Desi Hip-Hop / Pop Ecosystem
+    "karan aujla": [
+        "Diljit Dosanjh",
+        "Sidhu Moose Wala",
+        "AP Dhillon",
+        "Shubh",
+        "Sukha",
+        "Ikky",
+        "Mxrci",
+        "Gurinder Gill",
+        "Arjan Dhillon",
+        "Amrit Maan",
+        "Prem Dhillon",
+        "Jerry",
+        "Tegi Pannu",
+        "Wazir Patar",
+        "Baggh-e SMG",
+    ],
+    "sidhu moose wala": [
+        "Karan Aujla",
+        "Amrit Maan",
+        "Prem Dhillon",
+        "Sunny Malton",
+        "Byg Byrd",
+        "The Kidd",
+        "Diljit Dosanjh",
+        "Wazir Patar",
+        "Jordan Sandhu",
+        "Raja Kumari",
+        "Stefflon Don",
+    ],
+    "diljit dosanjh": [
+        "Karan Aujla",
+        "AP Dhillon",
+        "Amrinder Gill",
+        "Garry Sandhu",
+        "Badshah",
+        "Yo Yo Honey Singh",
+        "Sidhu Moose Wala",
+        "Nimrat Khaira",
+        "Intense",
+        "Tru-Skool",
+        "Ikky",
+    ],
+    "ap dhillon": [
+        "Gurinder Gill",
+        "Shinda Kahlon",
+        "Gminxr",
+        "Karan Aujla",
+        "Diljit Dosanjh",
+        "Shubh",
+        "Sukha",
+        "Ikky",
+        "Jerry",
+    ],
+    "shubh": [
+        "AP Dhillon",
+        "Karan Aujla",
+        "Sukha",
+        "Gurinder Gill",
+        "Ikky",
+        "Chani Nattan",
+        "Tegi Pannu",
+        "Diljit Dosanjh",
+    ],
+    "sukha": [
+        "Chani Nattan",
+        "Inderpal Moga",
+        "Shubh",
+        "Karan Aujla",
+        "AP Dhillon",
+        "Tegi Pannu",
+        "Baggh-e SMG",
+        "Jxggi",
+        "SickBoi",
+    ],
+    "baggh-e smg": [
+        "Big Kay Smg",
+        "Farmaan SMG",
+        "Mxrci",
+        "Karan Aujla",
+        "Sukha",
+        "Jerry",
+        "Tegi Pannu",
+        "Jxggi",
+        "Wazir Patar",
+    ],
+    "big kay smg": [
+        "Baggh-e SMG",
+        "Farmaan SMG",
+        "Mxrci",
+        "Karan Aujla",
+        "Sukha",
+        "Jerry",
+    ],
+    "farmaan smg": [
+        "Baggh-e SMG",
+        "Big Kay Smg",
+        "Mxrci",
+        "Karan Aujla",
+        "Sukha",
+    ],
+    "jxggi": [
+        "Dishant",
+        "SickBoi",
+        "Sukha",
+        "Baggh-e SMG",
+        "Chani Nattan",
+        "Tegi Pannu",
+        "Karan Aujla",
+    ],
+    "dishant": [
+        "Jxggi",
+        "SickBoi",
+        "Sukha",
+        "Baggh-e SMG",
+    ],
+    "sickboi": [
+        "Jxggi",
+        "Dishant",
+        "Sukha",
+        "Baggh-e SMG",
+        "Chani Nattan",
+    ],
+    "arjan dhillon": [
+        "Karan Aujla",
+        "Nimrat Khaira",
+        "Mxrci",
+        "Amrit Maan",
+        "Diljit Dosanjh",
+        "Hustinder",
+    ],
+    "amrit maan": [
+        "Sidhu Moose Wala",
+        "Karan Aujla",
+        "Diljit Dosanjh",
+        "Gur Sidhu",
+        "Jordan Sandhu",
+    ],
+    "prem dhillon": [
+        "Sidhu Moose Wala",
+        "The Kidd",
+        "Karan Aujla",
+        "Snappy",
+        "Tegi Pannu",
+    ],
+    "tegi pannu": [
+        "Sukha",
+        "Chani Nattan",
+        "Karan Aujla",
+        "Jerry",
+        "Baggh-e SMG",
+        "Manners",
+    ],
+    "chani nattan": [
+        "Inderpal Moga",
+        "Sukha",
+        "Shubh",
+        "Karan Aujla",
+        "Tegi Pannu",
+    ],
+    "wazir patar": [
+        "Sidhu Moose Wala",
+        "Roop Bhullar",
+        "Karan Aujla",
+        "Signature By Wazir",
+    ],
+    "jerry": [
+        "Karan Aujla",
+        "Devenderpal Singh",
+        "Mxrci",
+        "Sukha",
+        "Baggh-e SMG",
+    ],
+    "gurinder gill": [
+        "AP Dhillon",
+        "Shinda Kahlon",
+        "Gminxr",
+        "Karan Aujla",
+        "Shubh",
+    ],
+    "ikky": [
+        "Karan Aujla",
+        "Diljit Dosanjh",
+        "Shubh",
+        "Badshah",
+        "Sikander Kahlon",
+    ],
+    "mxrci": [
+        "Karan Aujla",
+        "Arjan Dhillon",
+        "Baggh-e SMG",
+        "Jerry",
+        "Diljit Dosanjh",
+    ],
     # Bollywood / Indian Romantic, Indie & Filmi
     "faheem abdullah": [
         "Huzaif Nazar",
@@ -451,13 +865,92 @@ ARTIST_COLLABORATOR_GRAPH: dict[str, list[str]] = {
 }
 
 
-def classify_genre_and_culture(primary_genre: str, tags: list[str] | None = None) -> str:
-    """Classify genre and cultural market into a coherent domain."""
+def classify_genre_and_culture(
+    primary_genre: str,
+    tags: list[str] | None = None,
+    artist_name: str | None = None,
+    language: str | None = None,
+    title: str | None = None,
+) -> str:
+    """Classify genre, artist, and cultural market into a coherent domain.
+
+    Supports Punjabi Hip-Hop/Pop, Bollywood/Desi, K-Pop, Latin, Hip-Hop, R&B, Rock,
+    Western Pop, and Electronic.
+    """
+    # 1. First check explicit language tag
+    if language:
+        lang_clean = language.strip().lower()
+        if lang_clean == "punjabi":
+            return "punjabi"
+        if lang_clean in (
+            "hindi",
+            "tamil",
+            "telugu",
+            "malayalam",
+            "kannada",
+            "bhojpuri",
+            "haryanvi",
+            "marathi",
+            "bengali",
+            "urdu",
+        ):
+            return "bollywood_desi"
+        if lang_clean in ("korean", "ko"):
+            return "kpop"
+        if lang_clean in ("spanish", "es"):
+            return "latin"
+
+    # 2. Check artist against known regional knowledge graphs
+    if artist_name:
+        art_clean = artist_name.strip().lower()
+        art_tokens = set(art_clean.replace(",", " ").replace("&", " ").replace("-", " ").split())
+
+        def _matches_artist(roster: frozenset[str]) -> bool:
+            for a in roster:
+                if len(a) <= 3:
+                    if a in art_tokens or a == art_clean:
+                        return True
+                else:
+                    if a in art_clean:
+                        return True
+            return False
+
+        if _matches_artist(PUNJABI_ARTISTS):
+            return "punjabi"
+        if _matches_artist(BOLLYWOOD_ARTISTS):
+            return "bollywood_desi"
+        if _matches_artist(KPOP_ARTISTS):
+            return "kpop"
+        if _matches_artist(LATIN_ARTISTS):
+            return "latin"
+
     text = (primary_genre or "").lower().replace("-", " ")
     if tags:
         text += " " + " ".join(str(t).lower().replace("-", " ") for t in tags)
+    if title:
+        text += " " + str(title).lower().replace("-", " ")
 
-    # 1. Bollywood / Desi / Indian
+    # 3. Punjabi / Bhangra / Desi Hip-Hop
+    if any(
+        term in text
+        for term in (
+            "punjabi",
+            "bhangra",
+            "desi hip hop",
+            "dhh",
+            "malwa",
+            "punjabi pop",
+            "punjabi hip hop",
+            "sidhu",
+            "aujla",
+            "dhillon",
+            "shubh",
+            "sukha",
+        )
+    ):
+        return "punjabi"
+
+    # 4. Bollywood / Desi / Indian
     if any(
         term in text
         for term in (
@@ -467,51 +960,49 @@ def classify_genre_and_culture(primary_genre: str, tags: list[str] | None = None
             "filmi",
             "sufi",
             "ghazal",
-            "punjabi",
             "hindi",
             "tamil",
             "telugu",
             "malayalam",
             "bengali",
             "desi",
-            "bhangra",
             "qawwali",
         )
     ):
         return "bollywood_desi"
 
-    # 2. K-Pop
+    # 5. K-Pop
     if "k pop" in text or "kpop" in text or "korean" in text:
         return "kpop"
 
-    # 3. Latin
+    # 6. Latin
     if any(
         term in text
         for term in ("latin", "reggaeton", "urbano", "salsa", "bachata", "cumbia", "corridos")
     ):
         return "latin"
 
-    # 4. Hip-Hop / Rap
+    # 7. Hip-Hop / Rap
     if any(term in text for term in ("hip hop", "rap", "trap", "drill", "cloud rap")):
         return "hiphop"
 
-    # 5. R&B / Soul
+    # 8. R&B / Soul
     if any(term in text for term in ("r&b", "soul", "neo soul", "funk")):
         return "rnb"
 
-    # 6. Rock / Alternative
+    # 9. Rock / Alternative
     if any(
         term in text for term in ("rock", "metal", "punk", "alternative", "grunge", "indie rock")
     ):
         return "rock"
 
-    # 7. Western Pop
+    # 10. Western Pop
     if any(
         term in text for term in ("pop", "dance", "synth pop", "disco", "electro pop", "teen pop")
     ):
         return "western_pop"
 
-    # 8. Electronic / Dance
+    # 11. Electronic / Dance
     if any(
         term in text
         for term in ("electronic", "edm", "house", "techno", "trance", "dnb", "dubstep")
@@ -542,6 +1033,65 @@ class LiveSearchService:
             self._track_cache = {
                 k: v for k, v in self._track_cache.items() if now - v[0] < self.cache_ttl
             }
+
+    @staticmethod
+    def _detect_country(query: str) -> str:
+        q_lower = query.lower()
+        if any(
+            term in q_lower
+            for term in (
+                "khat",
+                "sajde",
+                "guzarish",
+                "arijit",
+                "pritam",
+                "rahman",
+                "javed ali",
+                "faheem",
+                "atif",
+                "mohit chauhan",
+                "navjot",
+                "bollywood",
+                "hindi",
+                "punjabi",
+                "sonu nigam",
+                "shreya ghoshal",
+                "anuv jain",
+                "prateek kuhad",
+                "jasleen royal",
+                "kk",
+                "armaan malik",
+                "darshan raval",
+                "jubin nautiyal",
+                "diljit",
+                "sidhu",
+                "ap dhillon",
+                "badshah",
+                "honey singh",
+                "desi",
+                "sufi",
+                "karan aujla",
+                "shubh",
+                "sukha",
+                "aujla",
+                "baggh",
+                "smg",
+                "jxggi",
+                "wazir",
+                "tegi pannu",
+                "b praak",
+                "jaani",
+                "amrit maan",
+                "prem dhillon",
+                "arjan dhillon",
+            )
+        ):
+            return "IN"
+        if any(term in q_lower for term in ("bts", "blackpink", "newjeans", "stray kids", "twice")):
+            return "KR"
+        if any(term in q_lower for term in ("bad bunny", "peso pluma", "karol g", "reggaeton")):
+            return "MX"
+        return "US"
 
     @staticmethod
     def _normalize_itunes_track(item: dict[str, Any]) -> dict[str, Any] | None:
@@ -578,8 +1128,17 @@ class LiveSearchService:
         if "/" in primary_genre:
             for part in primary_genre.split("/"):
                 tags.append(part.strip().lower())
-        culture = classify_genre_and_culture(primary_genre, tags)
-        if culture == "bollywood_desi":
+
+        culture = classify_genre_and_culture(
+            primary_genre=primary_genre,
+            tags=tags,
+            artist_name=artist_str,
+            title=title_str,
+        )
+        if culture == "punjabi":
+            tags.extend(["punjabi", "desi", "bhangra", "punjabi-hip-hop", "punjabi-pop", "dance"])
+            genre_key = "punjabi"
+        elif culture == "bollywood_desi":
             tags.extend(["bollywood", "indian-pop", "acoustic", "melodic", "soul"])
             genre_key = "bollywood"
         elif culture == "hiphop":
@@ -609,7 +1168,6 @@ class LiveSearchService:
         base_dance = float(scalars_preset.get("danceability", 0.65))
         base_acoustic = float(scalars_preset.get("acousticness", 0.25))
 
-        title_lower = str(title).lower()
         if any(
             w in title_lower
             for w in ("acoustic", "unplugged", "piano", "reprise", "ballad", "slowed", "lullaby")
@@ -665,9 +1223,9 @@ class LiveSearchService:
             "album_name": item.get("collectionName"),
             "year": year,
             "isrcs": [],
-            "popularity_pct": 75.0,  # Live tracks have strong baseline familiarity
-            "has_a": False,  # Missing precomputed acoustic audio features (compliant invariant)
-            "has_t": True,  # Has semantic genre & descriptive tags
+            "popularity_pct": 75.0,
+            "has_a": False,
+            "has_t": True,
             "region_id": None,
             "scalars": scalars,
             "tags": sorted(set(tags)),
@@ -679,103 +1237,176 @@ class LiveSearchService:
             "source": "itunes_live",
         }
 
-    async def search_tracks(
+    @staticmethod
+    def _normalize_jiosaavn_track(item: dict[str, Any]) -> dict[str, Any] | None:
+        """Parse, decrypt, and normalize JioSaavn raw item into Melovia schema."""
+        track_id = item.get("id")
+        title_raw = item.get("title")
+        if not track_id or not title_raw:
+            return None
+
+        title = html.unescape(str(title_raw)).strip()
+        more = item.get("more_info") or {}
+        amap = more.get("artistMap") or {}
+        pa_list = [
+            html.unescape(a.get("name"))
+            for a in amap.get("primary_artists", [])
+            if a.get("name")
+        ]
+        if not pa_list:
+            sub = html.unescape(item.get("subtitle") or "").strip()
+            if " - " in sub:
+                pa_list = [p.strip() for p in sub.split(" - ")[0].split(",") if p.strip()]
+            elif sub:
+                pa_list = [sub]
+        if not pa_list:
+            singers = more.get("singers")
+            if singers:
+                pa_list = [s.strip() for s in str(singers).split(",") if s.strip()]
+
+        artist_str = ", ".join(pa_list) if pa_list else "Unknown Artist"
+        album_str = html.unescape(more.get("album") or "").strip() or None
+
+        title_lower = title.lower()
+        artist_lower = artist_str.lower()
+        if any(
+            bad in artist_lower or bad in title_lower
+            for bad in ("karaoke", "tribute", "backing track", "royalty free")
+        ):
+            return None
+
+        # Year
+        year: int | None = None
+        year_raw = item.get("year")
+        if year_raw and str(year_raw).isdigit():
+            year = int(year_raw)
+
+        # Image (upgrade from 150x150 to 500x500 for crisp visual presentation)
+        img = item.get("image") or ""
+        if img:
+            img = img.replace("150x150.jpg", "500x500.jpg").replace("50x50.jpg", "500x500.jpg")
+
+        # Media preview URL decryption
+        encrypted_media = more.get("encrypted_media_url")
+        preview_url = decrypt_jiosaavn_media_url(encrypted_media)
+
+        # Duration
+        dur_raw = more.get("duration")
+        dur_sec = float(dur_raw) if dur_raw is not None else 210.0
+        dur_ms = int(dur_sec * 1000)
+
+        language = (item.get("language") or "").lower().strip()
+        primary_genre = "punjabi" if language == "punjabi" else (language or "Indian")
+
+        tags = [language] if language else []
+        if language == "punjabi":
+            tags.extend(["punjabi", "desi", "bhangra", "punjabi-hip-hop", "punjabi-pop"])
+        elif language in ("hindi", "bollywood"):
+            tags.extend(["bollywood", "hindi", "indian-pop"])
+
+        culture = classify_genre_and_culture(
+            primary_genre=primary_genre,
+            tags=tags,
+            artist_name=artist_str,
+            language=language,
+            title=title,
+        )
+
+        genre_key = (
+            "punjabi"
+            if culture == "punjabi"
+            else ("bollywood" if culture == "bollywood_desi" else "pop")
+        )
+        scalars_preset = GENRE_SCALARS.get(genre_key, GENRE_SCALARS.get("pop", {}))
+        base_bpm = float(scalars_preset.get("bpm", 128.0))
+        base_energy = float(scalars_preset.get("energy", 0.80))
+        base_valence = float(scalars_preset.get("valence", 0.70))
+        base_dance = float(scalars_preset.get("danceability", 0.85))
+        base_acoustic = float(scalars_preset.get("acousticness", 0.18))
+
+        if any(w in title_lower for w in ("acoustic", "unplugged", "piano", "sad", "slowed")):
+            base_acoustic = min(0.95, base_acoustic + 0.35)
+            base_energy = max(0.20, base_energy - 0.25)
+            base_bpm = max(70.0, base_bpm - 20.0)
+        elif any(w in title_lower for w in ("remix", "party", "club", "dance", "bass", "dhamaka")):
+            base_energy = min(0.98, base_energy + 0.20)
+            base_dance = min(0.98, base_dance + 0.15)
+            base_bpm = min(150.0, base_bpm + 15.0)
+
+        scalars = {
+            "bpm": base_bpm,
+            "tempo_bpm": base_bpm,
+            "energy": base_energy,
+            "valence": base_valence,
+            "danceability": base_dance,
+            "acousticness": base_acoustic,
+            "instrumentalness": 0.05,
+            "loudness_db": -7.0,
+            "duration_ms": dur_ms,
+            "duration_sec": dur_sec,
+        }
+
+        canonical_id = f"ext:saavn:{track_id}"
+        artist_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"saavn.artist.{artist_str}"))
+
+        return {
+            "id": canonical_id,
+            "track_idx": -1,
+            "mbid": None,
+            "title": title,
+            "artist_id": artist_id,
+            "artist_name": artist_str,
+            "album_name": album_str,
+            "year": year,
+            "isrcs": [],
+            "popularity_pct": 80.0,
+            "has_a": False,
+            "has_t": True,
+            "region_id": None,
+            "scalars": scalars,
+            "tags": sorted(set(tags)),
+            "culture": culture,
+            "artwork_url": img or None,
+            "preview_url": preview_url,
+            "duration_ms": dur_ms,
+            "duration_sec": dur_sec,
+            "source": "jiosaavn_live",
+        }
+
+    async def search_itunes(
         self,
         query: str,
         limit: int = 15,
-        country: str | None = None,
+        country: str = "US",
     ) -> list[dict[str, Any]]:
-        """Search public tracks by query string with storefront routing."""
+        """Search iTunes Store API for songs."""
         q_clean = query.strip()
         if len(q_clean) < 2:
             return []
 
-        # Determine target storefront country
-        target_country = country
-        if not target_country:
-            q_lower = q_clean.lower()
-            if any(
-                term in q_lower
-                for term in (
-                    "khat",
-                    "sajde",
-                    "guzarish",
-                    "arijit",
-                    "pritam",
-                    "rahman",
-                    "javed ali",
-                    "faheem",
-                    "atif",
-                    "mohit chauhan",
-                    "navjot",
-                    "bollywood",
-                    "hindi",
-                    "punjabi",
-                    "sonu nigam",
-                    "shreya ghoshal",
-                    "anuv jain",
-                    "prateek kuhad",
-                    "jasleen royal",
-                    "kk",
-                    "armaan malik",
-                    "darshan raval",
-                    "jubin nautiyal",
-                    "diljit",
-                    "sidhu",
-                    "ap dhillon",
-                    "badshah",
-                    "honey singh",
-                    "desi",
-                    "sufi",
-                )
-            ):
-                target_country = "IN"
-            elif any(
-                term in q_lower for term in ("bts", "blackpink", "newjeans", "stray kids", "twice")
-            ):
-                target_country = "KR"
-            elif any(
-                term in q_lower for term in ("bad bunny", "peso pluma", "karol g", "reggaeton")
-            ):
-                target_country = "MX"
-            else:
-                target_country = "US"
-
-        cache_key = f"{q_clean.lower()}:{limit}:{target_country}"
+        cache_key = f"itunes:{q_clean.lower()}:{limit}:{country}"
         now = datetime.now()
-
-        # Check cache
         if cache_key in self._query_cache:
             ts, cached_res = self._query_cache[cache_key]
             if now - ts < self.cache_ttl:
                 return cached_res
 
         self._clean_cache()
-
         params: dict[str, str | int] = {
             "term": q_clean,
             "entity": "song",
             "limit": limit,
             "media": "music",
-            "country": target_country,
+            "country": country,
         }
 
         try:
             async with httpx.AsyncClient(timeout=3.5) as client:
-                response = await client.get(self.SEARCH_URL, params=params)
-                if response.status_code == 200:
-                    data = response.json()
-                    raw_results = data.get("results", [])
+                resp = await client.get(self.SEARCH_URL, params=params)
+                if resp.status_code == 200:
+                    raw_results = resp.json().get("results", [])
                 else:
                     raw_results = []
-
-                # Fallback probe if 0 results on regional storefront
-                if not raw_results:
-                    alt_country = "IN" if target_country != "IN" else "US"
-                    params["country"] = alt_country
-                    alt_resp = await client.get(self.SEARCH_URL, params=params)
-                    if alt_resp.status_code == 200:
-                        raw_results = alt_resp.json().get("results", [])
 
                 normalized: list[dict[str, Any]] = []
                 for item in raw_results:
@@ -786,23 +1417,204 @@ class LiveSearchService:
 
                 self._query_cache[cache_key] = (now, normalized)
                 return normalized
-
         except Exception as exc:
-            logger.warning("Failed to query iTunes search API: %s", exc)
+            logger.debug("iTunes search failed for '%s': %s", q_clean, exc)
             return []
 
-    async def get_track_by_id(self, ext_id: str) -> dict[str, Any] | None:
-        """Lookup external track by canonical ext:itunes:{trackId}."""
+    async def search_jiosaavn(
+        self,
+        query: str,
+        limit: int = 15,
+    ) -> list[dict[str, Any]]:
+        """Search JioSaavn API for songs (comprehensive coverage for Indian/Punjabi/Pop music)."""
+        q_clean = query.strip()
+        if len(q_clean) < 2:
+            return []
+
+        cache_key = f"saavn:{q_clean.lower()}:{limit}"
         now = datetime.now()
-        if ext_id in self._track_cache:
-            ts, track = self._track_cache[ext_id]
+        if cache_key in self._query_cache:
+            ts, cached_res = self._query_cache[cache_key]
+            if now - ts < self.cache_ttl:
+                return cached_res
+
+        self._clean_cache()
+        params: dict[str, str | int] = {
+            "__call": "search.getResults",
+            "q": q_clean,
+            "_format": "json",
+            "_marker": "0",
+            "api_version": "4",
+            "ctx": "web6dot0",
+            "n": limit,
+            "p": 1,
+        }
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Accept": "application/json",
+        }
+
+        try:
+            async with httpx.AsyncClient(
+                timeout=4.0, headers=headers, follow_redirects=True
+            ) as client:
+                resp = await client.get("https://www.jiosaavn.com/api.php", params=params)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    raw_results = data.get("results", [])
+                else:
+                    raw_results = []
+
+                normalized: list[dict[str, Any]] = []
+                for item in raw_results:
+                    parsed = self._normalize_jiosaavn_track(item)
+                    if parsed:
+                        normalized.append(parsed)
+                        self._track_cache[parsed["id"]] = (now, parsed)
+
+                self._query_cache[cache_key] = (now, normalized)
+                return normalized
+        except Exception as exc:
+            logger.debug("JioSaavn search failed for '%s': %s", q_clean, exc)
+            return []
+
+    async def search_tracks(
+        self,
+        query: str,
+        limit: int = 20,
+        country: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Multi-source concurrent search combining JioSaavn and iTunes.
+
+        Provides global and regional coverage with high-priority exact title matching.
+        """
+        q_clean = query.strip()
+        if len(q_clean) < 2:
+            return []
+
+        target_country = country or self._detect_country(q_clean)
+        cache_key = f"multi:{q_clean.lower()}:{limit}:{target_country}"
+        now = datetime.now()
+        if cache_key in self._query_cache:
+            ts, cached_res = self._query_cache[cache_key]
+            if now - ts < self.cache_ttl:
+                return cached_res
+
+        # Query JioSaavn and iTunes in parallel
+        saavn_task = self.search_jiosaavn(q_clean, limit=limit)
+        itunes_task = self.search_itunes(q_clean, limit=limit, country=target_country)
+        tasks = [saavn_task, itunes_task]
+
+        # If searching Indian storefront or Indian artist, also check iTunes US as fallback
+        if target_country == "IN":
+            tasks.append(self.search_itunes(q_clean, limit=limit, country="US"))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        saavn_tracks = results[0] if len(results) > 0 and isinstance(results[0], list) else []
+        itunes_tracks = results[1] if len(results) > 1 and isinstance(results[1], list) else []
+        itunes_us = results[2] if len(results) > 2 and isinstance(results[2], list) else []
+
+        all_candidates: list[dict[str, Any]] = saavn_tracks + itunes_tracks + itunes_us
+
+        # Rank candidates by relevance to query
+        q_norm = q_clean.lower().strip()
+
+        def match_priority(t: dict[str, Any]) -> int:
+            t_title = str(t.get("title", "")).lower().strip()
+            t_artist = str(t.get("artist_name", "")).lower().strip()
+            if t_title == q_norm:
+                return 0
+            if t_artist == q_norm:
+                return 1
+            if t_title.startswith(q_norm):
+                return 2
+            if q_norm in t_title:
+                return 3
+            if q_norm in t_artist:
+                return 4
+            return 5
+
+        all_candidates.sort(key=match_priority)
+
+        seen_keys: set[tuple[str, str]] = set()
+        seen_ids: set[str] = set()
+        merged: list[dict[str, Any]] = []
+
+        for t in all_candidates:
+            tid = str(t["id"])
+            t_key = (
+                str(t.get("title", "")).lower().strip(),
+                str(t.get("artist_name", "")).lower().strip(),
+            )
+            if tid not in seen_ids and t_key not in seen_keys:
+                seen_ids.add(tid)
+                seen_keys.add(t_key)
+                merged.append(t)
+                if len(merged) >= limit:
+                    break
+
+        self._query_cache[cache_key] = (now, merged)
+        return merged
+
+    async def get_jiosaavn_track_by_id(self, saavn_id: str) -> dict[str, Any] | None:
+        """Lookup JioSaavn track by raw saavn id or canonical ext:saavn:{id}."""
+        sid = saavn_id.split("ext:saavn:")[-1]
+        canonical_id = f"ext:saavn:{sid}"
+        now = datetime.now()
+        if canonical_id in self._track_cache:
+            ts, track = self._track_cache[canonical_id]
             if now - ts < self.cache_ttl:
                 return track
 
-        if not ext_id.startswith("ext:itunes:"):
+        params: dict[str, str] = {
+            "__call": "song.getDetails",
+            "pids": sid,
+            "_format": "json",
+            "_marker": "0",
+            "api_version": "4",
+            "ctx": "web6dot0",
+        }
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Accept": "application/json",
+        }
+        try:
+            async with httpx.AsyncClient(
+                timeout=4.0, headers=headers, follow_redirects=True
+            ) as client:
+                resp = await client.get("https://www.jiosaavn.com/api.php", params=params)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    songs = data.get("songs") or []
+                    if not songs and sid in data:
+                        songs = [data[sid]]
+                    if songs:
+                        parsed = self._normalize_jiosaavn_track(songs[0])
+                        if parsed:
+                            self._track_cache[canonical_id] = (now, parsed)
+                            return parsed
+        except Exception as exc:
+            logger.debug("Failed to lookup JioSaavn track %s: %s", sid, exc)
             return None
+        return None
 
-        track_id = ext_id.split("ext:itunes:")[-1]
+    async def get_itunes_track_by_id(self, itunes_id: str) -> dict[str, Any] | None:
+        """Lookup iTunes track by raw trackId or canonical ext:itunes:{trackId}."""
+        track_id = itunes_id.split("ext:itunes:")[-1]
+        canonical_id = f"ext:itunes:{track_id}"
+        now = datetime.now()
+        if canonical_id in self._track_cache:
+            ts, track = self._track_cache[canonical_id]
+            if now - ts < self.cache_ttl:
+                return track
+
         lookup_params: dict[str, str] = {"id": str(track_id)}
         try:
             async with httpx.AsyncClient(timeout=3.5) as client:
@@ -815,11 +1627,25 @@ class LiveSearchService:
                         if results:
                             parsed = self._normalize_itunes_track(results[0])
                             if parsed:
-                                self._track_cache[ext_id] = (now, parsed)
+                                self._track_cache[canonical_id] = (now, parsed)
                                 return parsed
         except Exception as exc:
-            logger.warning("Failed to lookup track %s: %s", ext_id, exc)
+            logger.debug("Failed to lookup iTunes track %s: %s", itunes_id, exc)
             return None
+        return None
+
+    async def get_track_by_id(self, ext_id: str) -> dict[str, Any] | None:
+        """Lookup external track across all supported sources."""
+        now = datetime.now()
+        if ext_id in self._track_cache:
+            ts, track = self._track_cache[ext_id]
+            if now - ts < self.cache_ttl:
+                return track
+
+        if ext_id.startswith("ext:saavn:"):
+            return await self.get_jiosaavn_track_by_id(ext_id)
+        if ext_id.startswith("ext:itunes:"):
+            return await self.get_itunes_track_by_id(ext_id)
         return None
 
     async def fetch_candidates_for_seeds(
@@ -827,7 +1653,7 @@ class LiveSearchService:
         seed_tracks: list[dict[str, Any]],
         limit_per_query: int = 15,
     ) -> list[dict[str, Any]]:
-        """Retrieve real-world candidate tracks matching seed artists and genre vibes."""
+        """Retrieve real candidate tracks matching seeds, peer graph, and genre vibes."""
         candidates: list[dict[str, Any]] = []
         seen_ids = {str(s.get("id")) for s in seed_tracks}
         seen_keys = {
@@ -849,7 +1675,10 @@ class LiveSearchService:
 
             genre = str(s.get("genre") or s.get("primaryGenreName") or "")
             tags = list(s.get("tags") or [])
-            culture = s.get("culture") or classify_genre_and_culture(genre, tags)
+            title = str(s.get("title") or "")
+            culture = s.get("culture") or classify_genre_and_culture(
+                genre, tags, artist_name=art, title=title
+            )
             seed_cultures.add(culture)
 
         # Detect dominant mood of the seeds
@@ -857,7 +1686,8 @@ class LiveSearchService:
         dominant_mood = mood_profile["dominant_mood"]
 
         # Determine primary market country based on seed cultures
-        primary_country = "IN" if "bollywood_desi" in seed_cultures else "US"
+        is_desi = "punjabi" in seed_cultures or "bollywood_desi" in seed_cultures
+        primary_country = "IN" if is_desi else "US"
         if "kpop" in seed_cultures:
             primary_country = "KR"
         elif "latin" in seed_cultures:
@@ -880,7 +1710,56 @@ class LiveSearchService:
         search_queries.extend(graph_peers)
 
         # 4. Add mood- and culture-specific peer discovery query terms
-        if "bollywood_desi" in seed_cultures:
+        if "punjabi" in seed_cultures:
+            if dominant_mood == MOOD_PARTY:
+                search_queries.extend(
+                    [
+                        "punjabi party hits",
+                        "punjabi dance hits",
+                        "Diljit Dosanjh party",
+                        "Karan Aujla party",
+                        "Sukha party",
+                        "bhangra party hits",
+                        "latest punjabi party",
+                    ]
+                )
+                for art in seed_artists:
+                    search_queries.append(f"{art} party")
+                    search_queries.append(f"{art} dance")
+            elif dominant_mood == MOOD_SAD:
+                search_queries.extend(
+                    [
+                        "punjabi sad songs",
+                        "B Praak sad hits",
+                        "Sidhu Moose Wala sad",
+                        "Karan Aujla sad",
+                        "punjabi emotional songs",
+                    ]
+                )
+                for art in seed_artists:
+                    search_queries.append(f"{art} sad")
+                    search_queries.append(f"{art} emotional")
+            else:
+                search_queries.extend(
+                    [
+                        "latest punjabi hits",
+                        "punjabi top 50",
+                        "punjabi hip hop",
+                        "trending punjabi",
+                        "Diljit Dosanjh hits",
+                        "Karan Aujla hits",
+                        "Sidhu Moose Wala hits",
+                        "AP Dhillon hits",
+                        "Shubh hits",
+                        "Sukha hits",
+                        "Arjan Dhillon hits",
+                        "Tegi Pannu hits",
+                        "Baggh-e SMG hits",
+                    ]
+                )
+                for art in seed_artists:
+                    search_queries.append(f"{art} hits")
+        elif "bollywood_desi" in seed_cultures:
             if dominant_mood == MOOD_SAD:
                 search_queries.extend(
                     [
@@ -919,7 +1798,6 @@ class LiveSearchService:
                     search_queries.append(f"{art} party")
                     search_queries.append(f"{art} dance")
             else:
-                # Romantic / Melodic / General
                 search_queries.extend(
                     [
                         "Arijit Singh romantic",
@@ -1028,16 +1906,55 @@ class LiveSearchService:
                 seen_q.add(q_clean)
                 unique_queries.append(q)
 
-        # Query iTunes for top queries using the targeted country storefront
-        for q in unique_queries[:20]:
-            results = await self.search_tracks(q, limit=limit_per_query, country=primary_country)
-            for r in results:
-                # 1. Culture boundary guard: if seeds are Bollywood, exclude foreign tracks
+        # Concurrently execute candidate searches across top queries in parallel
+        batch_queries = unique_queries[:20]
+        search_tasks = [
+            self.search_tracks(q, limit=limit_per_query, country=primary_country)
+            for q in batch_queries
+        ]
+        batch_results = await asyncio.gather(*search_tasks, return_exceptions=True)
+
+        for query_res in batch_results:
+            if not isinstance(query_res, list):
+                continue
+            for r in query_res:
                 r_culture = r.get("culture") or classify_genre_and_culture(
-                    str(r.get("primaryGenreName") or ""), r.get("tags")
+                    str(r.get("primaryGenreName") or ""),
+                    r.get("tags"),
+                    artist_name=str(r.get("artist_name") or ""),
+                    title=str(r.get("title") or ""),
                 )
-                if "bollywood_desi" in seed_cultures:
-                    if r_culture != "bollywood_desi":
+
+                # 1. Cultural boundary guard:
+                # When seeds are Punjabi, strictly enforce Punjabi/Desi tracks
+                if "punjabi" in seed_cultures:
+                    if r_culture not in ("punjabi", "bollywood_desi"):
+                        r_blob = (
+                            f"{str(r.get('title', ''))} {str(r.get('artist_name', ''))}"
+                        ).lower()
+                        if not any(
+                            k in r_blob
+                            for k in (
+                                "singh",
+                                "kaur",
+                                "dhillon",
+                                "aujla",
+                                "dosanjh",
+                                "sukha",
+                                "shubh",
+                                "maan",
+                                "pannu",
+                                "smg",
+                                "jxggi",
+                                "b praak",
+                                "sidhu",
+                                "punjabi",
+                                "desi",
+                            )
+                        ):
+                            continue
+                elif "bollywood_desi" in seed_cultures:
+                    if r_culture not in ("bollywood_desi", "punjabi"):
                         r_blob = (
                             f"{str(r.get('title', ''))} {str(r.get('artist_name', ''))}"
                         ).lower()
@@ -1063,7 +1980,11 @@ class LiveSearchService:
                             )
                         ):
                             continue
-                elif "hiphop" in seed_cultures and r_culture in ("bollywood_desi", "kpop"):
+                elif "hiphop" in seed_cultures and r_culture in (
+                    "bollywood_desi",
+                    "kpop",
+                    "punjabi",
+                ):
                     continue
 
                 # 2. Strict mood boundary guard

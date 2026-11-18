@@ -355,13 +355,14 @@ class CatalogStore:
         culture_key = raw_track.get("culture")
         if not culture_key:
             tag_text = " ".join(str(t).lower() for t in tags)
-            if any(
+            if any(k in tag_text for k in ("punjabi", "bhangra", "desi hip hop")):
+                culture_key = "punjabi"
+            elif any(
                 k in tag_text
                 for k in (
                     "bollywood",
                     "indian",
                     "hindi",
-                    "punjabi",
                     "sufi",
                     "desi",
                     "filmi",

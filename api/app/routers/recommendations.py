@@ -190,7 +190,7 @@ async def create_recommendations(
         from app.services.live_search import live_search_service
 
         for sid in payload.seed_track_ids:
-            if sid.startswith("ext:itunes:"):
+            if sid.startswith("ext:"):
                 has_track = catalog_store.contains_id(sid)
                 track_data = catalog_store.get_track_dict(sid) if has_track else None
                 if not track_data or not track_data.get("culture"):
@@ -251,25 +251,36 @@ async def create_recommendations(
     )
 
     # When live external seeds are present, prioritize real candidate tracks
-    has_live_seeds = any(sid.startswith("ext:itunes:") for sid in payload.seed_track_ids or [])
+    has_live_seeds = any(sid.startswith("ext:") for sid in payload.seed_track_ids or [])
     if has_live_seeds:
-        live_indices = [
-            idx
-            for idx in pool.track_indices
-            if (
-                catalog_store.track_ids[idx] in current_live_candidate_ids
-                if current_live_candidate_ids
-                else catalog_store.track_ids[idx].startswith("ext:itunes:")
-            )
-        ]
+        seed_idx_set = {
+            catalog_store.get_idx(sid)
+            for sid in (payload.seed_track_ids or [])
+            if catalog_store.has_idx(sid)
+        }
+        if current_live_candidate_ids:
+            live_indices = [
+                catalog_store.get_idx(cid)
+                for cid in current_live_candidate_ids
+                if catalog_store.contains_id(cid) and catalog_store.get_idx(cid) not in seed_idx_set
+            ]
+        else:
+            live_indices = [
+                idx
+                for idx in pool.track_indices
+                if catalog_store.track_ids[idx].startswith("ext:")
+            ]
+
         if len(live_indices) > 0:
             sub_indices = np.array(live_indices, dtype=np.int64)
-            idx_map = {idx: i for i, idx in enumerate(pool.track_indices)}
-            row_sel = [idx_map[idx] for idx in live_indices]
+            vecs_sub_t = catalog_store.vectors_t[sub_indices]
+            raw_t = np.dot(vecs_sub_t, modes.channel_vectors["t"].T)
+            vecs_sub_a = catalog_store.vectors_a[sub_indices]
+            raw_a = np.dot(vecs_sub_a, modes.channel_vectors["a"].T)
             pool = CandidatePool(
                 track_indices=sub_indices,
-                raw_sims_t=pool.raw_sims_t[row_sel],
-                raw_sims_a=pool.raw_sims_a[row_sel],
+                raw_sims_t=raw_t.astype(np.float32),
+                raw_sims_a=raw_a.astype(np.float32),
                 modes=modes,
             )
 

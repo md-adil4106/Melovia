@@ -216,8 +216,28 @@ async def search_tracks(
 
     seen_keys: set[tuple[str, str]] = set()
     merged: list[TrackDetailResponse] = []
+    candidates = db_items + live_items + items
 
-    for t in db_items + live_items + items:
+    q_norm = q.lower().strip()
+
+    def search_relevance_sort_key(t: TrackDetailResponse) -> int:
+        t_title = t.title.lower().strip()
+        t_artist = t.artist_name.lower().strip()
+        if t_title == q_norm:
+            return 0
+        if t_artist == q_norm:
+            return 1
+        if t_title.startswith(q_norm):
+            return 2
+        if q_norm in t_title:
+            return 3
+        if q_norm in t_artist:
+            return 4
+        return 5
+
+    candidates.sort(key=search_relevance_sort_key)
+
+    for t in candidates:
         key = (t.title.lower().strip(), t.artist_name.lower().strip())
         if key not in seen_keys:
             seen_keys.add(key)
@@ -252,7 +272,7 @@ async def get_track(
         return _build_track_detail(raw_track, store)
 
     # 2. Try live lookup if external ID
-    if id.startswith("ext:itunes:"):
+    if id.startswith("ext:"):
         from app.services.live_search import live_search_service
 
         try:
