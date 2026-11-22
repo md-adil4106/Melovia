@@ -44,6 +44,9 @@ class TrackDetailResponse(BaseModel):
     album_name: str | None = Field(default=None, description="Album or collection name")
     duration_ms: int | None = Field(default=None, description="Track runtime in milliseconds")
     duration_sec: float | None = Field(default=None, description="Track runtime in seconds")
+    source: str | None = Field(
+        default=None, description="Data origin source: saavn, itunes, or catalog"
+    )
 
 
 class TrackSearchResponse(BaseModel):

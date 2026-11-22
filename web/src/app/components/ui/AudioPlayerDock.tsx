@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { Music, Play, Pause, X, SkipBack, SkipForward, Repeat, Volume2, Volume1, VolumeX, AudioLines, Loader2 } from "lucide-react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { Music, Play, Pause, X, SkipBack, SkipForward, Repeat, Volume2, Volume1, VolumeX, AudioLines, Loader2, Radio } from "lucide-react";
 import { Track } from "../../store";
 import { AudioWaveVisualizer } from "./AudioWaveVisualizer";
+import { SourceBadge, getTrackSource } from "./SourceBadge";
 
 interface AudioPlayerDockProps {
   track: Track | null;
@@ -54,8 +55,16 @@ export function AudioPlayerDock({
   onClose,
   className = "",
 }: AudioPlayerDockProps) {
+  const trackDuration =
+    track?.duration_sec && track.duration_sec > 0
+      ? track.duration_sec
+      : track?.duration_ms && track.duration_ms > 0
+      ? Math.round(track.duration_ms / 1000)
+      : 30;
+
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(30);
+  const [duration, setDuration] = useState(trackDuration);
+  const [isScrubbing, setIsScrubbing] = useState(false);
   const [internalBuffering, setInternalBuffering] = useState(false);
   const [bufferedPct, setBufferedPct] = useState(0);
   const [hoverPosition, setHoverPosition] = useState<{ x: number; time: number; pct: number } | null>(null);
@@ -82,6 +91,14 @@ export function AudioPlayerDock({
   const effectiveBuffering = isBuffering || internalBuffering;
 
   useEffect(() => {
+    if (audioElement && !isNaN(audioElement.duration) && audioElement.duration > 0) {
+      setDuration(audioElement.duration);
+    } else {
+      setDuration(trackDuration);
+    }
+  }, [track?.id, trackDuration, audioElement]);
+
+  useEffect(() => {
     if (!audioElement) {
       setCurrentTime(0);
       setInternalBuffering(false);
@@ -90,7 +107,7 @@ export function AudioPlayerDock({
     }
 
     const updateTimes = () => {
-      if (!isNaN(audioElement.currentTime)) {
+      if (!isScrubbing && !isNaN(audioElement.currentTime)) {
         setCurrentTime(audioElement.currentTime);
       }
       if (!isNaN(audioElement.duration) && audioElement.duration > 0) {
@@ -99,7 +116,7 @@ export function AudioPlayerDock({
       if (audioElement.buffered.length > 0) {
         try {
           const end = audioElement.buffered.end(audioElement.buffered.length - 1);
-          const dur = audioElement.duration || 30;
+          const dur = audioElement.duration || duration || 30;
           setBufferedPct(Math.min(100, Math.max(0, (end / dur) * 100)));
         } catch {
           // ignore
@@ -135,7 +152,75 @@ export function AudioPlayerDock({
       audioElement.removeEventListener("canplay", handleCanPlay);
       audioElement.removeEventListener("canplaythrough", handleCanPlay);
     };
-  }, [audioElement, isPlaying]);
+  }, [audioElement, isPlaying, isScrubbing, duration]);
+
+  const seekToClientX = useCallback(
+    (clientX: number) => {
+      if (!scrubberContainerRef.current) return;
+      const rect = scrubberContainerRef.current.getBoundingClientRect();
+      if (rect.width <= 0) return;
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const targetDuration = duration > 0 ? duration : 30;
+      const newTime = ratio * targetDuration;
+      setCurrentTime(newTime);
+      if (audioElement) {
+        audioElement.currentTime = newTime;
+      }
+    },
+    [audioElement, duration]
+  );
+
+  const handleScrubberMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    setIsScrubbing(true);
+    seekToClientX(e.clientX);
+  };
+
+  const handleScrubberTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length > 0) {
+      setIsScrubbing(true);
+      seekToClientX(e.touches[0].clientX);
+    }
+  };
+
+  useEffect(() => {
+    if (!isScrubbing) return;
+
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      seekToClientX(e.clientX);
+    };
+
+    const handleWindowTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        seekToClientX(e.touches[0].clientX);
+      }
+    };
+
+    const handleWindowMouseUp = () => {
+      setIsScrubbing(false);
+    };
+
+    window.addEventListener("mousemove", handleWindowMouseMove);
+    window.addEventListener("mouseup", handleWindowMouseUp);
+    window.addEventListener("touchmove", handleWindowTouchMove, { passive: true });
+    window.addEventListener("touchend", handleWindowMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleWindowMouseMove);
+      window.removeEventListener("mouseup", handleWindowMouseUp);
+      window.removeEventListener("touchmove", handleWindowTouchMove);
+      window.removeEventListener("touchend", handleWindowMouseUp);
+    };
+  }, [isScrubbing, seekToClientX]);
+
+  const seekDelta = (seconds: number) => {
+    const targetDuration = duration > 0 ? duration : 30;
+    const newTime = Math.max(0, Math.min(targetDuration, currentTime + seconds));
+    setCurrentTime(newTime);
+    if (audioElement) {
+      audioElement.currentTime = newTime;
+    }
+  };
 
   if (!track) return null;
 
@@ -198,6 +283,14 @@ export function AudioPlayerDock({
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
   const volPct = Math.round((effectiveMuted ? 0 : effectiveVolume) * 100);
 
+  const source = getTrackSource(track);
+  const streamQuality =
+    source === "saavn"
+      ? "HQ Stream"
+      : source === "itunes"
+      ? "AAC Preview"
+      : "Catalog Preview";
+
   return (
     <div
       role="region"
@@ -249,14 +342,21 @@ export function AudioPlayerDock({
 
           {/* Track Info & Scrubber */}
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h4 className="text-xs font-bold text-white truncate apple-heading tracking-tight">
+            <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+              <h4 className="text-xs font-bold text-white truncate apple-heading tracking-tight max-w-[140px] sm:max-w-[200px]">
                 {track.title}
               </h4>
               <span className="text-white/40 text-[10px]">•</span>
-              <p className="text-[11px] text-white/60 truncate font-normal">
+              <p className="text-[11px] text-white/60 truncate font-normal max-w-[100px] sm:max-w-[160px]">
                 {track.artist_name}
               </p>
+              <SourceBadge track={track} compact />
+              <span
+                data-testid="dock-stream-quality"
+                className="hidden md:inline-flex items-center gap-1 text-[9px] font-mono text-white/50 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10"
+              >
+                {streamQuality}
+              </span>
             </div>
 
             {/* Scrubbable Progress Slider */}
@@ -266,9 +366,30 @@ export function AudioPlayerDock({
               </span>
               <div
                 ref={scrubberContainerRef}
+                onMouseDown={handleScrubberMouseDown}
+                onTouchStart={handleScrubberTouchStart}
                 onMouseMove={handleScrubberMouseMove}
                 onMouseLeave={handleScrubberMouseLeave}
-                className="relative flex-1 flex items-center group/scrubber h-5"
+                tabIndex={0}
+                role="slider"
+                aria-label="Audio scrubber"
+                aria-valuemin={0}
+                aria-valuemax={duration || 30}
+                aria-valuenow={currentTime}
+                aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft" || e.key === "j" || e.key === "J") {
+                    e.preventDefault();
+                    seekDelta(-5);
+                  } else if (e.key === "ArrowRight" || e.key === "l" || e.key === "L") {
+                    e.preventDefault();
+                    seekDelta(5);
+                  } else if (e.key === " ") {
+                    e.preventDefault();
+                    onTogglePlay(track);
+                  }
+                }}
+                className="relative flex-1 flex items-center group/scrubber h-5 cursor-pointer select-none focus:outline-none focus:ring-1 focus:ring-[#fa2d55]/70 rounded-full"
               >
                 {/* Floating Liquid Glass Timestamp Tooltip on Hover */}
                 {hoverPosition && (
@@ -281,23 +402,23 @@ export function AudioPlayerDock({
                   </div>
                 )}
 
-                {/* Subtle Decorative Waveform Spectrum Track behind progress slider */}
+                {/* Dynamic Waveform Spectrum Track behind progress slider */}
                 <div
-                  className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2.5 flex items-center justify-between px-0.5 opacity-25 group-hover/scrubber:opacity-45 pointer-events-none transition-opacity overflow-hidden"
+                  className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-3 flex items-center justify-between px-0.5 opacity-30 group-hover/scrubber:opacity-65 transition-opacity overflow-hidden pointer-events-none"
                   aria-hidden="true"
                 >
-                  {Array.from({ length: 28 }).map((_, idx) => {
-                    const barPct = (idx / 28) * 100;
+                  {Array.from({ length: 30 }).map((_, idx) => {
+                    const barPct = (idx / 30) * 100;
                     const isPassed = barPct <= pct;
                     const isBuffered = barPct <= bufferedPct;
-                    const heights = [3, 5, 8, 4, 9, 6, 10, 5, 7, 9, 4, 8, 10, 6, 7, 5, 9, 8, 4, 10, 6, 8, 5, 7, 9, 4, 6, 3];
+                    const heights = [3, 5, 8, 4, 10, 6, 12, 5, 7, 11, 4, 8, 12, 6, 9, 5, 11, 8, 4, 12, 6, 9, 5, 8, 11, 4, 7, 3, 9, 4];
                     const h = heights[idx % heights.length];
                     return (
                       <span
                         key={idx}
                         className={`w-0.5 rounded-full transition-all duration-150 ${
                           isPassed
-                            ? "bg-[#fa2d55]"
+                            ? "bg-[#fa2d55] shadow-[0_0_6px_rgba(250,45,85,0.6)]"
                             : isBuffered
                             ? "bg-white/40"
                             : "bg-white/15"
@@ -318,7 +439,7 @@ export function AudioPlayerDock({
                   />
                 )}
 
-                {/* Interactive Scrubber Range Slider */}
+                {/* Native Range Slider for Full Accessibility */}
                 <input
                   type="range"
                   min="0"
@@ -327,7 +448,7 @@ export function AudioPlayerDock({
                   value={currentTime}
                   onChange={handleSeek}
                   aria-label="Audio preview scrubber"
-                  className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#fa2d55] focus:outline-none focus:ring-1 focus:ring-[#fa2d55] relative z-10"
+                  className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#fa2d55] focus:outline-none relative z-10"
                   style={{
                     background: `linear-gradient(to right, #fa2d55 0%, #fb7185 ${pct}%, transparent ${pct}%, transparent 100%)`,
                   }}

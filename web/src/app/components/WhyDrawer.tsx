@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { Track, WhyExplanationData } from "../store";
+import { SourceBadge } from "./ui/SourceBadge";
 
 interface WhyDrawerProps {
   isOpen: boolean;
@@ -146,6 +147,9 @@ export function WhyDrawer({
                 <p className="text-xs text-white/60 truncate">
                   by {track.artist_name} {track.year ? `• ${track.year}` : ""}
                 </p>
+                <div className="mt-1">
+                  <SourceBadge track={track} compact />
+                </div>
               </div>
             </div>
             <button

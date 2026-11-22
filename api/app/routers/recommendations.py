@@ -76,6 +76,19 @@ def _build_response_items(
         if dur_sec is None:
             dur_sec = round(dur_ms / 1000.0, 1)
 
+        raw_source = t_dict.get("source")
+        tid_str = str(t_dict.get("id", ""))
+        source = "catalog"
+        if raw_source:
+            if "saavn" in str(raw_source).lower():
+                source = "saavn"
+            elif "itunes" in str(raw_source).lower():
+                source = "itunes"
+        elif tid_str.startswith("ext:saavn:"):
+            source = "saavn"
+        elif tid_str.startswith("ext:itunes:"):
+            source = "itunes"
+
         track_resp = TrackDetailResponse(
             id=t_dict["id"],
             track_idx=t_dict["track_idx"],
@@ -96,6 +109,7 @@ def _build_response_items(
             album_name=t_dict.get("album_name"),
             duration_ms=dur_ms,
             duration_sec=dur_sec,
+            source=source,
         )
 
         discovery_val = 0.0

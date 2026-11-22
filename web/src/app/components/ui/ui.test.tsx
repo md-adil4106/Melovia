@@ -14,6 +14,7 @@ import { AudioWaveVisualizer } from "./AudioWaveVisualizer";
 import { RefractionAura } from "./RefractionAura";
 import { ShortcutsModal } from "./ShortcutsModal";
 import { AudioPlayerDock } from "./AudioPlayerDock";
+import { SourceBadge, getTrackSource } from "./SourceBadge";
 import { useDiscoveryStore, Track } from "../../store";
 
 describe("Design System UI Primitives (Phase 15)", () => {
@@ -409,5 +410,62 @@ describe("Design System UI Primitives (Phase 15)", () => {
       fireEvent.mouseLeave(scrubberContainer);
       expect(screen.queryByTestId("scrubber-hover-tooltip")).toBeNull();
     }
+  });
+
+  it("renders SourceBadge correctly for JioSaavn, iTunes, and Catalog tracks", () => {
+    const saavnTrack: Partial<Track> = { id: "ext:saavn:12345", title: "EX-FILES" };
+    const itunesTrack: Partial<Track> = { id: "ext:itunes:67890", title: "Rich Flex" };
+    const catalogTrack: Partial<Track> = { id: "cat:111", title: "Midnight City" };
+
+    expect(getTrackSource(saavnTrack)).toBe("saavn");
+    expect(getTrackSource(itunesTrack)).toBe("itunes");
+    expect(getTrackSource(catalogTrack)).toBe("catalog");
+
+    const { rerender } = render(<SourceBadge track={saavnTrack} />);
+    expect(screen.getByTestId("source-badge-saavn")).toBeDefined();
+    expect(screen.getByText("JioSaavn")).toBeDefined();
+
+    rerender(<SourceBadge track={itunesTrack} compact />);
+    expect(screen.getByTestId("source-badge-itunes")).toBeDefined();
+    expect(screen.getByText("iTunes")).toBeDefined();
+
+    rerender(<SourceBadge track={catalogTrack} />);
+    expect(screen.getByTestId("source-badge-catalog")).toBeDefined();
+    expect(screen.getByText("Catalog")).toBeDefined();
+  });
+
+  it("handles live stream JioSaavn full duration and keyboard seek in AudioPlayerDock", () => {
+    const handleToggle = vi.fn();
+    const handleClose = vi.fn();
+    const liveStreamTrack: Track = {
+      id: "ext:saavn:exfiles123",
+      title: "EX-FILES",
+      artist_name: "Karan Aujla",
+      preview_url: "https://aac.saavn.cdn.jio.com/test.mp4",
+      source: "saavn",
+      duration_sec: 215, // 3:35 full track
+    };
+
+    render(
+      <AudioPlayerDock
+        track={liveStreamTrack}
+        isPlaying={true}
+        audioElement={null}
+        onTogglePlay={handleToggle}
+        onClose={handleClose}
+      />
+    );
+
+    // Verifies source badge and stream quality indicator
+    expect(screen.getByTestId("source-badge-saavn")).toBeDefined();
+    expect(screen.getByTestId("dock-stream-quality")).toBeDefined();
+    expect(screen.getByTestId("dock-stream-quality").textContent).toBe("HQ Stream");
+    expect(screen.getByText("3:35")).toBeDefined();
+
+    // Verifies keyboard seek on the scrubber container
+    const scrubber = screen.getByRole("slider", { name: "Audio scrubber" });
+    expect(scrubber).toBeDefined();
+    fireEvent.keyDown(scrubber, { key: "ArrowRight" });
+    fireEvent.keyDown(scrubber, { key: "ArrowLeft" });
   });
 });

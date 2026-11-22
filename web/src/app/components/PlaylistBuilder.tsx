@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useDiscoveryStore, RecommendedItem, Track } from "../store";
 import { ExportModal } from "./export/ExportModal";
+import { SourceBadge } from "./ui/SourceBadge";
 
 /* ── Types ─────────────────────────────────────────────── */
 
@@ -518,6 +519,7 @@ export function PlaylistBuilder({
                               {item.track.artist_name}
                             </div>
                           </div>
+                          <SourceBadge track={item.track} compact />
                           {energy != null && (
                             <span className="text-[10px] font-mono text-[#8c96a8] bg-[#10141d] px-1.5 py-0.5 rounded border border-[#1f2637]">
                               E {(energy * 100).toFixed(0)}%

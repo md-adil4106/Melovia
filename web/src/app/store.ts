@@ -29,6 +29,7 @@ export interface Track {
   album_name?: string | null;
   duration_ms?: number | null;
   duration_sec?: number | null;
+  source?: "saavn" | "itunes" | "catalog" | string | null;
 }
 
 export interface RecommendationSignals {

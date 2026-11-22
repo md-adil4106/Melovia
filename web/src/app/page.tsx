@@ -46,6 +46,7 @@ import { AudioWaveVisualizer } from "./components/ui/AudioWaveVisualizer";
 import { GlassThemeSelector } from "./components/ui/GlassThemeSelector";
 import { ShortcutsModal } from "./components/ui/ShortcutsModal";
 import { AudioPlayerDock } from "./components/ui/AudioPlayerDock";
+import { SourceBadge } from "./components/ui/SourceBadge";
 import { Button } from "./components/ui/Button";
 import { Card } from "./components/ui/Card";
 import { Chip } from "./components/ui/Chip";
@@ -1276,6 +1277,7 @@ export default function DiscoveryHome() {
                               <div className="flex items-center gap-2 text-xs text-white/60 truncate mt-0.5">
                                 <span className="truncate">{t.artist_name}</span>
                                 {t.year ? <span>• {t.year}</span> : null}
+                                <SourceBadge track={t} compact />
                                 {t.tags && t.tags.length > 0 && (
                                   <span className="text-[10px] bg-white/[0.06] text-white/70 px-2 py-0.5 rounded-md border border-white/10 hidden sm:inline">
                                     {t.tags[0]}
@@ -1334,6 +1336,7 @@ export default function DiscoveryHome() {
                     </div>
                     <span className="font-semibold max-w-[160px] truncate">{s.title}</span>
                     <span className="text-white/60 max-w-[100px] truncate">({s.artist_name})</span>
+                    <SourceBadge track={s} compact />
                     <button
                       type="button"
                       onClick={() => removeSeed(s.id)}
@@ -1822,6 +1825,9 @@ export default function DiscoveryHome() {
                           <span className="text-white/40">{novPct}%</span>
                         </div>
                       )}
+
+                      {/* Source Origin Badge */}
+                      <SourceBadge track={item.track} />
 
                       {/* Audio channel badge */}
                       {item.track.has_a ? (

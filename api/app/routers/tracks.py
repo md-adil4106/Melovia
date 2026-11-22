@@ -67,6 +67,19 @@ def _build_track_detail(raw_dict: dict[str, Any], store: CatalogStore) -> TrackD
     elif "isrc" in raw_dict and raw_dict["isrc"]:
         isrcs = [str(raw_dict["isrc"])]
 
+    raw_source = raw_dict.get("source")
+    track_id = str(raw_dict.get("id", ""))
+    source = "catalog"
+    if raw_source:
+        if "saavn" in str(raw_source).lower():
+            source = "saavn"
+        elif "itunes" in str(raw_source).lower():
+            source = "itunes"
+    elif track_id.startswith("ext:saavn:"):
+        source = "saavn"
+    elif track_id.startswith("ext:itunes:"):
+        source = "itunes"
+
     return TrackDetailResponse(
         id=str(raw_dict["id"]),
         track_idx=int(raw_dict["track_idx"]),
@@ -85,6 +98,9 @@ def _build_track_detail(raw_dict: dict[str, Any], store: CatalogStore) -> TrackD
         artwork_url=raw_dict.get("artwork_url"),
         preview_url=raw_dict.get("preview_url"),
         album_name=raw_dict.get("album_name"),
+        duration_ms=int(raw_dict["duration_ms"]) if raw_dict.get("duration_ms") else None,
+        duration_sec=float(raw_dict["duration_sec"]) if raw_dict.get("duration_sec") else None,
+        source=source,
     )
 
 
@@ -135,6 +151,7 @@ def _build_staging_track_detail(st: StagingTrack) -> TrackDetailResponse:
         region_id=None,
         scalars=scalars,
         tags=tag_names,
+        source="catalog",
     )
 
 
